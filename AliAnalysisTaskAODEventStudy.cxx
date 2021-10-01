@@ -110,11 +110,17 @@ AliAnalysisTaskAODEventStudy::AliAnalysisTaskAODEventStudy() : AliAnalysisTaskSE
   fHistChV0ACentrality(),
   fHistChV0CCentrality(),
   fHistChV0MCentrality(),
-  fHistCorrChV0AChV0C(),
-  fHistCorrCentSPDTrkV0M(),
-  fHistCorrCentSPDTrkV0A(),
-  fHistCorrCentSPDTrkV0C(),
-  fHistCorrCentV0AV0C(),
+
+  fHistCorrV0MCentrality(),
+  fHistCorrV0ACentrality(),
+  fHistCorrV0CCentrality(),
+  fHistCorrSPDTrkCentrality(),
+
+//fHistCorrChV0AChV0C(),
+//fHistCorrCentSPDTrkV0M(),
+//fHistCorrCentSPDTrkV0A(),
+//fHistCorrCentSPDTrkV0C(),
+//fHistCorrCentV0AV0C(),
 
   fHistPtMatchAll(),
   fHistPtMatchApt(),
@@ -181,11 +187,17 @@ AliAnalysisTaskAODEventStudy::AliAnalysisTaskAODEventStudy(const char* name) :
   fHistChV0ACentrality(),
   fHistChV0CCentrality(),
   fHistChV0MCentrality(),
-  fHistCorrChV0AChV0C(),
-  fHistCorrCentSPDTrkV0M(),
-  fHistCorrCentSPDTrkV0A(),
-  fHistCorrCentSPDTrkV0C(),
-  fHistCorrCentV0AV0C(),
+
+  fHistCorrV0MCentrality(),
+  fHistCorrV0ACentrality(),
+  fHistCorrV0CCentrality(),
+  fHistCorrSPDTrkCentrality(),
+
+//fHistCorrChV0AChV0C(),
+//fHistCorrCentSPDTrkV0M(),
+//fHistCorrCentSPDTrkV0A(),
+//fHistCorrCentSPDTrkV0C(),
+//fHistCorrCentV0AV0C(),
 
   fHistPtMatchAll(),
   fHistPtMatchApt(),
@@ -292,7 +304,18 @@ void AliAnalysisTaskAODEventStudy::UserCreateOutputObjects()
     fOutputList->Add(fHistChV0ACentrality[itrig]);
     fOutputList->Add(fHistChV0CCentrality[itrig]);
     fOutputList->Add(fHistChV0MCentrality[itrig]);
+    
+    fHistCorrV0MCentrality[itrig] = new TH2F(Form("fHistCorrV0MCentrality_%s",trigName[itrig].c_str()),"",100,0,100,100,0,100);
+    fHistCorrV0ACentrality[itrig] = new TH2F(Form("fHistCorrV0ACentrality_%s",trigName[itrig].c_str()),"",100,0,100,100,0,100);
+    fHistCorrV0CCentrality[itrig] = new TH2F(Form("fHistCorrV0CCentrality_%s",trigName[itrig].c_str()),"",100,0,100,100,0,100);
+    fHistCorrSPDTrkCentrality[itrig] = new TH2F(Form("fHistCorrSPDTrkCentrality_%s",trigName[itrig].c_str()),"",100,0,100,100,0,100);
 
+    fOutputList->Add(fHistCorrV0MCentrality[itrig]);
+    fOutputList->Add(fHistCorrV0ACentrality[itrig]);
+    fOutputList->Add(fHistCorrV0CCentrality[itrig]);
+    fOutputList->Add(fHistCorrSPDTrkCentrality[itrig]);
+
+    /*
     fHistCorrChV0AChV0C[itrig] = new TH2F(Form("fHistCorrChV0AChV0C_%s",trigName[itrig].c_str()),"",50,0,500,50,0,500);
     fHistCorrCentSPDTrkV0M[itrig] = new TH2F(Form("fHistCorrCentSPDTrkV0M_%s",trigName[itrig].c_str()),"",100,0,100,100,0,100);
     fHistCorrCentSPDTrkV0A[itrig] = new TH2F(Form("fHistCorrCentSPDTrkV0A_%s",trigName[itrig].c_str()),"",100,0,100,100,0,100);
@@ -303,7 +326,7 @@ void AliAnalysisTaskAODEventStudy::UserCreateOutputObjects()
     fOutputList->Add(fHistCorrCentSPDTrkV0A[itrig]);
     fOutputList->Add(fHistCorrCentSPDTrkV0C[itrig]);
     fOutputList->Add(fHistCorrCentV0AV0C[itrig]);
-
+    */
     fHistSPDTrkSPDClust[itrig] = new TH2F(Form("fHistSPDTrkSPDClust_%s",trigName[itrig].c_str()),"",150,0,150,400,0,400);
     fOutputList->Add(fHistSPDTrkSPDClust[itrig]);
   }
@@ -327,14 +350,12 @@ void AliAnalysisTaskAODEventStudy::UserCreateOutputObjects()
 }
 
 void AliAnalysisTaskAODEventStudy::UserExec(Option_t *){
-  
+
   if(!Initialize()) return;  
   if(!fUtils->isAcceptEvent()) return;
-  
   RunQA();
   MultiplicityQA();
   TrackQA();
-
 }
 
 bool AliAnalysisTaskAODEventStudy::Initialize()
@@ -364,7 +385,6 @@ bool AliAnalysisTaskAODEventStudy::Initialize()
 
 void AliAnalysisTaskAODEventStudy::RunQA()
 {
-  
   if(fIsCINT7){
     fHistEvent[trig4Normalization::CINT7] -> Fill(fUtils->getRunnumberIndex(),fUtils->getCentClass());
     fHistEvent4RunQA[trig4Normalization::CINT7] -> Fill(fUtils->getRunnumberIndex(),1./fUtils->getDS());
@@ -433,12 +453,10 @@ void AliAnalysisTaskAODEventStudy::FillMultiplicityQA(int index)
   fHistChV0ACentrality[index]->Fill(fUtils->getVzeroInfo(0),fUtils->getCentClass());
   fHistChV0CCentrality[index]->Fill(fUtils->getVzeroInfo(1),fUtils->getCentClass());
   fHistChV0MCentrality[index]->Fill(fUtils->getVzeroInfo(2),fUtils->getCentClass());
-  fHistCorrChV0AChV0C[index]->Fill(fUtils->getVzeroInfo(0),fUtils->getVzeroInfo(1));
-  fHistCorrCentSPDTrkV0M[index]->Fill(fUtils->getCentClass(0),fUtils->getCentClass(1));
-  fHistCorrCentSPDTrkV0A[index]->Fill(fUtils->getCentClass(0),fUtils->getCentClass(2));
-  fHistCorrCentSPDTrkV0C[index]->Fill(fUtils->getCentClass(0),fUtils->getCentClass(3));
-  fHistCorrCentV0AV0C[index]->Fill(fUtils->getCentClass(2),fUtils->getCentClass(3));
-  fHistSPDTrkSPDClust[index]->Fill(fUtils->getNSPDTrkInfo(4),fUtils->getNSPDClustInfo(0)+fUtils->getNSPDClustInfo(1));
+  fHistCorrSPDTrkCentrality[index]->Fill(fUtils->getCentClass(0),fUtils->getCentClass());
+  fHistCorrV0MCentrality[index]->Fill(fUtils->getCentClass(1),fUtils->getCentClass());
+  fHistCorrV0ACentrality[index]->Fill(fUtils->getCentClass(2),fUtils->getCentClass());
+  fHistCorrV0CCentrality[index]->Fill(fUtils->getCentClass(3),fUtils->getCentClass());
 }
 
 void AliAnalysisTaskAODEventStudy::MultiplicityQA()

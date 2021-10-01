@@ -121,12 +121,17 @@ class AliAnalysisTaskAODEventStudy : public AliAnalysisTaskSE {
   TH2F* fHistChV0CCentrality[6];
   TH2F* fHistChV0MCentrality[6];
   
+  TH2F* fHistCorrV0MCentrality[6];
+  TH2F* fHistCorrV0ACentrality[6];
+  TH2F* fHistCorrV0CCentrality[6];
+  TH2F* fHistCorrSPDTrkCentrality[6];
+  /*
   TH2F* fHistCorrChV0AChV0C[6];
   TH2F* fHistCorrCentSPDTrkV0M[6];
   TH2F* fHistCorrCentSPDTrkV0A[6];
   TH2F* fHistCorrCentSPDTrkV0C[6];
   TH2F* fHistCorrCentV0AV0C[6];
-
+  */
   TH1F* fHistPtMatchAll[6];
   TH1F* fHistPtMatchApt[6];
   TH1F* fHistPtMatchLpt[6];

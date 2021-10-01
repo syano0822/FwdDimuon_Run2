@@ -183,7 +183,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameRunnumber()
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptEvent()
 {  
-
+  
   if(!fEvent) return false;
 
   AliAODVertex * vtx  = fEvent->GetPrimaryVertex();
@@ -198,6 +198,10 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptEvent()
     return false;
   }
 
+  if(fDSfactor < 0.000000000001) {
+    return false;
+  }
+  
   return true;
 }
 
@@ -307,6 +311,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setDownScaleFactor()
   else if(fIsCMLL7){
     if(!fHistDsCMLL7) return false;
     fDSfactor = fHistDsCMLL7->GetBinContent(fHistDsCMLL7->GetXaxis()->FindBin(fRunNumber));
+
     return true;
   }
   
@@ -334,7 +339,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setTriggerInfo()
   if(!fInputHandler) return false;
 
   string fFiredTrigName = string(fEvent->GetFiredTriggerClasses());
-  
+
   if(fIsMC){
     if( fFiredTrigName.find("V0R") != std::string::npos   && fFiredTrigName.find("V0L") != std::string::npos )
       fIsCINT7 = true;

@@ -1,6 +1,6 @@
 AliAnalysisTaskAODEventStudy* AddTaskAODEventQA(UInt_t offlineTriggerMask = AliVEvent::kAny,
-						float min_vtxz =-10,
-						float max_vtxz = 10,
+						float min_vtxz =-10.,
+						float max_vtxz = 10.,
 						float min_pair_rap = -4.0,
 						float max_pair_rap = -2.5,
 						string multi_method="SPDTracklets",
