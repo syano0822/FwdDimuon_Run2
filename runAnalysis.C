@@ -206,31 +206,38 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
 
     else if (runPeriod.Contains("LHC17h")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17h");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC17i")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17i");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC17k")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17k");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC17l")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17l");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC17m")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17m");
-      plugin->SetDataPattern("/pass1/AOD234/ AliAOD.root");
+      //plugin->SetDataPattern("/pass1/AOD234/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC17o")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17o");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD203/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC17r")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17r");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC18c")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18c");
@@ -238,36 +245,43 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
     }
     else if (runPeriod.Contains("LHC18d")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18d");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC18e")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18e");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC18f")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18f");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC18l")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18l");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC18m")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18m");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC18o")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18o");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.root");
     }
     else if (runPeriod.Contains("LHC18p")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18p");
-      plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
+      plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.root");
     }
     
     plugin->SetRunPrefix("000");    
     //plugin->SetNrunsPerMaster(1);
-    //plugin->SetSplitMaxInputFileNumber(30);    
+    plugin->SetSplitMaxInputFileNumber(30);    
     plugin->SetNrunsPerMaster(15);
   }
 
