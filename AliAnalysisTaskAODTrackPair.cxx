@@ -14,6 +14,7 @@
 #include "AliAODInputHandler.h"
 #include "AliEventPoolMuon.h"
 #include "AliEventPoolManager.h"
+#include "AliGenEventHeader.h"
 
 #include "AliVEvent.h"
 #include "AliVHeader.h"
@@ -82,7 +83,31 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() :
   fSparseLSmmDimuon(NULL),
   fSparseMixULSDimuon(NULL),
   fSparseMixLSppDimuon(NULL),
-  fSparseMixLSmmDimuon(NULL)
+  fSparseMixLSmmDimuon(NULL),
+
+  fSparseEtaDalitz(NULL),
+  fSparseEta2Body(NULL),
+  fSparseRho2Body(NULL),
+  fSparseOmegaDalitz(NULL),
+  fSparseOmega2Body(NULL),
+  fSparsePhi2Body(NULL),
+  fSparseEtaPrimeDalitz(NULL),
+
+  fSparseEtaDalitzMC(NULL),
+  fSparseEta2BodyMC(NULL),
+  fSparseRho2BodyMC(NULL),
+  fSparseOmegaDalitzMC(NULL),
+  fSparseOmega2BodyMC(NULL),
+  fSparsePhi2BodyMC(NULL),
+  fSparseEtaPrimeDalitzMC(NULL),
+
+  fHistTrackEta(NULL),
+  fHistTrackThetaAbs(NULL),
+  fHistTrackTriggerMatch(NULL),
+  fHistTrackPDCA(NULL),
+  fHistTrackChiSquare(NULL),
+  fHistTriggerChiSquare(NULL)
+
 { 
   
 }
@@ -115,7 +140,30 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char* name) :
   fSparseLSmmDimuon(NULL),
   fSparseMixULSDimuon(NULL),
   fSparseMixLSppDimuon(NULL),
-  fSparseMixLSmmDimuon(NULL)
+  fSparseMixLSmmDimuon(NULL),
+
+  fSparseEtaDalitz(NULL),
+  fSparseEta2Body(NULL),
+  fSparseRho2Body(NULL),
+  fSparseOmegaDalitz(NULL),
+  fSparseOmega2Body(NULL),
+  fSparsePhi2Body(NULL),
+  fSparseEtaPrimeDalitz(NULL),
+  
+  fSparseEtaDalitzMC(NULL),
+  fSparseEta2BodyMC(NULL),
+  fSparseRho2BodyMC(NULL),
+  fSparseOmegaDalitzMC(NULL),
+  fSparseOmega2BodyMC(NULL),
+  fSparsePhi2BodyMC(NULL),
+  fSparseEtaPrimeDalitzMC(NULL),
+
+  fHistTrackEta(NULL),
+  fHistTrackThetaAbs(NULL),
+  fHistTrackTriggerMatch(NULL),
+  fHistTrackPDCA(NULL),
+  fHistTrackChiSquare(NULL),
+  fHistTriggerChiSquare(NULL)
 { 
   
   
@@ -192,18 +240,141 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects()
   fOutputList->Add(fSparseMixLSppDimuon);
   fOutputList->Add(fSparseMixLSmmDimuon);
   
+  if(fIsMC){
+    
+    const Int_t binnum_MC            = 5;
+    Int_t bins_MC[binnum_MC]       = {800,6,300,12,300};
+    double minbins_MC[binnum_MC] = {0,2.5,0,1.5,0};
+    double maxbins_MC[binnum_MC] = {4,4.0,30,4.5,30};
+    TString  namebins_MC[]        = {"rec_mass","rec_rap","rec_pt","true_rap","true_pt"};
+    fSparseEtaDalitz= new THnSparseF("fSparseEtaDalitz","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);
+    fSparseEta2Body= new THnSparseF("fSparseEta2Body","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);    
+    fSparseOmegaDalitz= new THnSparseF("fSparseOmegaDalitz","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);
+    fSparseOmega2Body= new THnSparseF("fSparseOmega2Body","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);
+    fSparsePhi2Body= new THnSparseF("fSparsePhi2Body","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);
+    fSparseEtaPrimeDalitz= new THnSparseF("fSparseEtaPrimeDalitz","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);    
+    fOutputList->Add(fSparseEtaDalitz);
+    fOutputList->Add(fSparseEta2Body);
+    fOutputList->Add(fSparseOmegaDalitz);
+    fOutputList->Add(fSparseOmega2Body);
+    fOutputList->Add(fSparsePhi2Body);
+    fOutputList->Add(fSparseEtaPrimeDalitz);
+
+    const Int_t binnum_True            = 2;
+    Int_t bins_True[binnum_True]       = {12,300};
+    double minbins_True[binnum_True] = {1.5,0};
+    double maxbins_True[binnum_True] = {4.5,30};
+    TString  namebins_True[]        = {"true_rap","true_pt"};
+    fSparseEtaDalitzMC= new THnSparseF("fSparseEtaDalitzMC","",binnum_True,bins_True,minbins_True,maxbins_True);
+    fSparseEta2BodyMC= new THnSparseF("fSparseEta2BodyMC","",binnum_True,bins_True,minbins_True,maxbins_True);
+    fSparseOmegaDalitzMC= new THnSparseF("fSparseOmegaDalitzMC","",binnum_True,bins_True,minbins_True,maxbins_True);
+    fSparseOmega2BodyMC= new THnSparseF("fSparseOmega2BodyMC","",binnum_True,bins_True,minbins_True,maxbins_True);
+    fSparsePhi2BodyMC= new THnSparseF("fSparsePhi2BodyMC","",binnum_True,bins_True,minbins_True,maxbins_True);
+    fSparseEtaPrimeDalitzMC= new THnSparseF("fSparseEtaPrimeDalitzMC","",binnum_True,bins_True,minbins_True,maxbins_True);    
+    fOutputList->Add(fSparseEtaDalitzMC);
+    fOutputList->Add(fSparseEta2BodyMC);    
+    fOutputList->Add(fSparseOmegaDalitzMC);
+    fOutputList->Add(fSparseOmega2BodyMC);
+    fOutputList->Add(fSparsePhi2BodyMC);
+    fOutputList->Add(fSparseEtaPrimeDalitzMC);
+    
+    const Int_t binnum_MC_Rho            = 6;
+    Int_t bins_MC_Rho[binnum_MC_Rho]       = {800,6,300,12,300,800};
+    double minbins_MC_Rho[binnum_MC_Rho] = {0,2.5,0,1.5,0,0};
+    double maxbins_MC_Rho[binnum_MC_Rho] = {4,4.0,30,4.5,30,4};
+    TString  namebins_MC_Rho[]        = {"rec_mass","rec_rap","rec_pt","true_rap","true_pt","true_mass"};
+    fSparseRho2Body= new THnSparseF("fSparseRho2Body","",binnum_MC_Rho,bins_MC_Rho,minbins_MC_Rho,maxbins_MC_Rho);
+    fOutputList->Add(fSparseRho2Body);
+
+    const Int_t binnum_True_Rho            = 3;
+    Int_t bins_True_Rho[binnum_True_Rho]       = {12,300,800};
+    double minbins_True_Rho[binnum_True_Rho] = {1.5,0,0};
+    double maxbins_True_Rho[binnum_True_Rho] = {4.5,30,4};
+    TString  namebins_True_Rho[]        = {"true_rap","true_pt","true_mass"};
+    fSparseRho2BodyMC= new THnSparseF("fSparseRho2BodyMC","",binnum_True_Rho,bins_True_Rho,minbins_True_Rho,maxbins_True_Rho);
+    fOutputList->Add(fSparseRho2BodyMC);
+  }
+
+  fHistTrackEta = new TH2F("fHistTrackEta","",20,0,10,25,-4.5,-2.0);
+  fHistTrackThetaAbs = new TH2F("fHistTrackThetaAbs","",20,0,10,60,0,15);
+  fHistTrackTriggerMatch = new TH2F("fHistTrackTriggerMatch","",20,0,10,5,0,5);
+  fHistTrackPDCA = new TH2F("fHistTrackPDCA","",20,0,10,200,0,20);
+  fHistTrackChiSquare = new TH2F("fHistTrackChiSquare","",20,0,10,100,0,10);
+  fHistTriggerChiSquare = new TH2F("fHistTriggerChiSquare","",20,0,10,100,0,10);  
+  fOutputList->Add(fHistTrackEta);
+  fOutputList->Add(fHistTrackThetaAbs);
+  fOutputList->Add(fHistTrackTriggerMatch);
+  fOutputList->Add(fHistTrackPDCA);
+  fOutputList->Add(fHistTrackChiSquare);
+  fOutputList->Add(fHistTriggerChiSquare);
+
   PostData(1, fOutputList);    
 }
 
 //________________________________________________________________________
 
 void AliAnalysisTaskAODTrackPair::UserExec(Option_t *)
-{  
+{ 
+
   if(!Initialize()) return;
   if(!fUtils->isAcceptEvent()) return;
-  
+
   MuonPairAnalysis();
   MuonPairAnalysisEveMixing();
+  if(fIsMC) ProcessMC();
+}
+
+bool AliAnalysisTaskAODTrackPair::ProcessMC(){
+  
+  AliAODMCParticle *particle1;
+
+  for(Int_t iTrack1=0; iTrack1<fMCTrackArray->GetSize(); ++iTrack1){
+    
+    particle1 = (AliAODMCParticle*)fMCTrackArray->At(iTrack1);
+
+    if(!particle1) continue;
+    if(!TDatabasePDG::Instance()->GetParticle(particle1->GetPdgCode())) continue;
+    
+    int pdgcode = particle1->GetPdgCode();
+    
+    double fill[]={fabs(particle1->Y()),particle1->Pt()};
+    
+    if(pdgcode == fUtils->fPdgCodeEta){
+      if(fUtils->isDalitzProd()){
+	fSparseEtaDalitzMC->Fill(fill);
+      }
+      if(fUtils->is2BodyProd()){
+	fSparseEta2BodyMC->Fill(fill);
+      }
+    }
+    else if(pdgcode == fUtils->fPdgCodeRho){
+      double fill_rho[]={fabs(particle1->Y()),particle1->Pt(),particle1->GetCalcMass()};
+      if(fUtils->is2BodyProd()){
+	fSparseRho2BodyMC->Fill(fill_rho);
+      }
+    }
+    else if(pdgcode == fUtils->fPdgCodeOmega){
+      if(fUtils->isDalitzProd()){
+	fSparseOmegaDalitzMC->Fill(fill);
+      }
+      if(fUtils->is2BodyProd()){
+	fSparseOmega2BodyMC->Fill(fill);
+      }	  
+    }
+    else if(pdgcode == fUtils->fPdgCodePhi){
+      if(fUtils->is2BodyProd()){
+	fSparsePhi2BodyMC->Fill(fill);
+      }	  
+    }
+    else if(pdgcode == fUtils->fPdgCodeEtaPrime){
+      if(fUtils->isDalitzProd()){
+	fSparseEtaPrimeDalitzMC->Fill(fill);
+      }
+    }
+  
+  }
+
+  return true;
 }
 
 bool AliAnalysisTaskAODTrackPair::Initialize()
@@ -214,20 +385,82 @@ bool AliAnalysisTaskAODTrackPair::Initialize()
   if( !fUtils->setEvent(fEvent,fInputHandler) )
     return false;
 
-  fUtils->getTriggerInfo(fIsCINT7, fIsCMSL7, fIsCMSH7, fIsCMUL7, fIsCMLL7);
-
+  
   if( fRunNumber != fEvent->GetRunNumber() ){
     fRunNumber = fUtils->getRunnumber();
     AliMuonTrackCuts* trackCut = fUtils->getMuonTrackCuts();
     trackCut->SetRun(fInputHandler);
   }
+
+  if(fIsMC){
+    AliAODMCHeader* mcHeader = (AliAODMCHeader*) fEvent->GetList()->FindObject(AliAODMCHeader::StdBranchName());  
+    if(!mcHeader) return false;  
+    
+    TList* headerList = mcHeader->GetCocktailHeaders();
+    if(!headerList) return false;
+    for (Int_t i=0; i<headerList->GetEntries(); i++) {
+      AliGenEventHeader * eventHeader2 = (AliGenEventHeader*)headerList->At(i) ;
+      TString name = eventHeader2->GetName();
+
+      if(name.Contains("EtaDalitz")){
+	fUtils->setDalitzProd(true);
+      }
+      else if(name.Contains("EtaDirect")){
+	fUtils->set2BodyProd(true);
+      }
+      else if(name.Contains("OmegaDalitz")){
+	fUtils->setDalitzProd(true);
+      }
+      else if(name.Contains("OmegaDirect")){
+	fUtils->set2BodyProd(true);
+      }
+      else if(name.Contains("EtaPrimeDalitz")){
+	fUtils->setDalitzProd(true);
+      }
+      else if(name.Contains("PhiDirect")){
+	fUtils->set2BodyProd(true);
+      }
+      else if(name.Contains("RhoDirect")){
+	fUtils->set2BodyProd(true);
+      }
+      else{
+	fUtils->setDalitzProd(false);
+	fUtils->set2BodyProd(false);
+      }      
+    }
+    
+    Double_t impPar = mcHeader->GetImpactParameter();    
+    
+    fMCTrackArray = dynamic_cast<TClonesArray*>(fEvent->FindListObject(AliAODMCParticle::StdBranchName()));
+    if(!fMCTrackArray) return false;
+    fUtils->setMCArray(fMCTrackArray);
+  }
+
+  fUtils->getTriggerInfo(fIsCINT7, fIsCMSL7, fIsCMSH7, fIsCMUL7, fIsCMLL7);
+  
   
   return true;
 }
 
+bool AliAnalysisTaskAODTrackPair::MuonTrackQA(AliAODTrack* track){
+  
+  fHistTrackEta->Fill(track->Pt(),track->Eta());
+  fHistTrackThetaAbs->Fill(track->Pt(),AliAnalysisMuonUtility::GetThetaAbsDeg(track));
+  fHistTrackTriggerMatch->Fill(track->Pt(),AliAnalysisMuonUtility::GetMatchTrigger(track));
+  //fHistTrackPDCA->Fill();
+  fHistTrackChiSquare->Fill(track->Pt(),AliAnalysisMuonUtility::GetChi2perNDFtracker(track));
+  fHistTriggerChiSquare->Fill(track->Pt(),AliAnalysisMuonUtility::GetChi2MatchTrigger(track));
+  
+  return true;
+}
 
-AliEventPool* AliAnalysisTaskAODTrackPair::setPool()
-{
+bool AliAnalysisTaskAODTrackPair::MuonPairAnalysisEveMixing(){
+  
+  if( !(fInputHandler->IsEventSelected() & fTriggerMaskForMixing) ) return false;
+  
+  TObjArray* fTrackArray = new TObjArray();
+  fTrackArray -> SetOwner();
+
   float poolCent=0.;
   float poolVtxZ=0.;
   float poolPsi=0.;
@@ -238,23 +471,12 @@ AliEventPool* AliAnalysisTaskAODTrackPair::setPool()
 
   AliEventPool* pool = (AliEventPool*)fPoolMuonTrackMgr -> GetEventPool(poolCent,poolVtxZ,poolPsi);
   
-  return pool;
-}
-
-bool AliAnalysisTaskAODTrackPair::MuonPairAnalysisEveMixing(){
-  
-  if( !(fInputHandler->IsEventSelected() & fTriggerMaskForMixing) ) return false;
-  
-  TObjArray* fTrackArray = new TObjArray();
-  fTrackArray -> SetOwner();
-
-  AliEventPool* pool = setPool();  
-  
   Int_t nTrack = fEvent->GetNumberOfTracks();
 
   for(Int_t iTrack1=0; iTrack1<nTrack; ++iTrack1){
 
     AliAODTrack *track1 = (AliAODTrack*)fEvent->GetTrack(iTrack1);        
+    
     if(!fUtils->isAcceptMuonTrack(track1)) continue;
     
     if (pool->IsReady()){
@@ -275,8 +497,8 @@ bool AliAnalysisTaskAODTrackPair::MuonPairAnalysisEveMixing(){
 	  dimuon->SetMuons(track1,track2);
 
 	  if(!fUtils->isAcceptDimuon(dimuon)) continue;
-	  
-	  double fill[]={dimuon->M(),dimuon->Pt(),fabs(dimuon->Y()),fUtils->getCentClass()};
+
+	  double fill[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fUtils->getCentClass()};
 	  
 	  if(dimuon->Charge() == 0){
 	    fSparseMixULSDimuon->Fill(fill,(double)1./fUtils->getDS());
@@ -310,48 +532,54 @@ bool AliAnalysisTaskAODTrackPair::MuonPairAnalysisEveMixing(){
 bool AliAnalysisTaskAODTrackPair::MuonPairAnalysis()
 { 
   
-  if( !(fInputHandler->IsEventSelected() & fTriggerMaskForSame) ) return false;
+  if(!fIsMC && !(fInputHandler->IsEventSelected() & fTriggerMaskForSame) ) return false;
 
   if(fIsCMUL7){
-    fEventCounter->Fill(1,fUtils->getCentClass());
-    fEventCounter->Fill(5,fUtils->getCentClass(),(double)1./fUtils->getDS());
+    fEventCounter->Fill(0.,fUtils->getCentClass());
+    fEventCounter->Fill(4.,fUtils->getCentClass(),(double)1./fUtils->getDS());
   }
   if(fIsCMLL7){
-    fEventCounter->Fill(2,fUtils->getCentClass());
-    fEventCounter->Fill(6,fUtils->getCentClass(),(double)1./fUtils->getDS());
+    fEventCounter->Fill(1.,fUtils->getCentClass());
+    fEventCounter->Fill(5.,fUtils->getCentClass(),(double)1./fUtils->getDS());
   }
   if(fIsCMUL7 || fIsCMLL7){
-    fEventCounter->Fill(3,fUtils->getCentClass());
-    fEventCounter->Fill(7,fUtils->getCentClass(),(double)1./fUtils->getDS());
+    fEventCounter->Fill(2.,fUtils->getCentClass());
+    fEventCounter->Fill(6.,fUtils->getCentClass(),(double)1./fUtils->getDS());
   }
   if(fIsCMUL7 && fIsCMLL7){
-    fEventCounter->Fill(4,fUtils->getCentClass());
-    fEventCounter->Fill(8,fUtils->getCentClass(),(double)1./fUtils->getDS());
+    fEventCounter->Fill(3.,fUtils->getCentClass());
+    fEventCounter->Fill(7.,fUtils->getCentClass(),(double)1./fUtils->getDS());
   }
 
-
-  //cout<<fEvent->GetFiredTriggerClasses()<<endl;
-
   Int_t nTrack = fEvent->GetNumberOfTracks();
+  
+  AliAODMCParticle* particle1;
+  AliAODTrack* track1;
+  AliAODTrack* track2;
+  AliAODDimuon* dimuon;
 
   for(Int_t iTrack1=0; iTrack1<nTrack; ++iTrack1){
    
-    AliAODTrack *track1 = (AliAODTrack*)fEvent->GetTrack(iTrack1);
+    track1 = (AliAODTrack*)fEvent->GetTrack(iTrack1);
     
     if(!fUtils->isAcceptMuonTrack(track1)) continue;
 
+    MuonTrackQA(track1);
+
     for(Int_t iTrack2=iTrack1+1; iTrack2<nTrack; ++iTrack2){
    
-      AliAODTrack *track2 = (AliAODTrack*)fEvent->GetTrack(iTrack2);
+      track2 = (AliAODTrack*)fEvent->GetTrack(iTrack2);
       
       if(!fUtils->isAcceptMuonTrack(track2)) continue;
-      
-      AliAODDimuon* dimuon = new AliAODDimuon();
-      dimuon->SetMuons(track1,track2);
 
-      if(!fUtils->isAcceptDimuon(dimuon)) continue;
+      dimuon = new AliAODDimuon();
+      dimuon->SetMuons(track1,track2);
       
-      double fill[]={dimuon->M(),dimuon->Pt(),fabs(dimuon->Y()),fUtils->getCentClass()};
+      if(!fUtils->isAcceptDimuon(dimuon)) continue;
+     
+      double fill[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fUtils->getCentClass()};
+      
+      string fFiredTrigName = string(fEvent->GetFiredTriggerClasses());
       
       if(dimuon->Charge() == 0){
 	fSparseULSDimuon->Fill(fill,(double)1./fUtils->getDS());
@@ -362,6 +590,52 @@ bool AliAnalysisTaskAODTrackPair::MuonPairAnalysis()
       else{
 	fSparseLSmmDimuon->Fill(fill,(double)1./fUtils->getDS());
       }
+      
+      if(!fIsMC) continue;
+
+      if(fUtils->isSameMotherPair(track1,track2)){
+	int mom_pdg=fUtils->getMotherPdgCode(track1);
+	int mom_label=fUtils->getMotherLabel(track1);
+	
+	particle1 = (AliAODMCParticle*)fMCTrackArray->At(mom_label);
+
+	double fill_mc[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fabs(particle1->Y()),particle1->Pt()};
+
+	if(mom_pdg == fUtils->fPdgCodeEta){
+	  if(fUtils->isDalitzProd()){
+	    fSparseEtaDalitz->Fill(fill_mc);
+	  }
+	  if(fUtils->is2BodyProd()){
+	    fSparseEta2Body->Fill(fill_mc);
+	  }
+	}
+	else if(mom_pdg == fUtils->fPdgCodeRho){
+	  double fill_mc_rho[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fabs(particle1->Y()),particle1->Pt(),particle1->GetCalcMass()};
+	  if(fUtils->is2BodyProd()){
+	    fSparseRho2Body->Fill(fill_mc_rho);
+	  }
+	}
+	else if(mom_pdg == fUtils->fPdgCodeOmega){
+	  if(fUtils->isDalitzProd()){
+	    fSparseOmegaDalitz->Fill(fill_mc);
+	  }
+	  if(fUtils->is2BodyProd()){
+	    fSparseOmega2Body->Fill(fill_mc);
+	  }	  
+	}
+	else if(mom_pdg == fUtils->fPdgCodePhi){
+	  if(fUtils->is2BodyProd()){
+	    fSparsePhi2Body->Fill(fill_mc);
+	  }	  
+	}
+	else if(mom_pdg == fUtils->fPdgCodeEtaPrime){
+	  if(fUtils->isDalitzProd()){
+	    fSparseEtaPrimeDalitz->Fill(fill_mc);
+	  }
+	}
+
+      }
+
 
       delete dimuon;
 

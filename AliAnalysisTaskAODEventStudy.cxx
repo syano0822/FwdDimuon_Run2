@@ -353,6 +353,7 @@ void AliAnalysisTaskAODEventStudy::UserExec(Option_t *){
 
   if(!Initialize()) return;  
   if(!fUtils->isAcceptEvent()) return;
+  if(fabs(fUtils->getVtxZ()>10.))cout<<fUtils->getVtxZ()<<endl;
   RunQA();
   MultiplicityQA();
   TrackQA();

@@ -16,30 +16,47 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   ~AliAnalysisTaskAODTrackPairUtils();
 
   bool setEvent(AliAODEvent* event, AliVEventHandler* handler);
-
+  bool setMCArray(TClonesArray* array){fMCArray = array;}
   void setMC(bool isMC){fIsMC = isMC;}
+  void setEvtSelection(bool isEvtSel){fIsEvtSelect=isEvtSel;}
   
   bool isAcceptEvent();
   bool isAcceptMuonTrack(AliAODTrack* track);
   bool isAcceptDimuon(AliAODDimuon* dimuon);
   
-  bool isSameMotherPair(TClonesArray* fMCTrackArray,AliAODTrack* track1,AliAODTrack* track2);
-  int getMotherPdgCode(TClonesArray* fMCTrackArray,AliAODTrack *track);
+  bool isSameMotherPair(AliAODTrack* track1,AliAODTrack* track2);
+  int getMotherPdgCode(AliAODTrack *track);
+  int getMotherLabel(AliAODTrack *track);
 
   bool isMC(){
     return fIsMC;
   }
+  
+  void setDalitzProd(bool flag){
+    fIsDalitzProd = flag;
+  }
+  void set2BodyProd(bool flag){
+    fIs2BodyProd = flag;
+  }
+
+  bool isDalitzProd(){
+    return fIsDalitzProd;
+  }
+  bool is2BodyProd(){
+    return fIs2BodyProd;
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////
   //Set analysis cut flags
   //////////////////////////////////////////////////////////////////////////////////////////////
   
-  void setVertexCut(float min, float max)
+  void setVertexCut(double min, double max)
   {
     fMinVertexCutZ = min;
     fMaxVertexCutZ = max;
     fIsVtxZcut = true;
   }  
-  void setPairRapidityCut(float min, float max)
+  void setPairRapidityCut(double min, double max)
   {
     fMinPairRapCut = -4.0;
     fMaxPairRapCut = -2.5;
@@ -77,11 +94,11 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   //Get the analysis variables
   //////////////////////////////////////////////////////////////////////////////////////////////
 
-  float getVtxZ()
+  double getVtxZ()
   {
     return fVtxZ;
   }
-  float getCentClass(int spec)
+  double getCentClass(int spec)
   {
     if(spec==0)
       return fCentSPDTrk;
@@ -94,15 +111,15 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     else
       return -999;
   }
-  float getCentClass()
+  double getCentClass()
   {
     return fCent;
   }
-  float getPsi()
+  double getPsi()
   {
     return fPsi;
   }
-  float getDS()
+  double getDS()
   {
     return fDSfactor;
   }
@@ -136,7 +153,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
       return 0;
   }
 
-  float getVzeroInfo(int spec)
+  double getVzeroInfo(int spec)
   {
     if(spec==0)
       return fChV0A;
@@ -187,6 +204,14 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     return fMuonTrackCuts;
   }
   
+
+  const int fPdgCodeEta = 221;
+  const int fPdgCodeRho = 113;
+  const int fPdgCodeOmega = 223;
+  const int fPdgCodeEtaPrime = 331;
+  const int fPdgCodeK0star = 313;
+  const int fPdgCodePhi = 333;
+   
   //private:
   
   void setInit();
@@ -204,7 +229,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   AliMultSelection* fMultSelection;  
   AliMuonTrackCuts* fMuonTrackCuts;
   AliVEventHandler* fInputHandler;
-
+  TClonesArray* fMCArray;
 
   int fRunNumber;
   int fRunNumberIndex;
@@ -214,17 +239,22 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   std::string fPass;
 
   bool fIsMC;
- 
+  bool fIsEvtSelect;
+
   bool fIsVtxZcut;
-  float fMaxVertexCutZ;
-  float fMinVertexCutZ;
+  double fMaxVertexCutZ;
+  double fMinVertexCutZ;
+  int fNContVtx;
 
   bool fIsPairRapCut;
-  float fMinPairRapCut;
-  float fMaxPairRapCut;
+  double fMinPairRapCut;
+  double fMaxPairRapCut;
   
   bool fIsPUcut;  
   bool fIsLBCut;
+
+  bool fIsDalitzProd;
+  bool fIs2BodyProd;
   
   std::string fMultiMethod;
   
@@ -232,16 +262,16 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   TH1F* fHistDsCINT7;
   TH1F* fHistDsCMLL7;
   
-  float fVtxZ;
-  float fCent;
-  float fPsi;
+  double fVtxZ;
+  double fCent;
+  double fPsi;
 
-  float fCentSPDTrk;
-  float fCentV0A;
-  float fCentV0C;
-  float fCentV0M;
+  double fCentSPDTrk;
+  double fCentV0A;
+  double fCentV0C;
+  double fCentV0M;
 
-  float fDSfactor;
+  double fDSfactor;
   
   bool fIs0MSL;
   bool fIs0MSH;
@@ -268,11 +298,12 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   int fNClustSPD1;
   int fNClustSPD2;
 
-  float fChV0A;
-  float fChV0C;
-  float fChV0M;
-  float fTimeV0A;
-  float fTimeV0C;
+  double fChV0A;
+  double fChV0C;
+  double fChV0M;
+  double fTimeV0A;
+  double fTimeV0C;
+  
 
   ClassDef(AliAnalysisTaskAODTrackPairUtils, 1); // example of analysis
 };

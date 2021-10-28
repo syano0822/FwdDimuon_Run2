@@ -20,17 +20,23 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fEvent(NULL),
   fMultSelection(NULL),
   fInputHandler(NULL),
+  fMCArray(NULL),
   fRunNumber(-99999),
   fRunNumberIndex(-99999),
   fIsMC(false),
   fIsVtxZcut(true),
   fMaxVertexCutZ(-10),
   fMinVertexCutZ(10),
+  
   fIsPairRapCut(true),
   fMinPairRapCut(-4.0),
   fMaxPairRapCut(-2.5),
   fIsPUcut(true),
   fIsLBCut(true),
+
+  fIsDalitzProd(false),
+  fIs2BodyProd(false),
+
   fMuonTrackCuts(NULL),
   fPeriod("LHC16k"),
   fCollSystem("pp13TeV"),
@@ -39,11 +45,13 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fHistDsCINT7(NULL),
   fHistDsCMSL7(NULL),
   fHistDsCMLL7(NULL),
+
+								       
 								       
   fVtxZ(0),
   fCent(0),
   fPsi(0),
-  
+  fNContVtx(0),
   fCentSPDTrk(0.),
   fCentV0A(0.),
   fCentV0C(0.),
@@ -122,6 +130,10 @@ void AliAnalysisTaskAODTrackPairUtils::setInit()
   fIs0MUL=false;
   fIs0MLL=false;
   
+  fIsDalitzProd=false;
+  fIs2BodyProd=false;
+
+  fNContVtx=0;
   fNSPDTrk05=0;
   fNSPDTrk10=0;
   fNSPDTrk15=0;
@@ -150,10 +162,12 @@ bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent* event, AliVEventHan
   fInputHandler = handler;
   if(!fInputHandler) return false;
 
+  fRunNumber = fEvent->GetRunNumber();
+  
+  if(!fIsEvtSelect) return true;
+
   fMultSelection = (AliMultSelection *)fEvent->FindListObject("MultSelection");  
   if(!fMultSelection) return false;
-  
-  fRunNumber = fEvent->GetRunNumber();
   
   if(!setRunnumberIndex())
     return false;
@@ -184,13 +198,13 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameRunnumber()
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptEvent()
 {  
   
-  if(!fEvent) return false;
+  if(!fEvent) return false;  
 
-  AliAODVertex * vtx  = fEvent->GetPrimaryVertex();
+  if(!fIsEvtSelect) return true;
 
-  if(fIsVtxZcut && (fMinVertexCutZ>vtx->GetZ() || vtx->GetZ()>fMaxVertexCutZ))
+  if(fIsVtxZcut && (fMinVertexCutZ>fVtxZ || fVtxZ>fMaxVertexCutZ))
     return false;
-  if(fIsVtxZcut && vtx->GetNContributors()<2)
+  if(fIsVtxZcut && fNContVtx<3)
     return false;
   if(fIsPUcut && fEvent->IsPileupFromSPDInMultBins())
     return false;
@@ -223,15 +237,15 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptDimuon(AliAODDimuon* dimuon)
   int triggerLB2 = AliAnalysisMuonUtility::GetLoCircuit(track2);
   
   if(fIsLBCut && triggerLB1 == triggerLB2) return false;
-
+  
   if(fIsPairRapCut && !(fMinPairRapCut<dimuon->Y() && dimuon->Y()<fMaxPairRapCut)) return false;
 
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(TClonesArray* fMCTrackArray,AliAODTrack* track1,AliAODTrack* track2)
+bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODTrack* track1,AliAODTrack* track2)
 {  
-  if(!fMCTrackArray) return false;
+  if(!fMCArray) return false;
   
   if(!track1 || !track2) return false;
   
@@ -240,8 +254,8 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(TClonesArray* fMCTrackAr
   
   if(label1<0 || label2<0) return false;
   
-  AliAODMCParticle *part1 = (AliAODMCParticle*)fMCTrackArray->At(label1);
-  AliAODMCParticle *part2 = (AliAODMCParticle*)fMCTrackArray->At(label2);
+  AliAODMCParticle *part1 = (AliAODMCParticle*)fMCArray->At(label1);
+  AliAODMCParticle *part2 = (AliAODMCParticle*)fMCArray->At(label2);
   
   if(!part1 || !part2) return false;
 
@@ -253,9 +267,9 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(TClonesArray* fMCTrackAr
   return true;
 }
 
-int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(TClonesArray* fMCTrackArray, AliAODTrack *track)
+int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(AliAODTrack *track)
 {
-  if(!fMCTrackArray) return false;
+  if(!fMCArray) return false;
 
   if(!track) return false;
 
@@ -263,14 +277,14 @@ int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(TClonesArray* fMCTrackArr
 
   if(label<-1) return false;
 
-  AliAODMCParticle *part = (AliAODMCParticle*)fMCTrackArray->At(label);
+  AliAODMCParticle *part = (AliAODMCParticle*)fMCArray->At(label);
   if(!part) return false;
 
   int mom = part->GetMother();
   
   if(mom<0) return -1;
 
-  AliAODMCParticle *mpart = (AliAODMCParticle*)fMCTrackArray->At(mom);
+  AliAODMCParticle *mpart = (AliAODMCParticle*)fMCArray->At(mom);
   
   if(!mpart) return false;
   
@@ -278,10 +292,32 @@ int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(TClonesArray* fMCTrackArr
 
 }
 
+int AliAnalysisTaskAODTrackPairUtils::getMotherLabel(AliAODTrack *track)
+{
+  if(!fMCArray) return false;
+
+  if(!track) return false;
+
+  int label = track->GetLabel();
+
+  if(label<-1) return false;
+
+  AliAODMCParticle *part = (AliAODMCParticle*)fMCArray->At(label);
+  if(!part) return false;
+  
+  int mom = part->GetMother();
+  
+  return mom;
+  
+}
+
 bool AliAnalysisTaskAODTrackPairUtils::setVtxZCentPsi()
 {
   
   if(!fEvent) return false;
+  
+  if(fIsMC) return true;
+
   if(!fMultSelection) return false;
 
   AliAODVertex* vtx = (AliAODVertex*)fEvent->GetPrimaryVertexSPD();
@@ -292,6 +328,8 @@ bool AliAnalysisTaskAODTrackPairUtils::setVtxZCentPsi()
   fCent = fMultSelection->GetMultiplicityPercentile(fMultiMethod,false);
   fPsi  = 0;
   
+  fNContVtx = vtx->GetNContributors();
+
   fCentSPDTrk = fMultSelection->GetMultiplicityPercentile("SPDTracklets", false);
   fCentV0M    = fMultSelection->GetMultiplicityPercentile("V0M", false);
   fCentV0A    = fMultSelection->GetMultiplicityPercentile("V0A", false);

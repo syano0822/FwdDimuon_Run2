@@ -1,22 +1,22 @@
 AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = AliVEvent::kAny,
-						float min_vtxz =-10,
-						float max_vtxz = 10,
-						float min_pair_rap = -4.0,
-						float max_pair_rap = -2.5,
-						string multi_method="SPDTracklets",
-						bool onPURej = true,
-						bool onLBcut = true,
-						bool onMuEtaCut = true,
-						bool onMuThetaAbsCut = true,
-						bool onMuMatchAptCut = true,
-						bool onMuMatchLptCut = true,
-						bool onMuMatchHptCut = true,
-						bool onMuChi2Cut = true,
-						bool onMuPdcaCut = true,
-						bool isMC=false)
+						 float min_vtxz =-10,
+						 float max_vtxz = 10,
+						 float min_pair_rap = -4.0,
+						 float max_pair_rap = -2.5,
+						 string multi_method="SPDTracklets",
+						 bool onPURej = true,
+						 bool onLBcut = true,
+						 bool onMuEtaCut = true,
+						 bool onMuThetaAbsCut = true,
+						 bool onMuMatchAptCut = true,
+						 bool onMuMatchLptCut = true,
+						 bool onMuMatchHptCut = false,
+						 bool onMuChi2Cut = true,
+						 bool onMuPdcaCut = true,
+						 bool isMC=false,
+						 bool isSelectEvt=true)
 {
-  
-  
+    
   AliMuonTrackCuts* fMuonTrackCuts = new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
   fMuonTrackCuts->SetIsMC(isMC);
   fMuonTrackCuts->SetAllowDefaultParams(true);
@@ -27,12 +27,14 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   if(onMuMatchLptCut) selectionMask |=AliMuonTrackCuts::kMuMatchLpt;
   if(onMuMatchHptCut) selectionMask |=AliMuonTrackCuts::kMuMatchHpt;
   if(onMuPdcaCut) selectionMask |=AliMuonTrackCuts::kMuPdca;
-  if(onMuChi2Cut) selectionMask |=AliMuonTrackCuts::kMuTrackChiSquare;
+  if(onMuChi2Cut) selectionMask |=AliMuonTrackCuts::kMuTrackChiSquare;    
   fMuonTrackCuts->SetFilterMask(selectionMask);
   
   TFile* input = TFile::Open("./DownScale_Run2_CTP.root");
 
   AliAnalysisTaskAODTrackPairUtils *utils = new AliAnalysisTaskAODTrackPairUtils();
+  utils->setMC(isMC);
+  utils->setEvtSelection(isSelectEvt);
   utils->setDownScalingHist(input);
   utils->setVertexCut(min_vtxz,max_vtxz);
   utils->setPairRapidityCut(min_pair_rap,max_pair_rap);
@@ -53,7 +55,7 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   }
     
   AliAnalysisTaskAODTrackPair* task = new AliAnalysisTaskAODTrackPair("dimuon");
-  task->SelectCollisionCandidates(offlineTriggerMask);
+  if(isSelectEvt)task->SelectCollisionCandidates(offlineTriggerMask);
   task->setUtils(utils);
   task->setEvtMixingTrackDepth(100);
   task->setEvtMixingPoolSize(100);

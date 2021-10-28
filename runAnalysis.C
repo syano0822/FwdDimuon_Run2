@@ -36,13 +36,14 @@ void runAnalysis(TString runPeriod = "LHC16k",
   gROOT->ProcessLine(".include ./");
 #endif
   
-  Bool_t isMC = false;
-  
-  if(type == "data"){
+  bool isMC = false;  
+  bool isEventSelection = true;
 
-  }
-  else{
+  if(type != "data"){
     isMC = true;
+    if(type == "LHC20f10a" || type == "LHC20f10b" || type == "LHC20f10c"){
+      isEventSelection = false;
+    }
   }
 
   // create the analysis manager
@@ -69,26 +70,32 @@ void runAnalysis(TString runPeriod = "LHC16k",
   // -----------------------------------------
   //            PHYSICS SELECTION
   // -----------------------------------------
+  
+  
 #if !defined (__CINT__) || defined (__CLING__)
-  AliPhysicsSelectionTask* physSelTask = AddTaskPhysicsSelection(isMC,true);//isMC,PileupCuts
+  if(isEventSelection) AliPhysicsSelectionTask* physSelTask = AddTaskPhysicsSelection(isMC,true);//isMC,PileupCuts
 #else
-  gROOT->LoadMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C");
-  if(run_mode == "full") AliPhysicsSelectionTask* physSelTask = AddTaskPhysicsSelection(isMC,true);
+  if(isEventSelection){
+    gROOT->LoadMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C");
+    if(run_mode == "full") AliPhysicsSelectionTask* physSelTask = AddTaskPhysicsSelection(isMC,true);
+  }
 #endif
-
   // -----------------------------------------
   //               MULT SELECTION
   // -----------------------------------------
 #if !defined (__CINT__) || defined (__CLING__)
-  AliMultSelectionTask *multSelTask=reinterpret_cast<AliMultSelectionTask*>(gInterpreter->ExecuteMacro("$ALICE_PHYSICS/OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C ()"));
+  if(isEventSelection) AliMultSelectionTask *multSelTask=reinterpret_cast<AliMultSelectionTask*>(gInterpreter->ExecuteMacro("$ALICE_PHYSICS/OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C ()"));
 #else
-  gROOT->LoadMacro("$ALICE_PHYSICS/OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C");
-  AliMultSelectionTask *multSelTask = AddTaskMultSelection(false);
-  multSelTask->SetUseDefaultCalib(true);
-  if(isMC) multSelTask->SetUseDefaultMCCalib(kTRUE);
-  else     multSelTask->SetUseDefaultCalib(kTRUE);
+  if(isEventSelection){
+    gROOT->LoadMacro("$ALICE_PHYSICS/OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C");
+    AliMultSelectionTask *multSelTask = AddTaskMultSelection(false);
+    multSelTask->SetUseDefaultCalib(true);
+    if(isMC) multSelTask->SetUseDefaultMCCalib(kTRUE);
+    else     multSelTask->SetUseDefaultCalib(kTRUE);
+  }
 #endif
-
+  
+    
   TFile* input = TFile::Open("./DownScale_Run2_CTP.root");
   
   float min_vtxz =-10;
@@ -108,28 +115,14 @@ void runAnalysis(TString runPeriod = "LHC16k",
 
   gROOT->LoadMacro("./AliAnalysisTaskAODTrackPair.cxx++g");
   gROOT->LoadMacro("./AddTaskAODTrackPair.C");
+  
+  //AliAnalysisTaskAODEventStudy* qa = AddTaskAODEventQA(AliVEvent::kMuonSingleLowPt7 | AliVEvent::kMuonUnlikeLowPt7 | AliVEvent::kMuonLikeLowPt7 | AliVEvent::kINT7inMUON,-10,10,-4.0,-2.5,"SPDTracklets",1,1,1,1,0,0,0,1,1,isMC);  
+  
+  UInt_t offlineTriggerMask;
+  if(isEventSelection) offlineTriggerMask = AliVEvent::kMuonSingleLowPt7 | AliVEvent::kMuonUnlikeLowPt7 | AliVEvent::kMuonLikeLowPt7;
+  else offlineTriggerMask = AliVEvent::kAny;
 
-  /*
-    UInt_t offlineTriggerMask = AliVEvent::kAny,
-    float min_vtxz =-10,
-    float max_vtxz = 10,
-    float min_pair_rap = -4.0,
-    float max_pair_rap = -2.5,
-    string multi_method="SPDTracklets",
-    bool onPURej = true,
-    bool onLBcut = true,
-    bool onMuEtaCut = true,
-    bool onMuThetaAbsCut = true,
-    bool onMuMatchAptCut = true,
-    bool onMuMatchLptCut = true,
-    bool onMuMatchHptCut = true,
-    bool onMuChi2Cut = true,
-    bool onMuPdcaCut = true,
-    bool isMC=false)
-  */
-
-  AliAnalysisTaskAODEventStudy* qa = AddTaskAODEventQA(AliVEvent::kMuonSingleLowPt7 | AliVEvent::kMuonUnlikeLowPt7 | AliVEvent::kMuonLikeLowPt7 | AliVEvent::kINT7inMUON,-10,10,-4.0,-2.5,"SPDTracklets",1,1,1,1,0,0,0,1,1,isMC);  
-  //AliAnalysisTaskAODTrackPair* dimuon = AddTaskAODTrackPair(AliVEvent::kMuonSingleLowPt7 | AliVEvent::kMuonUnlikeLowPt7 | AliVEvent::kMuonLikeLowPt7,-10,10,-4.0,-2.5,"SPDTracklets",1,1,1,1,0,0,0,1,1,isMC);  
+  AliAnalysisTaskAODTrackPair* dimuon = AddTaskAODTrackPair(offlineTriggerMask,-10,10,-4.5,-2.0,"SPDTracklets",true,true,true,true,true,true,false,true,true,isMC,isEventSelection);  
   
   // -----------------------------------------
   //               Add Task V0Reader
@@ -173,8 +166,24 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
   
   plugin->SetGridWorkingDir("PWGLF/AOD/"+runPeriod+"/LowMassDimuon/"+type);
   plugin->SetGridOutputDir("output");
+
+  plugin->SetSplitMaxInputFileNumber(30);    
+  plugin->SetNrunsPerMaster(45);
+
+  if(type == "LHC20f10c"){
+    plugin->SetGridDataDir("/alice/sim/2020/LHC20f10c");    
+    plugin->SetDataPattern("/AOD/ AliAOD.Muons.root");
+  }
+  if(type == "LHC20f10b"){
+    plugin->SetGridDataDir("/alice/sim/2020/LHC20f10b");    
+    plugin->SetDataPattern("/AOD/ AliAOD.Muons.root");
+  }
+  if(type == "LHC20f10a"){
+    plugin->SetGridDataDir("/alice/sim/2020/LHC20f10a");    
+    plugin->SetDataPattern("/AOD/ AliAOD.Muons.root");
+  }
   
-  if(type == "data"){
+  else if(type == "data"){
     if (runPeriod.Contains("LHC16h")){
       plugin->SetGridDataDir("/alice/data/2016/LHC16h");    
       plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
@@ -203,41 +212,41 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
       plugin->SetGridDataDir("/alice/data/2016/LHC16p");
       plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
     }
-
+    
     else if (runPeriod.Contains("LHC17h")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17h");
-      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
-      plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
+      plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.Muons.root");
     }
     else if (runPeriod.Contains("LHC17i")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17i");
-      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
-      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.Muons.root");
     }
     else if (runPeriod.Contains("LHC17k")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17k");
-      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
-      plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
+      plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.Muons.root");
     }
     else if (runPeriod.Contains("LHC17l")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17l");
-      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
-      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.Muons.root");
     }
     else if (runPeriod.Contains("LHC17m")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17m");
-      //plugin->SetDataPattern("/pass1/AOD234/ AliAOD.root");
-      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass1/AOD234/ AliAOD.Muons.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.Muons.root");
     }
     else if (runPeriod.Contains("LHC17o")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17o");
-      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
-      plugin->SetDataPattern("/muon_calo_pass1/AOD203/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD203/ AliAOD.Muons.root");
     }
     else if (runPeriod.Contains("LHC17r")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17r");
-      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
-      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
+      //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
+      plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.Muons.root");
     }
     else if (runPeriod.Contains("LHC18c")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18c");
@@ -280,9 +289,6 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
     }
     
     plugin->SetRunPrefix("000");    
-    //plugin->SetNrunsPerMaster(1);
-    plugin->SetSplitMaxInputFileNumber(30);    
-    plugin->SetNrunsPerMaster(15);
   }
 
   if(runPeriod.Contains("LHC16h")){
