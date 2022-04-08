@@ -31,6 +31,11 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fIsPairRapCut(true),
   fMinPairRapCut(-4.0),
   fMaxPairRapCut(-2.5),
+
+  fIsPairPtCutForOneTrack(false),
+  fIsPairPtCutForBothTracks(false),
+  fMinPairPtCut(0.),
+
   fIsPUcut(true),
   fIsLBCut(true),
 
@@ -45,17 +50,18 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fHistDsCINT7(NULL),
   fHistDsCMSL7(NULL),
   fHistDsCMLL7(NULL),
-
-								       
-								       
+								       								       
   fVtxZ(0),
   fCent(0),
   fPsi(0),
   fNContVtx(0),
+  fMinContVtx(1),
   fCentSPDTrk(0.),
   fCentV0A(0.),
   fCentV0C(0.),
   fCentV0M(0.),
+
+  fTrueVtx(),
 
   fDSfactor(1.),
 
@@ -70,7 +76,6 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fIs0MSH(false),
   fIs0MUL(false),
   fIs0MLL(false),
-
 
   fInput0MSH(0),
   fInput0MLL(0),
@@ -90,7 +95,11 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fChV0C(0.),
   fChV0M(0.),
   fTimeV0A(0.),
-  fTimeV0C(0.)
+  fTimeV0C(0.),
+
+  fNChV0A(0),
+  fNChV0C(0)
+
 {
 
 }
@@ -112,6 +121,10 @@ void AliAnalysisTaskAODTrackPairUtils::setInit()
   fCent=-999;
   fPsi=-999;
   
+  fTrueVtx[0] = -999;
+  fTrueVtx[1] = -999;
+  fTrueVtx[2] = -999;
+
   fCentSPDTrk=-999;
   fCentV0A=-999;
   fCentV0C=-999;
@@ -149,6 +162,9 @@ void AliAnalysisTaskAODTrackPairUtils::setInit()
 
   fTimeV0A=0.;
   fTimeV0C=0.;
+
+  fNChV0A = 0;
+  fNChV0C = 0;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent* event, AliVEventHandler* handler)
@@ -158,14 +174,18 @@ bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent* event, AliVEventHan
   
   fEvent = event;  
   if(!fEvent) return false;
-  
+
   fInputHandler = handler;
   if(!fInputHandler) return false;
 
   fRunNumber = fEvent->GetRunNumber();
   
-  if(!fIsEvtSelect) return true;
+  if(fIsMC){
+    setMCEventInfo();
+  }
 
+  if(!fIsEvtSelect) return true;
+  
   fMultSelection = (AliMultSelection *)fEvent->FindListObject("MultSelection");  
   if(!fMultSelection) return false;
   
@@ -196,22 +216,21 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameRunnumber()
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptEvent()
-{  
+{    
+
+  if(!fEvent) return false;
   
-  if(!fEvent) return false;  
-
   if(!fIsEvtSelect) return true;
-
+  
   if(fIsVtxZcut && (fMinVertexCutZ>fVtxZ || fVtxZ>fMaxVertexCutZ))
     return false;
-  if(fIsVtxZcut && fNContVtx<3)
+  if(fIsVtxZcut && fNContVtx<fMinContVtx)
     return false;
   if(fIsPUcut && fEvent->IsPileupFromSPDInMultBins())
     return false;
   if(fMultSelection && fMultSelection->GetMultiplicityPercentile(fMultiMethod,false)<0 && fMultSelection->GetMultiplicityPercentile(fMultiMethod,false)>100.){
     return false;
   }
-
   if(fDSfactor < 0.000000000001) {
     return false;
   }
@@ -235,10 +254,28 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptDimuon(AliAODDimuon* dimuon)
   
   int triggerLB1 = AliAnalysisMuonUtility::GetLoCircuit(track1);
   int triggerLB2 = AliAnalysisMuonUtility::GetLoCircuit(track2);
+
+  if( fIsLBCut && triggerLB1 == triggerLB2 ) {
+    return false;
+  }  
   
-  if(fIsLBCut && triggerLB1 == triggerLB2) return false;
+  if( fIsPairRapCut && !(fMinPairRapCut<fabs(dimuon->Y()) && fabs(dimuon->Y())<fMaxPairRapCut) ) {
+    return false;
+  }
   
-  if(fIsPairRapCut && !(fMinPairRapCut<dimuon->Y() && dimuon->Y()<fMaxPairRapCut)) return false;
+  if(fIsPairPtCutForOneTrack && !fIsPairPtCutForBothTracks){
+    if(track1->Pt()<fMinPairPtCut && track2->Pt()<fMinPairPtCut){
+      return false;
+    }
+  } else if (!fIsPairPtCutForOneTrack && fIsPairPtCutForBothTracks) {
+    if(track1->Pt()<fMinPairPtCut || track2->Pt()<fMinPairPtCut){
+      return false;
+    }
+  } else if (!fIsPairPtCutForOneTrack && !fIsPairPtCutForBothTracks) {
+    return true;
+  } else {
+    return false;
+  }
 
   return true;
 }
@@ -265,6 +302,99 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODTrack* track1,AliA
   if(mom1 != mom2) return false;
 
   return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isCharmQuarkOrigin(AliAODMCParticle* particle)
+{  
+  Int_t mother1 = particle->GetMother();
+  
+  if(mother1<0) return false;
+
+  AliAODMCParticle *particle_mother1 = (AliAODMCParticle*)fMCArray->At(mother1);
+  if(!particle_mother1) return false;
+
+  Int_t mom_pid1 = particle_mother1->GetPdgCode();
+  
+  AliAODMCParticle* particle_origin = NULL;
+
+  while(true) {
+    
+    particle_mother1 = (AliAODMCParticle*)fMCArray->At(mother1);
+    
+    if(!particle_mother1) break;
+    else{
+      mother1  = particle_mother1->GetMother();
+      mom_pid1 = particle_mother1->GetPdgCode();      
+      if(fabs(mom_pid1) == 4){
+	return true;
+      }
+    }
+  }//end of while	    
+
+  return false;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isBeautyQuarkOrigin(AliAODMCParticle* particle)
+{  
+  Int_t mother1 = particle->GetMother();
+  
+  if(mother1<0) return false;
+
+  AliAODMCParticle *particle_mother1 = (AliAODMCParticle*)fMCArray->At(mother1);
+  if(!particle_mother1) return false;
+
+  Int_t mom_pid1 = particle_mother1->GetPdgCode();
+  
+  AliAODMCParticle* particle_origin = NULL;
+
+  while(true) {
+    
+    particle_mother1 = (AliAODMCParticle*)fMCArray->At(mother1);
+    
+    if(!particle_mother1) break;
+    else{
+      mother1  = particle_mother1->GetMother();
+      mom_pid1 = particle_mother1->GetPdgCode();      
+      if(fabs(mom_pid1) == 5){
+	return true;
+      }
+    }
+  }//end of while	    
+  
+  return false;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isPrimary(AliAODMCParticle* particle){
+  
+  if(!particle) return false;
+  
+  double vtx[3]={-999,-999,-999};  
+  particle->XvYvZv(vtx);
+
+  double length = sqrt(pow(vtx[0]-fTrueVtx[0],2) + pow(vtx[1]-fTrueVtx[1],2) + pow(vtx[2]-fTrueVtx[2],2));
+
+  if(length>3) return false;
+
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::setTrueChPartInV0s()
+{
+  
+  AliAODMCParticle *particle1 = NULL;
+
+  for(Int_t iTrack1=0; iTrack1<fMCArray->GetEntries(); ++iTrack1){
+    particle1 =  (AliAODMCParticle*)fMCArray->At(iTrack1);
+    if( 2.8<particle1->Eta() && particle1->Eta()<5.1 ) ++fNChV0A;
+    if( -3.7<particle1->Eta() && particle1->Eta()<-1.7 ) ++fNChV0C;    
+  }
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isHeavyFlavorOrigin(AliAODMCParticle* particle)
+{
+  if(isCharmQuarkOrigin(particle) || isBeautyQuarkOrigin(particle)) return true;
+  else return false;
 }
 
 int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(AliAODTrack *track)
@@ -311,12 +441,26 @@ int AliAnalysisTaskAODTrackPairUtils::getMotherLabel(AliAODTrack *track)
   
 }
 
+bool AliAnalysisTaskAODTrackPairUtils::setMCEventInfo(){
+
+  if(!fMCArray) return false;
+
+  AliAODMCParticle *part = (AliAODMCParticle*)fMCArray->At(0);
+  if(!part) return false;
+
+  part->XvYvZv(fTrueVtx);
+  
+  setTrueChPartInV0s();
+
+  return true;
+}
+
 bool AliAnalysisTaskAODTrackPairUtils::setVtxZCentPsi()
 {
   
   if(!fEvent) return false;
   
-  if(fIsMC) return true;
+  if(fIsMC && !fIsEvtSelect) return true;
 
   if(!fMultSelection) return false;
 
@@ -344,46 +488,46 @@ bool AliAnalysisTaskAODTrackPairUtils::setDownScaleFactor()
   if(fIsCMUL7 || fIsCMSH7){
     fDSfactor = 1.;    
     return true;
-  }
-  
-  else if(fIsCMLL7){
-    if(!fHistDsCMLL7) return false;
-    fDSfactor = fHistDsCMLL7->GetBinContent(fHistDsCMLL7->GetXaxis()->FindBin(fRunNumber));
-
-    return true;
-  }
-  
-  else if(fIsCMSL7){
-    if(!fHistDsCMSL7) return false;
-    fDSfactor = fHistDsCMSL7->GetBinContent(fHistDsCMSL7->GetXaxis()->FindBin(fRunNumber));
-    return true;
-  }
-  
-  else if(fIsCINT7){
-    if(!fHistDsCINT7) return false;
-    fDSfactor = fHistDsCINT7->GetBinContent(fHistDsCINT7->GetXaxis()->FindBin(fRunNumber));
-    return true;
-  }
-  else{
+  } else if(fIsCMLL7){
+    if(!fHistDsCMLL7) {
+      return false;
+    } else {
+      fDSfactor = fHistDsCMLL7->GetBinContent(fHistDsCMLL7->GetXaxis()->FindBin(fRunNumber));
+      return true;
+    }
+  } else if(fIsCMSL7){
+    if(!fHistDsCMSL7){
+      return false;
+    } else {
+      fDSfactor = fHistDsCMSL7->GetBinContent(fHistDsCMSL7->GetXaxis()->FindBin(fRunNumber));
+      return true;
+    }
+  } else if(fIsCINT7){
+    if(!fHistDsCINT7) {
+      return false;
+    } else {
+      fDSfactor = fHistDsCINT7->GetBinContent(fHistDsCINT7->GetXaxis()->FindBin(fRunNumber));
+      return true;
+    }
+  } else {
     fDSfactor = 1.;  
     return true;
   }
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::setTriggerInfo()
-{
-  
+{  
   if(!fEvent) return false;
   if(!fInputHandler) return false;
 
   string fFiredTrigName = string(fEvent->GetFiredTriggerClasses());
 
   if(fIsMC){
-    if( fFiredTrigName.find("V0R") != std::string::npos   && fFiredTrigName.find("V0L") != std::string::npos )
+    if( fFiredTrigName.find("V0R") != std::string::npos   && fFiredTrigName.find("V0L") != std::string::npos ){
       fIsCINT7 = true;
-    else 
+    } else  {
       fIsCINT7 = false;;      
-
+    }
     if( fFiredTrigName.find("MULow") != std::string::npos && fIsCINT7 )
       fIsCMSL7 = true;
     else 
@@ -407,26 +551,22 @@ bool AliAnalysisTaskAODTrackPairUtils::setTriggerInfo()
   else{    
     if(fInputHandler->IsEventSelected() & AliVEvent::kMuonUnlikeLowPt7){
       fIsCMUL7 = true;
-    }
-    else{
+    } else {
       fIsCMUL7 = false;
     }
     if(fInputHandler->IsEventSelected() & AliVEvent::kMuonLikeLowPt7){
       fIsCMLL7 = true;
-    }
-    else{
+    } else {
       fIsCMLL7 = false;
     }
     if(fInputHandler->IsEventSelected() & AliVEvent::kMuonSingleLowPt7){
       fIsCMSL7 = true;
-    }
-    else{
+    } else {
       fIsCMSL7 = false;
     }
     if(fInputHandler->IsEventSelected() & AliVEvent::kINT7inMUON){
       fIsCINT7 = true;
-    }
-    else{
+    } else {
       fIsCINT7 = false;
     }
   }

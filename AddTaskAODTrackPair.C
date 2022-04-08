@@ -1,6 +1,8 @@
+
 AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = AliVEvent::kAny,
 						 float min_vtxz =-10,
 						 float max_vtxz = 10,
+						 int min_vtx_cont = 1,
 						 float min_pair_rap = -4.0,
 						 float max_pair_rap = -2.5,
 						 string multi_method="SPDTracklets",
@@ -14,7 +16,11 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
 						 bool onMuChi2Cut = true,
 						 bool onMuPdcaCut = true,
 						 bool isMC=false,
-						 bool isSelectEvt=true)
+						 bool isSelectEvt=true,
+						 int paircuttype=1,
+						 double min_pairtrackptcut=0.5,
+						 bool onMixingAnalysis=false)
+
 {
     
   AliMuonTrackCuts* fMuonTrackCuts = new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
@@ -36,12 +42,13 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   utils->setMC(isMC);
   utils->setEvtSelection(isSelectEvt);
   utils->setDownScalingHist(input);
-  utils->setVertexCut(min_vtxz,max_vtxz);
+  utils->setVertexCut(min_vtxz,max_vtxz,min_vtx_cont);
   utils->setPairRapidityCut(min_pair_rap,max_pair_rap);
   utils->setPileupRejectionCut(onPURej);
   utils->setLocalBoardCut(onLBcut);
   utils->setMultiEstimateMethod(multi_method);
   utils->setMuonTrackCut(fMuonTrackCuts);
+  utils->setPairKinematicCut(paircuttype,min_pairtrackptcut);
   
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
@@ -55,7 +62,9 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   }
     
   AliAnalysisTaskAODTrackPair* task = new AliAnalysisTaskAODTrackPair("dimuon");
-  if(isSelectEvt)task->SelectCollisionCandidates(offlineTriggerMask);
+  if(isSelectEvt){
+    task->SelectCollisionCandidates(offlineTriggerMask);
+  }
   task->setUtils(utils);
   task->setEvtMixingTrackDepth(100);
   task->setEvtMixingPoolSize(100);
@@ -63,10 +72,34 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   task->setEvtMixingPoolVtxZ(true);
   task->setEvtMixingPoolCent(true);
   task->setEvtMixingPoolPsi(true);
+  task->setMixingAnalysis(onMixingAnalysis);
   task->setMC(isMC);
   mgr->AddTask(task);
 
+
+  cout<< min_vtxz <<endl;
+  cout<< max_vtxz <<endl;
+  cout<<  min_vtx_cont <<endl;
+  cout<< min_pair_rap <<endl;
+  cout<< max_pair_rap <<endl;
+  cout<< multi_method <<endl;
+  cout<< onPURej <<endl;
+  cout<< onLBcut <<endl;
+  cout<< onMuEtaCut <<endl;
+  cout<< onMuThetaAbsCut <<endl;
+  cout<< onMuMatchAptCut <<endl;
+  cout<< onMuMatchLptCut <<endl;
+  cout<< onMuMatchHptCut <<endl;
+  cout<< onMuChi2Cut <<endl;
+  cout<< onMuPdcaCut <<endl;
+  cout<< isMC <<endl;
+  cout<< isSelectEvt <<endl;
+  cout<< paircuttype <<endl;
+  cout<< min_pairtrackptcut <<endl;
+  cout<< onMixingAnalysis <<endl;
+
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
+  //AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");
   AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"AnalysisResults.root");
   
   mgr->ConnectInput(task,0,cinput);

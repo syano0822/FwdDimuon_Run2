@@ -3,6 +3,7 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TH1F.h"
+#include "TH3F.h"
 #include "TCanvas.h"
 #include "TDatabasePDG.h"
 #include "TRefArray.h"
@@ -60,8 +61,8 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() :
   fEvent(NULL),
   fPoolMuonTrackMgr(NULL),
   fUtils(NULL),
-  fMCTrackArray(NULL),
   fIsMC(false),  
+  fIsMixingAnalysis(false),
   fRunNumber(-99999),
   fTrackDepth(1000),
   fPoolSize(1),
@@ -76,38 +77,42 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() :
   fIsCMSH7(false),
   fIsCMUL7(false),
   fIsCMLL7(false),
+
   fOutputList(NULL),
   fEventCounter(NULL),
+/*
   fSparseULSDimuon(NULL),
   fSparseLSppDimuon(NULL),
   fSparseLSmmDimuon(NULL),
   fSparseMixULSDimuon(NULL),
   fSparseMixLSppDimuon(NULL),
   fSparseMixLSmmDimuon(NULL),
-
-  fSparseEtaDalitz(NULL),
-  fSparseEta2Body(NULL),
-  fSparseRho2Body(NULL),
-  fSparseOmegaDalitz(NULL),
-  fSparseOmega2Body(NULL),
-  fSparsePhi2Body(NULL),
-  fSparseEtaPrimeDalitz(NULL),
-
-  fSparseEtaDalitzMC(NULL),
-  fSparseEta2BodyMC(NULL),
-  fSparseRho2BodyMC(NULL),
-  fSparseOmegaDalitzMC(NULL),
-  fSparseOmega2BodyMC(NULL),
-  fSparsePhi2BodyMC(NULL),
-  fSparseEtaPrimeDalitzMC(NULL),
-
+*/
   fHistTrackEta(NULL),
   fHistTrackThetaAbs(NULL),
   fHistTrackTriggerMatch(NULL),
   fHistTrackPDCA(NULL),
   fHistTrackChiSquare(NULL),
-  fHistTriggerChiSquare(NULL)
+  fHistTriggerChiSquare(NULL),
 
+  fHistEventVtxZ(NULL),
+  fHistEventCent(NULL),
+  fHistEventMulti(NULL),
+  fHistEventVtxCont(NULL),
+
+  fTreeULSDimuon(NULL),
+  fTreeLSppDimuon(NULL),
+  fTreeLSmmDimuon(NULL),
+
+  fTreeMixULSDimuon(NULL),
+  fTreeMixLSppDimuon(NULL),
+  fTreeMixLSmmDimuon(NULL),
+
+  RecDimuonPt(0.),
+  RecDimuonRap(0.),
+  RecDimuonMass(0.),
+  RecDimuonCent(0.),
+  RecDimuonDS(0.)
 { 
   
 }
@@ -117,8 +122,8 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char* name) :
   fEvent(NULL),
   fPoolMuonTrackMgr(NULL),
   fUtils(NULL),
-  fMCTrackArray(NULL),
-  fIsMC(false),
+  fIsMC(false),  
+  fIsMixingAnalysis(false),
   fRunNumber(-99999),
   fTrackDepth(1000),
   fPoolSize(1),
@@ -133,40 +138,44 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char* name) :
   fIsCMSH7(false),
   fIsCMUL7(false),
   fIsCMLL7(false),
+
   fOutputList(NULL),
   fEventCounter(NULL),
+/*
   fSparseULSDimuon(NULL),
   fSparseLSppDimuon(NULL),
   fSparseLSmmDimuon(NULL),
   fSparseMixULSDimuon(NULL),
   fSparseMixLSppDimuon(NULL),
   fSparseMixLSmmDimuon(NULL),
-
-  fSparseEtaDalitz(NULL),
-  fSparseEta2Body(NULL),
-  fSparseRho2Body(NULL),
-  fSparseOmegaDalitz(NULL),
-  fSparseOmega2Body(NULL),
-  fSparsePhi2Body(NULL),
-  fSparseEtaPrimeDalitz(NULL),
-  
-  fSparseEtaDalitzMC(NULL),
-  fSparseEta2BodyMC(NULL),
-  fSparseRho2BodyMC(NULL),
-  fSparseOmegaDalitzMC(NULL),
-  fSparseOmega2BodyMC(NULL),
-  fSparsePhi2BodyMC(NULL),
-  fSparseEtaPrimeDalitzMC(NULL),
-
+*/
   fHistTrackEta(NULL),
   fHistTrackThetaAbs(NULL),
   fHistTrackTriggerMatch(NULL),
   fHistTrackPDCA(NULL),
   fHistTrackChiSquare(NULL),
-  fHistTriggerChiSquare(NULL)
-{ 
-  
-  
+  fHistTriggerChiSquare(NULL),
+
+  fHistEventVtxZ(NULL),
+  fHistEventCent(NULL),
+  fHistEventMulti(NULL),
+  fHistEventVtxCont(NULL),
+
+  fTreeULSDimuon(NULL),
+  fTreeLSppDimuon(NULL),
+  fTreeLSmmDimuon(NULL),
+
+  fTreeMixULSDimuon(NULL),
+  fTreeMixLSppDimuon(NULL),
+  fTreeMixLSmmDimuon(NULL),
+
+  RecDimuonPt(0.),
+  RecDimuonRap(0.),
+  RecDimuonMass(0.),
+  RecDimuonCent(0.),
+  RecDimuonDS(0.)
+{
+   
   double fCentBins[] = {-1,10,20,30,40,50,60,70,80,90,101};
   double fVtxBins[] = {-50,-10.5,-6,-2,0,2,6,10.5,50};
   double fPsiBins[] = {-10,-1.5,-1.0,-0.5,0,0.5,1.0,1.5,10};
@@ -210,14 +219,20 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects()
 
   std::string event_label[]={"CMUL7","CMLL7","CMUL7orCMLL7","CMUL7andCMLL7","CMUL7withDS","CMLL7withDS","CMUL7orCMLL7withDS","CMUL7andCMLL7withDS"};
   fEventCounter = new TH2F("fEventCounter","",binnum_event_hist,bins_event_hist,binnum_cent_hist,bins_cent_hist);
-  for(int iname=0; iname<sizeof(event_label)/sizeof(std::string); ++iname)
+  for(unsigned int iname=0; iname<sizeof(event_label)/sizeof(std::string); ++iname) {
     fEventCounter->GetXaxis()->SetBinLabel(iname+1,event_label[iname].c_str());
+  }
+  
   fOutputList->Add(fEventCounter);
+  /*
+  double min_mass = 0.;
+  double max_mass = 12.;
+  double mass_width = 0.025;
 
   const Int_t binnum_Cent            = 4;
-  Int_t bins_Cent[binnum_Cent]       = {800,6,300,binnum_cent_hist};
-  double minbins_Cent[binnum_Cent] = {0,2.5,0,0};
-  double maxbins_Cent[binnum_Cent] = {4,4.0,30,100};
+  Int_t bins_Cent[binnum_Cent]       = {static_cast<int>((max_mass-min_mass)/mass_width),6,300,binnum_cent_hist};
+  double minbins_Cent[binnum_Cent] = {min_mass,2.5,0,0};
+  double maxbins_Cent[binnum_Cent] = {max_mass,4.0,30,100};
   TString  namebins_Cent[]        = {"mass","rap","pt","centrality"};
   
   fSparseULSDimuon = new THnSparseF("fSparseULSDimuon","",binnum_Cent,bins_Cent,minbins_Cent,maxbins_Cent);
@@ -239,61 +254,66 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects()
   fOutputList->Add(fSparseMixULSDimuon);
   fOutputList->Add(fSparseMixLSppDimuon);
   fOutputList->Add(fSparseMixLSmmDimuon);
+  */
   
-  if(fIsMC){
-    
-    const Int_t binnum_MC            = 5;
-    Int_t bins_MC[binnum_MC]       = {800,6,300,12,300};
-    double minbins_MC[binnum_MC] = {0,2.5,0,1.5,0};
-    double maxbins_MC[binnum_MC] = {4,4.0,30,4.5,30};
-    TString  namebins_MC[]        = {"rec_mass","rec_rap","rec_pt","true_rap","true_pt"};
-    fSparseEtaDalitz= new THnSparseF("fSparseEtaDalitz","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);
-    fSparseEta2Body= new THnSparseF("fSparseEta2Body","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);    
-    fSparseOmegaDalitz= new THnSparseF("fSparseOmegaDalitz","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);
-    fSparseOmega2Body= new THnSparseF("fSparseOmega2Body","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);
-    fSparsePhi2Body= new THnSparseF("fSparsePhi2Body","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);
-    fSparseEtaPrimeDalitz= new THnSparseF("fSparseEtaPrimeDalitz","",binnum_MC,bins_MC,minbins_MC,maxbins_MC);    
-    fOutputList->Add(fSparseEtaDalitz);
-    fOutputList->Add(fSparseEta2Body);
-    fOutputList->Add(fSparseOmegaDalitz);
-    fOutputList->Add(fSparseOmega2Body);
-    fOutputList->Add(fSparsePhi2Body);
-    fOutputList->Add(fSparseEtaPrimeDalitz);
+  if ( !fIsMixingAnalysis ){
+    fTreeULSDimuon = new TTree("fTreeULSDimuon","");
+    fTreeULSDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
+    fTreeULSDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
+    fTreeULSDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");    
+    fTreeULSDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");    
+    fTreeULSDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");    
+    fOutputList->Add(fTreeULSDimuon);
 
-    const Int_t binnum_True            = 2;
-    Int_t bins_True[binnum_True]       = {12,300};
-    double minbins_True[binnum_True] = {1.5,0};
-    double maxbins_True[binnum_True] = {4.5,30};
-    TString  namebins_True[]        = {"true_rap","true_pt"};
-    fSparseEtaDalitzMC= new THnSparseF("fSparseEtaDalitzMC","",binnum_True,bins_True,minbins_True,maxbins_True);
-    fSparseEta2BodyMC= new THnSparseF("fSparseEta2BodyMC","",binnum_True,bins_True,minbins_True,maxbins_True);
-    fSparseOmegaDalitzMC= new THnSparseF("fSparseOmegaDalitzMC","",binnum_True,bins_True,minbins_True,maxbins_True);
-    fSparseOmega2BodyMC= new THnSparseF("fSparseOmega2BodyMC","",binnum_True,bins_True,minbins_True,maxbins_True);
-    fSparsePhi2BodyMC= new THnSparseF("fSparsePhi2BodyMC","",binnum_True,bins_True,minbins_True,maxbins_True);
-    fSparseEtaPrimeDalitzMC= new THnSparseF("fSparseEtaPrimeDalitzMC","",binnum_True,bins_True,minbins_True,maxbins_True);    
-    fOutputList->Add(fSparseEtaDalitzMC);
-    fOutputList->Add(fSparseEta2BodyMC);    
-    fOutputList->Add(fSparseOmegaDalitzMC);
-    fOutputList->Add(fSparseOmega2BodyMC);
-    fOutputList->Add(fSparsePhi2BodyMC);
-    fOutputList->Add(fSparseEtaPrimeDalitzMC);
-    
-    const Int_t binnum_MC_Rho            = 6;
-    Int_t bins_MC_Rho[binnum_MC_Rho]       = {800,6,300,12,300,800};
-    double minbins_MC_Rho[binnum_MC_Rho] = {0,2.5,0,1.5,0,0};
-    double maxbins_MC_Rho[binnum_MC_Rho] = {4,4.0,30,4.5,30,4};
-    TString  namebins_MC_Rho[]        = {"rec_mass","rec_rap","rec_pt","true_rap","true_pt","true_mass"};
-    fSparseRho2Body= new THnSparseF("fSparseRho2Body","",binnum_MC_Rho,bins_MC_Rho,minbins_MC_Rho,maxbins_MC_Rho);
-    fOutputList->Add(fSparseRho2Body);
+    fTreeLSppDimuon = new TTree("fTreeLSppDimuon","");
+    fTreeLSppDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
+    fTreeLSppDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
+    fTreeLSppDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");    
+    fTreeLSppDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");    
+    fTreeLSppDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
+    fOutputList->Add(fTreeLSppDimuon);
 
-    const Int_t binnum_True_Rho            = 3;
-    Int_t bins_True_Rho[binnum_True_Rho]       = {12,300,800};
-    double minbins_True_Rho[binnum_True_Rho] = {1.5,0,0};
-    double maxbins_True_Rho[binnum_True_Rho] = {4.5,30,4};
-    TString  namebins_True_Rho[]        = {"true_rap","true_pt","true_mass"};
-    fSparseRho2BodyMC= new THnSparseF("fSparseRho2BodyMC","",binnum_True_Rho,bins_True_Rho,minbins_True_Rho,maxbins_True_Rho);
-    fOutputList->Add(fSparseRho2BodyMC);
+    fTreeLSmmDimuon = new TTree("fTreeLSmmDimuon","");
+    fTreeLSmmDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
+    fTreeLSmmDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
+    fTreeLSmmDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");    
+    fTreeLSmmDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");    
+    fTreeLSmmDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
+    fOutputList->Add(fTreeLSmmDimuon);
+  } else {
+    fTreeMixULSDimuon = new TTree("fTreeMixULSDimuon","");
+    fTreeMixULSDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
+    fTreeMixULSDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
+    fTreeMixULSDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");    
+    fTreeMixULSDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");    
+    fTreeMixULSDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");    
+    fOutputList->Add(fTreeMixULSDimuon);
+
+    fTreeMixLSppDimuon = new TTree("fTreeMixLSppDimuon","");
+    fTreeMixLSppDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
+    fTreeMixLSppDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
+    fTreeMixLSppDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");    
+    fTreeMixLSppDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");    
+    fTreeMixLSppDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
+    fOutputList->Add(fTreeMixLSppDimuon);
+
+    fTreeMixLSmmDimuon = new TTree("fTreeMixLSmmDimuon","");
+    fTreeMixLSmmDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
+    fTreeMixLSmmDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
+    fTreeMixLSmmDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");    
+    fTreeMixLSmmDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");    
+    fTreeMixLSmmDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
+    fOutputList->Add(fTreeMixLSmmDimuon);
   }
+
+  fHistEventVtxZ = new TH1F("fHistEventVtxZ","",60,-30,30);
+  fHistEventCent = new TH1F("fHistEventCent","",100,0,100);
+  fHistEventMulti = new TH1F("fHistEventMulti","",200,0,200);
+  fHistEventVtxCont = new TH1F("fHistEventVtxCont","",100,0,100);
+  fOutputList->Add(fHistEventVtxZ);
+  fOutputList->Add(fHistEventCent);
+  fOutputList->Add(fHistEventMulti);
+  fOutputList->Add(fHistEventVtxCont);
 
   fHistTrackEta = new TH2F("fHistTrackEta","",20,0,10,25,-4.5,-2.0);
   fHistTrackThetaAbs = new TH2F("fHistTrackThetaAbs","",20,0,10,60,0,15);
@@ -315,142 +335,51 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects()
 
 void AliAnalysisTaskAODTrackPair::UserExec(Option_t *)
 { 
-
-  if(!Initialize()) return;
+  
+  if(!Initialize()) return;  
   if(!fUtils->isAcceptEvent()) return;
-
-  MuonPairAnalysis();
-  MuonPairAnalysisEveMixing();
-  if(fIsMC) ProcessMC();
-}
-
-bool AliAnalysisTaskAODTrackPair::ProcessMC(){
   
-  AliAODMCParticle *particle1;
+  EventQA();
 
-  for(Int_t iTrack1=0; iTrack1<fMCTrackArray->GetSize(); ++iTrack1){
-    
-    particle1 = (AliAODMCParticle*)fMCTrackArray->At(iTrack1);
-
-    if(!particle1) continue;
-    if(!TDatabasePDG::Instance()->GetParticle(particle1->GetPdgCode())) continue;
-    
-    int pdgcode = particle1->GetPdgCode();
-    
-    double fill[]={fabs(particle1->Y()),particle1->Pt()};
-    
-    if(pdgcode == fUtils->fPdgCodeEta){
-      if(fUtils->isDalitzProd()){
-	fSparseEtaDalitzMC->Fill(fill);
-      }
-      if(fUtils->is2BodyProd()){
-	fSparseEta2BodyMC->Fill(fill);
-      }
-    }
-    else if(pdgcode == fUtils->fPdgCodeRho){
-      double fill_rho[]={fabs(particle1->Y()),particle1->Pt(),particle1->GetCalcMass()};
-      if(fUtils->is2BodyProd()){
-	fSparseRho2BodyMC->Fill(fill_rho);
-      }
-    }
-    else if(pdgcode == fUtils->fPdgCodeOmega){
-      if(fUtils->isDalitzProd()){
-	fSparseOmegaDalitzMC->Fill(fill);
-      }
-      if(fUtils->is2BodyProd()){
-	fSparseOmega2BodyMC->Fill(fill);
-      }	  
-    }
-    else if(pdgcode == fUtils->fPdgCodePhi){
-      if(fUtils->is2BodyProd()){
-	fSparsePhi2BodyMC->Fill(fill);
-      }	  
-    }
-    else if(pdgcode == fUtils->fPdgCodeEtaPrime){
-      if(fUtils->isDalitzProd()){
-	fSparseEtaPrimeDalitzMC->Fill(fill);
-      }
-    }
-  
+  if ( !fIsMixingAnalysis ) {
+    MuonPairAnalysis();
+  } else {   
+    MuonPairAnalysisEveMixing();
   }
 
-  return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::Initialize()
-{
-
+bool AliAnalysisTaskAODTrackPair::Initialize() {
   fEvent = dynamic_cast<AliAODEvent*>(InputEvent());
 
   if( !fUtils->setEvent(fEvent,fInputHandler) )
     return false;
 
-  
   if( fRunNumber != fEvent->GetRunNumber() ){
     fRunNumber = fUtils->getRunnumber();
     AliMuonTrackCuts* trackCut = fUtils->getMuonTrackCuts();
     trackCut->SetRun(fInputHandler);
   }
 
-  if(fIsMC){
-    AliAODMCHeader* mcHeader = (AliAODMCHeader*) fEvent->GetList()->FindObject(AliAODMCHeader::StdBranchName());  
-    if(!mcHeader) return false;  
-    
-    TList* headerList = mcHeader->GetCocktailHeaders();
-    if(!headerList) return false;
-    for (Int_t i=0; i<headerList->GetEntries(); i++) {
-      AliGenEventHeader * eventHeader2 = (AliGenEventHeader*)headerList->At(i) ;
-      TString name = eventHeader2->GetName();
-
-      if(name.Contains("EtaDalitz")){
-	fUtils->setDalitzProd(true);
-      }
-      else if(name.Contains("EtaDirect")){
-	fUtils->set2BodyProd(true);
-      }
-      else if(name.Contains("OmegaDalitz")){
-	fUtils->setDalitzProd(true);
-      }
-      else if(name.Contains("OmegaDirect")){
-	fUtils->set2BodyProd(true);
-      }
-      else if(name.Contains("EtaPrimeDalitz")){
-	fUtils->setDalitzProd(true);
-      }
-      else if(name.Contains("PhiDirect")){
-	fUtils->set2BodyProd(true);
-      }
-      else if(name.Contains("RhoDirect")){
-	fUtils->set2BodyProd(true);
-      }
-      else{
-	fUtils->setDalitzProd(false);
-	fUtils->set2BodyProd(false);
-      }      
-    }
-    
-    Double_t impPar = mcHeader->GetImpactParameter();    
-    
-    fMCTrackArray = dynamic_cast<TClonesArray*>(fEvent->FindListObject(AliAODMCParticle::StdBranchName()));
-    if(!fMCTrackArray) return false;
-    fUtils->setMCArray(fMCTrackArray);
-  }
-
   fUtils->getTriggerInfo(fIsCINT7, fIsCMSL7, fIsCMSH7, fIsCMUL7, fIsCMLL7);
-  
   
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MuonTrackQA(AliAODTrack* track){
-  
+bool AliAnalysisTaskAODTrackPair::EventQA() {  
+  fHistEventVtxZ->Fill(fUtils->getVtxZ());
+  fHistEventCent->Fill(fUtils->getCentClass());
+  fHistEventMulti->Fill(fUtils->getNSPDTrkInfo(4));
+  fHistEventVtxCont->Fill(fUtils->getVtxCont());
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPair::MuonTrackQA(AliAODTrack* track){  
   fHistTrackEta->Fill(track->Pt(),track->Eta());
   fHistTrackThetaAbs->Fill(track->Pt(),AliAnalysisMuonUtility::GetThetaAbsDeg(track));
   fHistTrackTriggerMatch->Fill(track->Pt(),AliAnalysisMuonUtility::GetMatchTrigger(track));
-  //fHistTrackPDCA->Fill();
   fHistTrackChiSquare->Fill(track->Pt(),AliAnalysisMuonUtility::GetChi2perNDFtracker(track));
   fHistTriggerChiSquare->Fill(track->Pt(),AliAnalysisMuonUtility::GetChi2MatchTrigger(track));
-  
   return true;
 }
 
@@ -500,14 +429,23 @@ bool AliAnalysisTaskAODTrackPair::MuonPairAnalysisEveMixing(){
 
 	  double fill[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fUtils->getCentClass()};
 	  
-	  if(dimuon->Charge() == 0){
-	    fSparseMixULSDimuon->Fill(fill,(double)1./fUtils->getDS());
-	  }
-	  else if(dimuon->Charge() > 0){
-	    fSparseMixLSppDimuon->Fill(fill,(double)1./fUtils->getDS());
-	  }
-	  else{
-	    fSparseMixLSmmDimuon->Fill(fill,(double)1./fUtils->getDS());
+	  RecDimuonPt = dimuon->Pt();
+	  RecDimuonRap = fabs(dimuon->Y());
+	  RecDimuonMass = dimuon->M();
+	  RecDimuonCent = fUtils->getCentClass();
+	  RecDimuonDS = fUtils->getDS();
+      
+	  string fFiredTrigName = string(fEvent->GetFiredTriggerClasses());
+      
+	  if(dimuon->Charge() == 0) {
+	    //fSparseULSDimuon->Fill(fill,(double)1./fUtils->getDS());
+	    fTreeMixULSDimuon->Fill();
+	  } else if(dimuon->Charge() > 0) {
+	    //fSparseLSppDimuon->Fill(fill,(double)1./fUtils->getDS());
+	    fTreeMixLSppDimuon->Fill();
+	  } else {
+	    //fSparseLSmmDimuon->Fill(fill,(double)1./fUtils->getDS());
+	    fTreeMixLSmmDimuon->Fill();
 	  }
 	  
 	  delete track2;
@@ -527,6 +465,7 @@ bool AliAnalysisTaskAODTrackPair::MuonPairAnalysisEveMixing(){
     pool->UpdatePool(fTrackArrayClone);
   }
   
+  return true;
 }
 
 bool AliAnalysisTaskAODTrackPair::MuonPairAnalysis()
@@ -552,10 +491,10 @@ bool AliAnalysisTaskAODTrackPair::MuonPairAnalysis()
   }
 
   Int_t nTrack = fEvent->GetNumberOfTracks();
-  
-  AliAODMCParticle* particle1;
+
   AliAODTrack* track1;
   AliAODTrack* track2;
+  
   AliAODDimuon* dimuon;
 
   for(Int_t iTrack1=0; iTrack1<nTrack; ++iTrack1){
@@ -576,69 +515,31 @@ bool AliAnalysisTaskAODTrackPair::MuonPairAnalysis()
       dimuon->SetMuons(track1,track2);
       
       if(!fUtils->isAcceptDimuon(dimuon)) continue;
-     
+      
       double fill[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fUtils->getCentClass()};
+      
+      RecDimuonPt = dimuon->Pt();
+      RecDimuonRap = fabs(dimuon->Y());
+      RecDimuonMass = dimuon->M();
+      RecDimuonCent = fUtils->getCentClass();
+      RecDimuonDS = fUtils->getDS();
       
       string fFiredTrigName = string(fEvent->GetFiredTriggerClasses());
       
-      if(dimuon->Charge() == 0){
-	fSparseULSDimuon->Fill(fill,(double)1./fUtils->getDS());
-      }
-      else if(dimuon->Charge() > 0){
-	fSparseLSppDimuon->Fill(fill,(double)1./fUtils->getDS());
-      }
-      else{
-	fSparseLSmmDimuon->Fill(fill,(double)1./fUtils->getDS());
+      if(dimuon->Charge() == 0) {
+	//fSparseULSDimuon->Fill(fill,(double)1./fUtils->getDS());
+	fTreeULSDimuon->Fill();
+      } else if(dimuon->Charge() > 0) {
+	//fSparseLSppDimuon->Fill(fill,(double)1./fUtils->getDS());
+	fTreeLSppDimuon->Fill();
+      } else {
+	//fSparseLSmmDimuon->Fill(fill,(double)1./fUtils->getDS());
+	fTreeLSmmDimuon->Fill();
       }
       
-      if(!fIsMC) continue;
-
-      if(fUtils->isSameMotherPair(track1,track2)){
-	int mom_pdg=fUtils->getMotherPdgCode(track1);
-	int mom_label=fUtils->getMotherLabel(track1);
-	
-	particle1 = (AliAODMCParticle*)fMCTrackArray->At(mom_label);
-
-	double fill_mc[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fabs(particle1->Y()),particle1->Pt()};
-
-	if(mom_pdg == fUtils->fPdgCodeEta){
-	  if(fUtils->isDalitzProd()){
-	    fSparseEtaDalitz->Fill(fill_mc);
-	  }
-	  if(fUtils->is2BodyProd()){
-	    fSparseEta2Body->Fill(fill_mc);
-	  }
-	}
-	else if(mom_pdg == fUtils->fPdgCodeRho){
-	  double fill_mc_rho[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fabs(particle1->Y()),particle1->Pt(),particle1->GetCalcMass()};
-	  if(fUtils->is2BodyProd()){
-	    fSparseRho2Body->Fill(fill_mc_rho);
-	  }
-	}
-	else if(mom_pdg == fUtils->fPdgCodeOmega){
-	  if(fUtils->isDalitzProd()){
-	    fSparseOmegaDalitz->Fill(fill_mc);
-	  }
-	  if(fUtils->is2BodyProd()){
-	    fSparseOmega2Body->Fill(fill_mc);
-	  }	  
-	}
-	else if(mom_pdg == fUtils->fPdgCodePhi){
-	  if(fUtils->is2BodyProd()){
-	    fSparsePhi2Body->Fill(fill_mc);
-	  }	  
-	}
-	else if(mom_pdg == fUtils->fPdgCodeEtaPrime){
-	  if(fUtils->isDalitzProd()){
-	    fSparseEtaPrimeDalitz->Fill(fill_mc);
-	  }
-	}
-
-      }
-
-
       delete dimuon;
 
     }//end of loop track2
   }//end of loop track1 
+  return true;
 }

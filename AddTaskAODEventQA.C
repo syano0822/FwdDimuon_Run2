@@ -1,8 +1,9 @@
 AliAnalysisTaskAODEventStudy* AddTaskAODEventQA(UInt_t offlineTriggerMask = AliVEvent::kAny,
-						double min_vtxz =-10.00000000,
-						double max_vtxz = 10.00000000,
-						double min_pair_rap = -4.0000,
-						double max_pair_rap = -2.5000,
+						float min_vtxz =-10,
+						float max_vtxz = 10,
+						int min_vtx_cont = 1,
+						float min_pair_rap = -4.0,
+						float max_pair_rap = -2.5,
 						string multi_method="SPDTracklets",
 						bool onPURej = true,
 						bool onLBcut = true,
@@ -13,7 +14,8 @@ AliAnalysisTaskAODEventStudy* AddTaskAODEventQA(UInt_t offlineTriggerMask = AliV
 						bool onMuMatchHptCut = true,
 						bool onMuChi2Cut = true,
 						bool onMuPdcaCut = true,
-						bool isMC=false)
+						bool isMC=false,
+						bool isSelectEvt=true)
 {
   
   
@@ -33,8 +35,10 @@ AliAnalysisTaskAODEventStudy* AddTaskAODEventQA(UInt_t offlineTriggerMask = AliV
   TFile* input = TFile::Open("./DownScale_Run2_CTP.root");
 
   AliAnalysisTaskAODTrackPairUtils *utils = new AliAnalysisTaskAODTrackPairUtils();
+  utils->setMC(isMC);
+  utils->setEvtSelection(isSelectEvt);
   utils->setDownScalingHist(input);
-  utils->setVertexCut(min_vtxz,max_vtxz);
+  utils->setVertexCut(min_vtxz,max_vtxz,min_vtx_cont);
   utils->setPairRapidityCut(min_pair_rap,max_pair_rap);
   utils->setPileupRejectionCut(onPURej);
   utils->setLocalBoardCut(onLBcut);

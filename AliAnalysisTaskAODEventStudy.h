@@ -67,12 +67,14 @@ class AliAnalysisTaskAODEventStudy : public AliAnalysisTaskSE {
   void RunQA();
   void TrackQA();
   void FillTrackQA(int index,AliAODTrack* track);
+  void triggerQA();
   void MultiplicityQA();
   void FillMultiplicityQA(int index);
 
   AliAODEvent                      *fEvent;  
   AliAnalysisTaskAODTrackPairUtils *fUtils;
-  
+  TClonesArray   *fMCTrackArray;
+
   int fRunNumber;
   
   int fNTrackMatchAll;
@@ -142,6 +144,9 @@ class AliAnalysisTaskAODEventStudy : public AliAnalysisTaskSE {
   TH2F* fHistTrigChi2[4];
     
   TH2F* fHistChVtxEta;      
+
+  TH3F* fHistTrueChV0ACVtxZ_CINT7;
+  TH3F* fHistTrueChV0ACVtxZ_Inel;
 
   ClassDef(AliAnalysisTaskAODEventStudy, 1); // example of analysis
 };

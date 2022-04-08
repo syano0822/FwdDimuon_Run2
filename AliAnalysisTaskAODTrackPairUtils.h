@@ -16,17 +16,30 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   ~AliAnalysisTaskAODTrackPairUtils();
 
   bool setEvent(AliAODEvent* event, AliVEventHandler* handler);
-  bool setMCArray(TClonesArray* array){fMCArray = array;}
+  void  setMCArray(TClonesArray* array){fMCArray = array;}
   void setMC(bool isMC){fIsMC = isMC;}
   void setEvtSelection(bool isEvtSel){fIsEvtSelect=isEvtSel;}
-  
+  bool setMCEventInfo();
+
   bool isAcceptEvent();
   bool isAcceptMuonTrack(AliAODTrack* track);
   bool isAcceptDimuon(AliAODDimuon* dimuon);
   
   bool isSameMotherPair(AliAODTrack* track1,AliAODTrack* track2);
+  bool isCharmQuarkOrigin(AliAODMCParticle* particle);
+  bool isBeautyQuarkOrigin(AliAODMCParticle* particle);
+  bool isHeavyFlavorOrigin(AliAODMCParticle* particle);
+  bool isPrimary(AliAODMCParticle* particle);
   int getMotherPdgCode(AliAODTrack *track);
   int getMotherLabel(AliAODTrack *track);
+  bool setTrueChPartInV0s();
+  
+  bool getTrueChPartInV0s(int &v0a, int& v0c)
+  {
+    v0a = fNChV0A;
+    v0c = fNChV0C;
+    return true;
+  }
 
   bool isMC(){
     return fIsMC;
@@ -50,18 +63,40 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   //Set analysis cut flags
   //////////////////////////////////////////////////////////////////////////////////////////////
   
-  void setVertexCut(double min, double max)
+  void setVertexCut(double min, double max, int min_cont)
   {
     fMinVertexCutZ = min;
     fMaxVertexCutZ = max;
+    fMinContVtx = min_cont;
     fIsVtxZcut = true;
   }  
   void setPairRapidityCut(double min, double max)
   {
-    fMinPairRapCut = -4.0;
-    fMaxPairRapCut = -2.5;
+    fMinPairRapCut = min;
+    fMaxPairRapCut = max;
     fIsPairRapCut = true;
-  }  
+  }
+  void setPairKinematicCut(int type=0,double min=0.){
+    if(type==0){
+      fIsPairPtCutForOneTrack = false;
+      fIsPairPtCutForBothTracks = false;
+      fMinPairPtCut = 0.;
+    }
+    else if(type==1){
+      fIsPairPtCutForOneTrack = true;
+      fIsPairPtCutForBothTracks = false;
+      fMinPairPtCut = min;
+    }
+    else if(type==2){
+      fIsPairPtCutForOneTrack = false;
+      fIsPairPtCutForBothTracks = true;
+      fMinPairPtCut = min;
+    }
+    else{
+      std::cout<<"Pair pt cut is not correct..."<<std::endl;
+      std::cout<<"You set type = "<<type<<"  but it should be between 0 - 2"<<std::endl;
+    }
+  }
   void setPileupRejectionCut(bool flag)
   {
     fIsPUcut = flag;
@@ -89,10 +124,14 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     fHistDsCMSL7  = (TH1F*)inFile->Get("DS_MSL7")->Clone("fHistDsCMSL7");
     fHistDsCINT7  = (TH1F*)inFile->Get("DS_INT7")->Clone("fHistDsCINT7");
   }  
-
+  
   //////////////////////////////////////////////////////////////////////////////////////////////
   //Get the analysis variables
   //////////////////////////////////////////////////////////////////////////////////////////////
+
+  double getTrueVtxZ(){
+    return fTrueVtx[2];
+  }
 
   double getVtxZ()
   {
@@ -110,6 +149,9 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
       return fCentV0C;
     else
       return -999;
+  }
+  double getVtxCont() {
+    return fNContVtx;
   }
   double getCentClass()
   {
@@ -245,11 +287,16 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   double fMaxVertexCutZ;
   double fMinVertexCutZ;
   int fNContVtx;
+  int fMinContVtx;
 
   bool fIsPairRapCut;
   double fMinPairRapCut;
   double fMaxPairRapCut;
   
+  bool fIsPairPtCutForOneTrack;
+  bool fIsPairPtCutForBothTracks;
+  double fMinPairPtCut;
+
   bool fIsPUcut;  
   bool fIsLBCut;
 
@@ -265,6 +312,8 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   double fVtxZ;
   double fCent;
   double fPsi;
+
+  double fTrueVtx[3];
 
   double fCentSPDTrk;
   double fCentV0A;
@@ -303,6 +352,9 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   double fChV0M;
   double fTimeV0A;
   double fTimeV0C;
+
+  int fNChV0A;
+  int fNChV0C;
   
 
   ClassDef(AliAnalysisTaskAODTrackPairUtils, 1); // example of analysis

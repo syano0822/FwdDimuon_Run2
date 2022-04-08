@@ -63,6 +63,7 @@ ClassImp(AliAnalysisTaskAODEventStudy)
 AliAnalysisTaskAODEventStudy::AliAnalysisTaskAODEventStudy() : AliAnalysisTaskSE(),
   fEvent(NULL),
   fUtils(NULL),
+  fMCTrackArray(NULL),
 
   fRunNumber(999999),
   
@@ -130,7 +131,10 @@ AliAnalysisTaskAODEventStudy::AliAnalysisTaskAODEventStudy() : AliAnalysisTaskSE
   fHistRabs(NULL),
   fHistTrackChi2(),
   fHistTrigChi2(),
-  fHistChVtxEta(NULL)
+  fHistChVtxEta(NULL),
+
+  fHistTrueChV0ACVtxZ_Inel(),
+  fHistTrueChV0ACVtxZ_CINT7()
 {
   
 }
@@ -140,6 +144,8 @@ AliAnalysisTaskAODEventStudy::AliAnalysisTaskAODEventStudy(const char* name) :
   AliAnalysisTaskSE(name),
   fEvent(NULL),
   fUtils(NULL),
+  fMCTrackArray(NULL),
+
   fIsMC(false),
   
   fRunNumber(999999),
@@ -207,7 +213,10 @@ AliAnalysisTaskAODEventStudy::AliAnalysisTaskAODEventStudy(const char* name) :
   fHistRabs(NULL),
   fHistTrackChi2(),
   fHistTrigChi2(),
-  fHistChVtxEta(NULL)
+  fHistChVtxEta(NULL),
+
+  fHistTrueChV0ACVtxZ_Inel(),
+  fHistTrueChV0ACVtxZ_CINT7()
 {  
     
   trig4NormalizationMap.emplace(trig4Normalization::CINT7,"CINT7");
@@ -327,6 +336,7 @@ void AliAnalysisTaskAODEventStudy::UserCreateOutputObjects()
     fOutputList->Add(fHistCorrCentSPDTrkV0C[itrig]);
     fOutputList->Add(fHistCorrCentV0AV0C[itrig]);
     */
+
     fHistSPDTrkSPDClust[itrig] = new TH2F(Form("fHistSPDTrkSPDClust_%s",trigName[itrig].c_str()),"",150,0,150,400,0,400);
     fOutputList->Add(fHistSPDTrkSPDClust[itrig]);
   }
@@ -345,6 +355,11 @@ void AliAnalysisTaskAODEventStudy::UserCreateOutputObjects()
   
   fHistChVtxEta = new TH2F("fHistChVtxEta","",100,-2.5,2.5,60,-30,30);  
   fOutputList->Add(fHistChVtxEta);
+  
+  fHistTrueChV0ACVtxZ_Inel = new TH3F("fHistTrueChV0ACVtxZ_Inel","",100,0,100,100,0,100,60,-30,30);
+  fOutputList->Add(fHistTrueChV0ACVtxZ_Inel);
+  fHistTrueChV0ACVtxZ_CINT7 = new TH3F("fHistTrueChV0ACVtxZ_CINT7","",100,0,100,100,0,100,60,-30,30);
+  fOutputList->Add(fHistTrueChV0ACVtxZ_CINT7);
 
   PostData(1,fOutputList); 
 }
@@ -353,7 +368,7 @@ void AliAnalysisTaskAODEventStudy::UserExec(Option_t *){
 
   if(!Initialize()) return;  
   if(!fUtils->isAcceptEvent()) return;
-  if(fabs(fUtils->getVtxZ()>10.))cout<<fUtils->getVtxZ()<<endl;
+  
   RunQA();
   MultiplicityQA();
   TrackQA();
@@ -366,15 +381,21 @@ bool AliAnalysisTaskAODEventStudy::Initialize()
     
   if( !fUtils->setEvent(fEvent,fInputHandler) )
     return false;
-  
-  fUtils->getTriggerInfo(fIsCINT7, fIsCMSL7, fIsCMSH7, fIsCMUL7, fIsCMLL7, fIs0MSL, fIs0MSH, fIs0MUL, fIs0MLL);
-  
+
   if( fRunNumber != fEvent->GetRunNumber() ){
     fRunNumber = fUtils->getRunnumber();
     AliMuonTrackCuts* trackCut = fUtils->getMuonTrackCuts();
     trackCut->SetRun(fInputHandler);
   }
   
+  if(fIsMC){    
+    fMCTrackArray = dynamic_cast<TClonesArray*>(fEvent->FindListObject(AliAODMCParticle::StdBranchName()));
+    if(!fMCTrackArray) return false;
+    fUtils->setMCArray(fMCTrackArray);
+  }
+  
+  fUtils->getTriggerInfo(fIsCINT7, fIsCMSL7, fIsCMSH7, fIsCMUL7, fIsCMLL7, fIs0MSL, fIs0MSH, fIs0MUL, fIs0MLL);
+    
   fNTrackMatchAll=0;
   fNTrackMatchApt=0;
   fNTrackMatchLpt=0;
@@ -386,6 +407,9 @@ bool AliAnalysisTaskAODEventStudy::Initialize()
 
 void AliAnalysisTaskAODEventStudy::RunQA()
 {
+  
+  triggerQA();
+
   if(fIsCINT7){
     fHistEvent[trig4Normalization::CINT7] -> Fill(fUtils->getRunnumberIndex(),fUtils->getCentClass());
     fHistEvent4RunQA[trig4Normalization::CINT7] -> Fill(fUtils->getRunnumberIndex(),1./fUtils->getDS());
@@ -458,6 +482,20 @@ void AliAnalysisTaskAODEventStudy::FillMultiplicityQA(int index)
   fHistCorrV0MCentrality[index]->Fill(fUtils->getCentClass(1),fUtils->getCentClass());
   fHistCorrV0ACentrality[index]->Fill(fUtils->getCentClass(2),fUtils->getCentClass());
   fHistCorrV0CCentrality[index]->Fill(fUtils->getCentClass(3),fUtils->getCentClass());
+}
+
+void AliAnalysisTaskAODEventStudy::triggerQA(){
+  
+  int v0a=0;
+  int v0c=0;
+  fUtils->getTrueChPartInV0s(v0a,v0c);
+  
+  double vtxz = fUtils->getTrueVtxZ();
+
+  fHistTrueChV0ACVtxZ_Inel->Fill(v0a,v0c,vtxz);
+  
+  if( fIsCINT7 ) fHistTrueChV0ACVtxZ_CINT7->Fill(v0a,v0c,vtxz);
+
 }
 
 void AliAnalysisTaskAODEventStudy::MultiplicityQA()
