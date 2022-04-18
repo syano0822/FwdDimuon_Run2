@@ -76,7 +76,6 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   task->setMC(isMC);
   mgr->AddTask(task);
 
-
   cout<< min_vtxz <<endl;
   cout<< max_vtxz <<endl;
   cout<<  min_vtx_cont <<endl;

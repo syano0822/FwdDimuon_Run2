@@ -1,15 +1,15 @@
 #include "AliAnalysisTaskAODTrackPairUtils.h"
 #include "AliAnalysisTaskAODEventStudy.h"
-#include "AliAnalysisTaskAODTrackPair.h"
+#include "AliAnalysisTaskAODTrackPairMC.h"
 
 AliAnalysisGrid* CreateAlienHandler(TString period, TString run_mode, Bool_t isJDL, TString type,bool onMixingAnalysis);
 
-void runAnalysis(TString runPeriod = "LHC16k",
-		 TString run_mode  = "test",
-		 Bool_t isJDL      = true,
-		 TString type      = "data",
-		 Bool_t  local     = false,
-		 bool isMix        = false)
+void runAnalysisMC(TString runPeriod = "LHC16k",
+		   TString run_mode  = "test",
+		   Bool_t isJDL      = true,
+		   TString type      = "data",
+		   Bool_t  local     = false,
+		   bool isMix        = false)
 {
   // since we will compile a class, tell root where to look for headers  
 #if !defined (__CINT__) || defined (__CLING__)
@@ -110,9 +110,9 @@ void runAnalysis(TString runPeriod = "LHC16k",
 #if !defined (__CINT__) || defined (__CLING__)
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
   gInterpreter->LoadMacro("AliAnalysisTaskAODEventStudy.cxx++g");
-  gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPair.cxx++g");
-  AliAnalysisTaskAODTrackPair *task
-    = reinterpret_cast<AliAnalysisTaskAODTrackPair*>(gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, \"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d)",
+  gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairMC.cxx++g");
+  AliAnalysisTaskAODTrackPairMC *task
+    = reinterpret_cast<AliAnalysisTaskAODTrackPairMC*>(gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPairMC.C(%u, %f, %f, %d, %f, %f, \"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d)",
 										     offlineTriggerMask,
 										     min_vtxz,
 										     max_vtxz,
@@ -138,9 +138,9 @@ void runAnalysis(TString runPeriod = "LHC16k",
 #else
   gROOT->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
   gROOT->LoadMacro("AliAnalysisTaskAODEventStudy.cxx++g");
-  gROOT->LoadMacro("AliAnalysisTaskAODTrackPair.cxx++g");
-  gROOT->LoadMacro("AddTaskAODTrackPair.C");
-  AliAnalysisTaskAODTrackPair* task = AddTaskAODTrackPair(offlineTriggerMask,
+  gROOT->LoadMacro("AliAnalysisTaskAODTrackPairMC.cxx++g");
+  gROOT->LoadMacro("AddTaskAODTrackPairMC.C");
+  AliAnalysisTaskAODTrackPairMC* task = AddTaskAODTrackPair(offlineTriggerMask,
 							  min_vtxz,
 							  max_vtxz,
 							  min_vtx_cont,
@@ -644,9 +644,9 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
 
   plugin->AddIncludePath("-I. -I$ROOTSYS/include -I$ALICE_ROOT -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include");
 
-  plugin->SetAnalysisSource("AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPair.cxx");
+  plugin->SetAnalysisSource("AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPairMC.cxx");
   plugin->SetAdditionalLibs("libSTEERBase.so libESD.so libAOD.so libANALYSIS.so libANALYSISalice.so libANALYSISaliceBase.so libCORRFW.so libOADB.so libCore.so libTree.so libGeom.so libVMC.so libPhysics.so "
-			    "AliAnalysisTaskAODTrackPairUtils.h AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.h AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPair.h AliAnalysisTaskAODTrackPair.cxx");
+			    "AliAnalysisTaskAODTrackPairUtils.h AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.h AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPairMC.h AliAnalysisTaskAODTrackPairMC.cxx");
   
   //Set Job
   plugin->SetExecutableCommand("aliroot -b -q");

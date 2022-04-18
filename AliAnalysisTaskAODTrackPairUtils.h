@@ -16,7 +16,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   ~AliAnalysisTaskAODTrackPairUtils();
 
   bool setEvent(AliAODEvent* event, AliVEventHandler* handler);
-  void  setMCArray(TClonesArray* array){fMCArray = array;}
+  void setMCArray(TClonesArray* array){fMCArray = array;}
   void setMC(bool isMC){fIsMC = isMC;}
   void setEvtSelection(bool isEvtSel){fIsEvtSelect=isEvtSel;}
   bool setMCEventInfo();
@@ -26,12 +26,15 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   bool isAcceptDimuon(AliAODDimuon* dimuon);
   
   bool isSameMotherPair(AliAODTrack* track1,AliAODTrack* track2);
+  bool isSameMotherPair(AliAODMCParticle *part1, AliAODMCParticle *part2);
   bool isCharmQuarkOrigin(AliAODMCParticle* particle);
   bool isBeautyQuarkOrigin(AliAODMCParticle* particle);
   bool isHeavyFlavorOrigin(AliAODMCParticle* particle);
   bool isPrimary(AliAODMCParticle* particle);
   int getMotherPdgCode(AliAODTrack *track);
+  int getMotherPdgCode(AliAODMCParticle *part);
   int getMotherLabel(AliAODTrack *track);
+  int getMotherLabel(AliAODMCParticle *part);
   bool setTrueChPartInV0s();
   
   bool getTrueChPartInV0s(int &v0a, int& v0c)

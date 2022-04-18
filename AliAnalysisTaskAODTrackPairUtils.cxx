@@ -298,8 +298,37 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODTrack* track1,AliA
 
   int mom1 = part1->GetMother();
   int mom2 = part2->GetMother();
+  
+  if(mom1 != mom2) return false;
+
+  if(mom1<0){
+    return false;
+  } 
+  if(mom2<0){
+    return false;
+  } 
+
+  return true;
+}
+
+
+bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODMCParticle *part1, AliAODMCParticle *part2)
+{  
+  if(!fMCArray) return false;
+  
+  if(!part1 || !part2) return false;
+  
+  int mom1 = part1->GetMother();
+  int mom2 = part2->GetMother();
 
   if(mom1 != mom2) return false;
+
+  if(mom1<0){
+    return false;
+  } 
+  if(mom2<0){
+    return false;
+  } 
 
   return true;
 }
@@ -370,7 +399,6 @@ bool AliAnalysisTaskAODTrackPairUtils::isPrimary(AliAODMCParticle* particle){
   
   double vtx[3]={-999,-999,-999};  
   particle->XvYvZv(vtx);
-
   double length = sqrt(pow(vtx[0]-fTrueVtx[0],2) + pow(vtx[1]-fTrueVtx[1],2) + pow(vtx[2]-fTrueVtx[2],2));
 
   if(length>3) return false;
@@ -422,6 +450,23 @@ int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(AliAODTrack *track)
 
 }
 
+int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(AliAODMCParticle *part)
+{
+  if(!fMCArray) return false;
+  
+  if(!part) return false;
+  
+  int mom = part->GetMother();
+  
+  if(mom<0) return -1;
+
+  AliAODMCParticle *mpart = (AliAODMCParticle*)fMCArray->At(mom);  
+  if(!mpart) return false;
+  
+  return mpart->GetPdgCode();
+
+}
+
 int AliAnalysisTaskAODTrackPairUtils::getMotherLabel(AliAODTrack *track)
 {
   if(!fMCArray) return false;
@@ -440,6 +485,18 @@ int AliAnalysisTaskAODTrackPairUtils::getMotherLabel(AliAODTrack *track)
   return mom;
   
 }
+
+int AliAnalysisTaskAODTrackPairUtils::getMotherLabel(AliAODMCParticle *part)
+{
+  if(!fMCArray) return false;
+  
+  if(!part) return false;
+  
+  int mom = part->GetMother();
+  
+  return mom;  
+}
+
 
 bool AliAnalysisTaskAODTrackPairUtils::setMCEventInfo(){
 
@@ -643,8 +700,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setVZERO(){
 
 bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
-  if(296690<=fRunNumber && fRunNumber<=297624){
-    
+  if(296690<=fRunNumber && fRunNumber<=297624){    
     fPeriod     = "LHC18r";
     fCollSystem = "PbPb5TeV";
     fPass       = "pass1";

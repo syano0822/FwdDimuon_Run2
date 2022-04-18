@@ -1,24 +1,28 @@
-#ifndef AliAnalysisTaskAODTrackPair_cxx
-#define AliAnalysisTaskAODTrackPair_cxx
+#ifndef AliAnalysisTaskAODTrackPairMC_cxx
+#define AliAnalysisTaskAODTrackPairMC_cxx
 
 #include "AliAnalysisTaskSE.h"
 #include "THnSparse.h"
 #include "TH3F.h"
 #include "AliAnalysisTaskAODTrackPairUtils.h"
 
-class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
+class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   
  public:
   
-  AliAnalysisTaskAODTrackPair();
-  AliAnalysisTaskAODTrackPair(const char* name);
-  virtual ~AliAnalysisTaskAODTrackPair();
+  AliAnalysisTaskAODTrackPairMC();
+  AliAnalysisTaskAODTrackPairMC(const char* name);
+  virtual ~AliAnalysisTaskAODTrackPairMC();
 
   virtual void   UserCreateOutputObjects();
   virtual void   UserExec(Option_t *option);
   
   void setMC(bool isMC){fIsMC = isMC;}
-  
+
+  void setMixingAnalysis(bool isMix)
+  {
+    fIsMixingAnalysis = isMix;    
+  }  
   void setUtils(AliAnalysisTaskAODTrackPairUtils *utils)
   {
     fUtils = utils;
@@ -55,44 +59,28 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   {
     fTriggerMaskForSame = mask;
   }
-  
-  void setEff(TH3F* p, TH3F* m){
-    fEffP = p;
-    fEffM = m;
-  }
-  void setReso(THnSparse* p, THnSparse* m){
-    fResoP= p;
-    fResoM = m;
-  }
-
-  bool isMimicDetect(AliAODMCParticle* part);
-  bool getMimicResolution(AliAODMCParticle* part, vector<double>& reso);
-
-  TH3F* fEffP;
-  TH3F* fEffM;
-
-  THnSparse *fResoP;
-  THnSparse *fResoM;
 
  private:
   
-  AliAnalysisTaskAODTrackPair(const AliAnalysisTaskAODTrackPair&); // not implemented
-  AliAnalysisTaskAODTrackPair& operator=(const AliAnalysisTaskAODTrackPair&); // not implemented
+  AliAnalysisTaskAODTrackPairMC(const AliAnalysisTaskAODTrackPairMC&); // not implemented
+  AliAnalysisTaskAODTrackPairMC& operator=(const AliAnalysisTaskAODTrackPairMC&); // not implemented
   
   bool Initialize();
   bool MuonPairAnalysis();
   bool MuonPairAnalysisEveMixing();  
   bool MuonTrackQA(AliAODTrack* track);
-  bool HFMuonTrackQA(AliAODTrack* track);
-  bool ProcessMC();
+  bool EventQA();
   bool isPrimaryMuonTrack(AliAODMCParticle *particle1);
+  bool processMC();
 
   AliAODEvent    *fEvent;  
   AliEventPoolManager *fPoolMuonTrackMgr;
   AliAnalysisTaskAODTrackPairUtils* fUtils;
   TClonesArray   *fMCTrackArray;
-  
+
   bool fIsMC;  
+  bool fIsMixingAnalysis;
+
   int fRunNumber;
   int fTrackDepth;
   int fPoolSize;
@@ -118,30 +106,14 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
 
   TList* fOutputList;
   TH2F* fEventCounter;
-
+  /*
   THnSparse* fSparseULSDimuon;
   THnSparse* fSparseLSppDimuon;
   THnSparse* fSparseLSmmDimuon;
   THnSparse* fSparseMixULSDimuon;
   THnSparse* fSparseMixLSppDimuon;
   THnSparse* fSparseMixLSmmDimuon;
-
-  THnSparse* fSparseEtaDalitz;
-  THnSparse* fSparseEta2Body;
-  THnSparse* fSparseRho2Body;
-  THnSparse* fSparseOmegaDalitz;
-  THnSparse* fSparseOmega2Body;
-  THnSparse* fSparsePhi2Body;
-  THnSparse* fSparseEtaPrimeDalitz;
-
-  THnSparse* fSparseEtaDalitzMC;
-  THnSparse* fSparseEta2BodyMC;
-  THnSparse* fSparseRho2BodyMC;
-  THnSparse* fSparseOmegaDalitzMC;
-  THnSparse* fSparseOmega2BodyMC;
-  THnSparse* fSparsePhi2BodyMC;
-  THnSparse* fSparseEtaPrimeDalitzMC;
-  
+  */
   TH2F* fHistTrackEta;
   TH2F* fHistTrackThetaAbs;
   TH2F* fHistTrackTriggerMatch;
@@ -149,51 +121,45 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   TH2F* fHistTrackChiSquare;
   TH2F* fHistTriggerChiSquare;
 
-  TTree* fTreeDimuon;
-  int RecDimuonQ;
-  double RecDimuonPt;
-  double RecDimuonEta;
-  double RecDimuonMass;
-  int MCDimuonQ;
-  double MCDimuonPt;
-  double MCDimuonEta;
-  double MCDimuonMass;
-  bool isDimuonDetect;
+  TH1F* fHistEventVtxZ;
+  TH1F* fHistEventCent;
+  TH1F* fHistEventMulti;
+  TH1F* fHistEventVtxCont;
 
-  TTree* fTreeMimicDimuon;
-  int RecMimicDimuonQ;
-  double RecMimicDimuonPt;
-  double RecMimicDimuonEta;
-  double RecMimicDimuonMass;
-  int MCMimicDimuonQ;
-  double MCMimicDimuonPt;
-  double MCMimicDimuonEta;
-  double MCMimicDimuonMass;
-  bool isMimicDimuonDetect;
+  TTree* fTreeULSDimuon;
+  TTree* fTreeLSppDimuon;
+  TTree* fTreeLSmmDimuon;  
 
-  TTree* fTreeMuon;
-  int RecMuonQ;
-  double RecMuonPt;
-  double RecMuonEta;
-  double RecMuonPhi;
-  int MCMuonQ;
-  double MCMuonPt;
-  double MCMuonEta;
-  double MCMuonPhi;
-  bool isMuonDetect;
+  TTree* fTreeMCULSDimuon;
+  TTree* fTreeMCLSppDimuon;
+  TTree* fTreeMCLSmmDimuon;  
 
-  TTree* fTreeMimicMuon;
-  int RecMimicMuonQ;
-  double RecMimicMuonPt;
-  double RecMimicMuonEta;
-  double RecMimicMuonPhi;
-  int MCMimicMuonQ;
-  double MCMimicMuonPt;
-  double MCMimicMuonEta;
-  double MCMimicMuonPhi;
-  bool isMimicMuonDetect;
+  TTree* fTreeMixULSDimuon;
+  TTree* fTreeMixLSppDimuon;
+  TTree* fTreeMixLSmmDimuon;  
+  
+  float RecDimuonPt;
+  float RecDimuonRap;
+  float RecDimuonMass;
+  float RecDimuonCent;
+  float RecDimuonDS;
 
-  ClassDef(AliAnalysisTaskAODTrackPair, 1); // example of analysis
+  float RecMCDimuonPt;
+  float RecMCDimuonRap;
+  float RecMCDimuonMass;
+  float RecMCDimuonPdgCode;
+  int RecMCDimuon2Body;
+  int RecMCDimuonDalitz;
+
+  float MCDimuonPt;
+  float MCDimuonRap;
+  float MCDimuonMass;
+  float MCDimuonPdgCode;
+  int MCDimuon2Body;
+  int MCDimuonDalitz;
+  
+
+  ClassDef(AliAnalysisTaskAODTrackPairMC, 1); // example of analysis
 };
 
 #endif
