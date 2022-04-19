@@ -205,7 +205,7 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
     plugin->SetRunMode("offline");
   
   plugin->SetAPIVersion("V1.1x");
-  plugin->SetAliPhysicsVersion("vAN-20220401-1");
+  plugin->SetAliPhysicsVersion("vAN-20220401_ROOT6-1");
   plugin->SetDefaultOutputs(kTRUE);
   
   if (onMixingAnalysis) {

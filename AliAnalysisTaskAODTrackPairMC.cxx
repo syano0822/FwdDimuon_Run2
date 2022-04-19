@@ -101,6 +101,24 @@ AliAnalysisTaskAODTrackPairMC::AliAnalysisTaskAODTrackPairMC() :
   fHistEventMulti(NULL),
   fHistEventVtxCont(NULL),
 
+  fTreeRecMuonP(NULL),
+  fTreeRecMuonN(NULL),
+  RecMuonPt(0.),
+  RecMuonEta(0.),
+  RecMuonRap(0.),
+  RecMuonPhi(0.),
+  RecMCMuonPt(0.),
+  RecMCMuonEta(0.),
+  RecMCMuonRap(0.),
+  RecMCMuonPhi(0.),  
+  fTreeMCMuonP(NULL),
+  fTreeMCMuonN(NULL),
+  MCMuonPt(0.),
+  MCMuonEta(0.),
+  MCMuonRap(0.),
+  MCMuonPhi(0.),
+  MCMuonDetect(0.),
+
   fTreeULSDimuon(NULL),
   fTreeLSppDimuon(NULL),
   fTreeLSmmDimuon(NULL),
@@ -112,7 +130,7 @@ AliAnalysisTaskAODTrackPairMC::AliAnalysisTaskAODTrackPairMC() :
   fTreeMixULSDimuon(NULL),
   fTreeMixLSppDimuon(NULL),
   fTreeMixLSmmDimuon(NULL),
-
+  
   RecDimuonPt(0.),
   RecDimuonRap(0.),
   RecDimuonMass(0.),
@@ -129,7 +147,8 @@ AliAnalysisTaskAODTrackPairMC::AliAnalysisTaskAODTrackPairMC() :
   MCDimuonMass(0.),  
   MCDimuon2Body(0.),
   MCDimuonDalitz(0),
-  MCDimuonPdgCode(0.)
+  MCDimuonPdgCode(0.),
+  MCDimuonDetected(0)
 { 
   
 }
@@ -179,18 +198,33 @@ AliAnalysisTaskAODTrackPairMC::AliAnalysisTaskAODTrackPairMC(const char* name) :
   fHistEventMulti(NULL),
   fHistEventVtxCont(NULL),
 
+  fTreeRecMuonP(NULL),
+  fTreeRecMuonN(NULL),
+  RecMuonPt(0.),
+  RecMuonEta(0.),
+  RecMuonRap(0.),
+  RecMuonPhi(0.),
+  RecMCMuonPt(0.),
+  RecMCMuonEta(0.),
+  RecMCMuonRap(0.),
+  RecMCMuonPhi(0.),  
+  fTreeMCMuonP(NULL),
+  fTreeMCMuonN(NULL),
+  MCMuonPt(0.),
+  MCMuonEta(0.),
+  MCMuonRap(0.),
+  MCMuonPhi(0.),
+  MCMuonDetect(0.),
+
   fTreeULSDimuon(NULL),
   fTreeLSppDimuon(NULL),
   fTreeLSmmDimuon(NULL),
-
   fTreeMCULSDimuon(NULL),
   fTreeMCLSppDimuon(NULL),
   fTreeMCLSmmDimuon(NULL),
-
   fTreeMixULSDimuon(NULL),
   fTreeMixLSppDimuon(NULL),
   fTreeMixLSmmDimuon(NULL),
-
   RecDimuonPt(0.),
   RecDimuonRap(0.),
   RecDimuonMass(0.),
@@ -207,7 +241,8 @@ AliAnalysisTaskAODTrackPairMC::AliAnalysisTaskAODTrackPairMC(const char* name) :
   MCDimuonMass(0.),  
   MCDimuon2Body(0.),
   MCDimuonDalitz(0),
-  MCDimuonPdgCode(0.)
+  MCDimuonPdgCode(0.),
+  MCDimuonDetected(0)
 {
    
   double fCentBins[] = {-1,10,20,30,40,50,60,70,80,90,101};
@@ -362,6 +397,7 @@ void AliAnalysisTaskAODTrackPairMC::UserCreateOutputObjects()
   fTreeMCULSDimuon->Branch("MCDimuon2Body",&MCDimuon2Body,"MCDimuon2Body/I");    
   fTreeMCULSDimuon->Branch("MCDimuonDalitz",&MCDimuonDalitz,"MCDimuonDalitz/I");    
   fTreeMCULSDimuon->Branch("MCDimuonPdgCode",&MCDimuonPdgCode,"MCDimuonPdgCode/F");    
+  fTreeMCULSDimuon->Branch("MCDimuonDetected",&MCDimuonDetected,"MCDimuonDetected/I");    
   fOutputList->Add(fTreeMCULSDimuon);
 
   fTreeMCLSppDimuon = new TTree("fTreeMCLSppDimuon","");
@@ -371,6 +407,7 @@ void AliAnalysisTaskAODTrackPairMC::UserCreateOutputObjects()
   fTreeMCLSppDimuon->Branch("MCDimuon2Body",&MCDimuon2Body,"MCDimuon2Body/I");    
   fTreeMCLSppDimuon->Branch("MCDimuonDalitz",&MCDimuonDalitz,"MCDimuonDalitz/I");    
   fTreeMCLSppDimuon->Branch("MCDimuonPdgCode",&MCDimuonPdgCode,"MCDimuonPdgCode/F");    
+  fTreeMCLSppDimuon->Branch("MCDimuonDetected",&MCDimuonDetected,"MCDimuonDetected/I");    
   fOutputList->Add(fTreeMCLSppDimuon);
 
   fTreeMCLSmmDimuon = new TTree("fTreeMCLSmmDimuon","");
@@ -380,10 +417,47 @@ void AliAnalysisTaskAODTrackPairMC::UserCreateOutputObjects()
   fTreeMCLSmmDimuon->Branch("MCDimuon2Body",&MCDimuon2Body,"MCDimuon2Body/I");    
   fTreeMCLSmmDimuon->Branch("MCDimuonDalitz",&MCDimuonDalitz,"MCDimuonDalitz/I");    
   fTreeMCLSmmDimuon->Branch("MCDimuonPdgCode",&MCDimuonPdgCode,"MCDimuonPdgCode/F");    
+  fTreeMCLSmmDimuon->Branch("MCDimuonDetected",&MCDimuonDetected,"MCDimuonDetected/I");    
   fOutputList->Add(fTreeMCLSmmDimuon);
+
+  fTreeRecMuonP = new TTree("fTreeRecMuonP","");
+  fTreeRecMuonP->Branch("RecMuonPt",&RecMuonPt,"RecMuonPt/F");
+  fTreeRecMuonP->Branch("RecMuonEta",&RecMuonEta,"RecMuonEta/F");
+  fTreeRecMuonP->Branch("RecMuonRap",&RecMuonRap,"RecMuonRap/F");
+  fTreeRecMuonP->Branch("RecMuonPhi",&RecMuonPhi,"RecMuonPhi/F");  
+  fTreeRecMuonP->Branch("RecMCMuonPt",&RecMCMuonPt,"RecMCMuonPt/F");
+  fTreeRecMuonP->Branch("RecMCMuonEta",&RecMCMuonEta,"RecMCMuonEta/F");
+  fTreeRecMuonP->Branch("RecMCMuonRap",&RecMCMuonRap,"RecMCMuonRap/F");
+  fTreeRecMuonP->Branch("RecMCMuonPhi",&RecMCMuonPhi,"RecMCMuonPhi/F");
+  fOutputList->Add(fTreeRecMuonP);
+
+  fTreeRecMuonN = new TTree("fTreeRecMuonN","");
+  fTreeRecMuonN->Branch("RecMuonPt",&RecMuonPt,"RecMuonPt/F");
+  fTreeRecMuonN->Branch("RecMuonEta",&RecMuonEta,"RecMuonEta/F");
+  fTreeRecMuonN->Branch("RecMuonRap",&RecMuonRap,"RecMuonRap/F");
+  fTreeRecMuonN->Branch("RecMuonPhi",&RecMuonPhi,"RecMuonPhi/F");
+  fTreeRecMuonN->Branch("RecMCMuonPt",&RecMCMuonPt,"RecMCMuonPt/F");
+  fTreeRecMuonN->Branch("RecMCMuonEta",&RecMCMuonEta,"RecMCMuonEta/F");
+  fTreeRecMuonN->Branch("RecMCMuonRap",&RecMCMuonRap,"RecMCMuonRap/F");
+  fTreeRecMuonN->Branch("RecMCMuonPhi",&RecMCMuonPhi,"RecMCMuonPhi/F");
+  fOutputList->Add(fTreeRecMuonN);
+
+  fTreeMCMuonP = new TTree("fTreeMCMuonP","");
+  fTreeMCMuonP->Branch("MCMuonPt",&MCMuonPt,"MCMuonPt/F");
+  fTreeMCMuonP->Branch("MCMuonEta",&MCMuonEta,"MCMuonEta/F");
+  fTreeMCMuonP->Branch("MCMuonRap",&MCMuonRap,"MCMuonRap/F");
+  fTreeMCMuonP->Branch("MCMuonPhi",&MCMuonPhi,"MCMuonPhi/F");  
+  fTreeMCMuonP->Branch("MCMuonDetect",&MCMuonDetect,"MCMuonDetect/I");
+  fOutputList->Add(fTreeMCMuonP);
+
+  fTreeMCMuonN = new TTree("fTreeMCMuonN","");
+  fTreeMCMuonN->Branch("MCMuonPt",&MCMuonPt,"MCMuonPt/F");
+  fTreeMCMuonN->Branch("MCMuonEta",&MCMuonEta,"MCMuonEta/F");
+  fTreeMCMuonN->Branch("MCMuonRap",&MCMuonRap,"MCMuonRap/F");
+  fTreeMCMuonN->Branch("MCMuonPhi",&MCMuonPhi,"MCMuonPhi/F");
+  fTreeMCMuonN->Branch("MCMuonDetect",&MCMuonDetect,"MCMuonDetect/I");
+  fOutputList->Add(fTreeMCMuonN);
   
-
-
   fHistEventVtxZ = new TH1F("fHistEventVtxZ","",60,-30,30);
   fHistEventCent = new TH1F("fHistEventCent","",100,0,100);
   fHistEventMulti = new TH1F("fHistEventMulti","",200,0,200);
@@ -508,6 +582,34 @@ bool AliAnalysisTaskAODTrackPairMC::MuonTrackQA(AliAODTrack* track){
   fHistTrackTriggerMatch->Fill(track->Pt(),AliAnalysisMuonUtility::GetMatchTrigger(track));
   fHistTrackChiSquare->Fill(track->Pt(),AliAnalysisMuonUtility::GetChi2perNDFtracker(track));
   fHistTriggerChiSquare->Fill(track->Pt(),AliAnalysisMuonUtility::GetChi2MatchTrigger(track));
+
+  int label = track->GetLabel();
+  
+  if(label<0){
+    return false;
+  }
+
+  AliAODMCParticle *particle1 = (AliAODMCParticle*)fMCTrackArray->At(label);  
+  if (!particle1) {
+    return false;
+  } 
+  
+  RecMCMuonPt = particle1->Pt();
+  RecMCMuonEta = particle1->Eta();
+  RecMCMuonRap = particle1->Y();
+  RecMCMuonPhi = particle1->Phi();
+  
+  RecMuonPt = track->Pt();
+  RecMuonEta = track->Eta();
+  RecMuonRap = track->Y();
+  RecMuonPhi = track->Phi();
+  
+  if (particle1->Charge() > 0) {
+    fTreeRecMuonP->Fill();
+  } else {
+    fTreeRecMuonN->Fill();
+  }  
+
   return true;
 }
 
@@ -770,7 +872,11 @@ bool AliAnalysisTaskAODTrackPairMC::processMC(){
 
   TLorentzVector muon1,muon2,muon12;
   
+  bool detect[2]={};
+  
   for(Int_t iTrack1=0; iTrack1<fMCTrackArray->GetEntries(); ++iTrack1){
+    
+    detect[0] = false;
     
     particle1 = (AliAODMCParticle*)fMCTrackArray->At(iTrack1);
     
@@ -778,12 +884,46 @@ bool AliAnalysisTaskAODTrackPairMC::processMC(){
       continue;
     }
     
+    for(Int_t iMCHTrack=0; iMCHTrack<fEvent->GetNumberOfTracks(); ++iMCHTrack){
+      AliAODTrack* track = (AliAODTrack*)fEvent->GetTrack(iMCHTrack);      
+      int label = track->GetLabel();      
+      if(iTrack1==label) {
+	detect[0]=true;
+      }
+    }
+
+    if ( detect[0] ) {
+
+      MCMuonPt = particle1->Pt();
+      MCMuonEta = particle1->Eta();
+      MCMuonRap = particle1->Y();
+      MCMuonPhi = particle1->Phi();
+    
+      MCMuonDetect = detect[0];
+    
+      if(particle1->Charge() > 0) {
+	fTreeMCMuonP->Fill();
+      } else {
+	fTreeMCMuonN->Fill();
+      }
+    }
+
     for(Int_t iTrack2=iTrack1+1; iTrack2<fMCTrackArray->GetEntries(); ++iTrack2){
+
+      detect[1] = false;
 
       particle2 = (AliAODMCParticle*)fMCTrackArray->At(iTrack2);
     
       if (!isPrimaryMuonTrack(particle2)) {
 	continue;
+      }
+      
+      for(Int_t iMCHTrack=0; iMCHTrack<fEvent->GetNumberOfTracks(); ++iMCHTrack){
+	AliAODTrack* track = (AliAODTrack*)fEvent->GetTrack(iMCHTrack);      
+	int label = track->GetLabel();      
+	if(iTrack2==label) {
+	  detect[1]=true;
+	}
       }
 
       int mom_pdg1 = fUtils->getMotherPdgCode(particle1);
@@ -802,11 +942,19 @@ bool AliAnalysisTaskAODTrackPairMC::processMC(){
 	if(!particle12){
 	  continue;
 	}
-
+	
 	MCDimuonDalitz = 0;
 	MCDimuon2Body = 0;
 	MCDimuonPdgCode = mom_pdg1;
 
+	if ( detect[0]==true && detect[1]==true ) {
+	  MCDimuonDetected = 2;
+	} else if ( (detect[0]==true && detect[1]==false) || (detect[0]==false && detect[1]==true) ) {
+	  MCDimuonDetected = 1;
+	} else {
+	  MCDimuonDetected = 0;
+	}
+	
 	if(mom_pdg1 == fUtils->fPdgCodeEta){
 	  if(fUtils->isDalitzProd()){
 	    MCDimuonDalitz = 1;

@@ -125,6 +125,24 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   TH1F* fHistEventCent;
   TH1F* fHistEventMulti;
   TH1F* fHistEventVtxCont;
+  
+  TTree* fTreeRecMuonP;
+  TTree* fTreeRecMuonN;
+  float RecMuonPt;
+  float RecMuonEta;
+  float RecMuonRap;
+  float RecMuonPhi;
+  float RecMCMuonPt;
+  float RecMCMuonEta;
+  float RecMCMuonRap;
+  float RecMCMuonPhi;
+  TTree* fTreeMCMuonP;
+  TTree* fTreeMCMuonN;
+  float MCMuonPt;
+  float MCMuonEta;
+  float MCMuonRap;
+  float MCMuonPhi;
+  int MCMuonDetect;
 
   TTree* fTreeULSDimuon;
   TTree* fTreeLSppDimuon;
@@ -157,7 +175,7 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   float MCDimuonPdgCode;
   int MCDimuon2Body;
   int MCDimuonDalitz;
-  
+  int MCDimuonDetected;
 
   ClassDef(AliAnalysisTaskAODTrackPairMC, 1); // example of analysis
 };
