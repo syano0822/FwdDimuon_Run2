@@ -21,7 +21,7 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
 						     bool onMixingAnalysis=false)
 
 {
-    
+
   AliMuonTrackCuts* fMuonTrackCuts = new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
   fMuonTrackCuts->SetIsMC(isMC);
   fMuonTrackCuts->SetAllowDefaultParams(true);
@@ -32,9 +32,9 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
   if(onMuMatchLptCut) selectionMask |=AliMuonTrackCuts::kMuMatchLpt;
   if(onMuMatchHptCut) selectionMask |=AliMuonTrackCuts::kMuMatchHpt;
   if(onMuPdcaCut) selectionMask |=AliMuonTrackCuts::kMuPdca;
-  if(onMuChi2Cut) selectionMask |=AliMuonTrackCuts::kMuTrackChiSquare;    
+  if(onMuChi2Cut) selectionMask |=AliMuonTrackCuts::kMuTrackChiSquare;
   fMuonTrackCuts->SetFilterMask(selectionMask);
-  
+
   TFile* input = TFile::Open("./DownScale_Run2_CTP.root");
 
   AliAnalysisTaskAODTrackPairUtils *utils = new AliAnalysisTaskAODTrackPairUtils();
@@ -48,18 +48,18 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
   utils->setMultiEstimateMethod(multi_method);
   utils->setMuonTrackCut(fMuonTrackCuts);
   utils->setPairKinematicCut(paircuttype,min_pairtrackptcut);
-  
+
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
     ::Error("AddTaskAODMuonEventSelection", "No analysis manager to connect to");
     return NULL;
   }
-  
+
   if (!mgr->GetInputEventHandler()) {
     ::Error("AddTaskAODMuonEventSelection", "This task requires an input event handler");
     return NULL;
   }
-    
+
   AliAnalysisTaskAODTrackPairMC* task = new AliAnalysisTaskAODTrackPairMC("dimuonMC");
   if(isSelectEvt){
     task->SelectCollisionCandidates(offlineTriggerMask);
@@ -98,7 +98,7 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
 
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");
-    
+
   mgr->ConnectInput(task,0,cinput);
   mgr->ConnectOutput(task,1,coutput1);
 

@@ -30,7 +30,7 @@ void runAnalysisMC(TString runPeriod = "LHC16k",
   if(type != "data"){
     isMC = true;
     if(type == "LHC20f10a" || type == "LHC20f10b" || type == "LHC20f10c" || type == "Pythia6Perugia2011CCSemiMuonic" ||
-       type == "UncorrFlatMuons_GEANT4" ){
+       type == "UncorrFlatMuons_GEANT4" || type == "UncorrFlatMuonsLowPt_GEANT4"){
       isEventSelection = false;
     }
   }
@@ -101,7 +101,7 @@ void runAnalysisMC(TString runPeriod = "LHC16k",
   bool onMuMatchLptCut = true;
   bool onMuMatchHptCut = false;
   bool onMuChi2Cut = true;
-  bool onMuPdcaCut = true;
+  bool onMuPdcaCut = false;
   bool isSelectEvt = isEventSelection;
   int paircuttype = 0;
   float min_pairtrackptcut = 0.0;  
@@ -195,15 +195,20 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
   AliAnalysisAlien *plugin = new AliAnalysisAlien();
   
   plugin->SetMergeViaJDL(isJDL);
-  if(run_mode=="terminate")
+
+  if(run_mode=="terminate"){
     plugin->SetRunMode("terminate");
-  if(run_mode=="full")
+  }
+  if(run_mode=="full"){
     plugin->SetRunMode("full");
-  if(run_mode=="test")
+  }
+  if(run_mode=="test"){
     plugin->SetRunMode("test");
-  if(run_mode=="offline")
+  }
+  if(run_mode=="offline"){
     plugin->SetRunMode("offline");
-  
+  }
+    
   plugin->SetAPIVersion("V1.1x");
   plugin->SetAliPhysicsVersion("vAN-20220401_ROOT6-1");
   plugin->SetDefaultOutputs(kTRUE);
@@ -213,6 +218,7 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
   } else {
     plugin->SetGridWorkingDir("PWGLF/AOD/"+runPeriod+"/LowMassDimuon/"+type);
   }
+  
   plugin->SetGridOutputDir("output");
 
   plugin->SetSplitMaxInputFileNumber(30);    
@@ -221,145 +227,121 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
   if(type == "LHC20f10c"){
     plugin->SetGridDataDir("/alice/sim/2020/LHC20f10c");    
     plugin->SetDataPattern("/AOD/ AliAOD.Muons.root");
-  }
-  else if(type == "LHC20f10b"){
+  } else if(type == "LHC20f10b"){
     plugin->SetGridDataDir("/alice/sim/2020/LHC20f10b");    
     plugin->SetDataPattern("/AOD/ AliAOD.Muons.root");
-  }
-  else if(type == "LHC20f10a"){
+  } else if(type == "LHC20f10a"){
     plugin->SetGridDataDir("/alice/sim/2020/LHC20f10a");    
     plugin->SetDataPattern("/AOD/ AliAOD.Muons.root");
-  }
-  
-  else if(type == "Pythia6Perugia2011CCSemiMuonic"){
+  } else if(type == "Pythia6Perugia2011CCSemiMuonic"){
     plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2016/Pythia6Perugia2011CCSemiMuonic");    
     plugin->SetDataPattern("AliAOD.Muons.root");
     plugin->SetSplitMaxInputFileNumber(10);    
     plugin->SetNrunsPerMaster(5);
-  }
-
-  else if(type == "UncorrFlatMuons_GEANT4"){
+  } else if(type == "UncorrFlatMuons_GEANT4"){
     if(runPeriod.Contains("16")){
       plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2016/UncorrFlatMuons_GEANT4");
       plugin->SetDataPattern("AliAOD.root");
-    }
-    else if(runPeriod.Contains("17")){
+    } else if(runPeriod.Contains("17")){
       plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2017/UncorrFlatMuons_GEANT4");
       plugin->SetDataPattern("AliAOD.root");
-    }
-    else if(runPeriod.Contains("18")){
+    } else if(runPeriod.Contains("18")){
       plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2018/UncorrFlatMuons_GEANT4");      
       plugin->SetDataPattern("AliAOD.Muons.root");
     }
-    
-  }
-
-  else if(type =="LHC18f1"){
+  } else if(type == "UncorrFlatMuonsLowPt_GEANT4"){
+    if(runPeriod.Contains("16")){
+      plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2016/UncorrFlatMuonsLowPt_GEANT4");
+      plugin->SetDataPattern("AliAOD.Muons.root");
+    } else if(runPeriod.Contains("17")){
+      plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2017/UncorrFlatMuonsLowPt_GEANT4");
+      plugin->SetDataPattern("AliAOD.Muons.root");
+    } else if(runPeriod.Contains("18")){
+      plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2018/UncorrFlatMuonsLowPt_GEANT4");      
+      plugin->SetDataPattern("AliAOD.Muons.root");
+    }    
+  } else if(type =="LHC18f1"){
     plugin->SetGridDataDir("/alice/sim/2018/LHC18f1");
     plugin->SetDataPattern("/AOD235/ AliAOD.root");
-  }
-
-  else if(type == "data"){
+  } else if(type == "data"){
     if (runPeriod.Contains("LHC16h")){
       plugin->SetGridDataDir("/alice/data/2016/LHC16h");    
       plugin->SetDataPattern("/pass1/AOD234/ AliAOD.root");
-    }
-    if (runPeriod.Contains("LHC16i")){
+    } else if (runPeriod.Contains("LHC16i")){
       plugin->SetGridDataDir("/alice/data/2016/LHC16i");    
       plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC16j")){
+    } else if (runPeriod.Contains("LHC16j")){
       plugin->SetGridDataDir("/alice/data/2016/LHC16j");
       plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC16k")){
+    } else if (runPeriod.Contains("LHC16k")){
       plugin->SetGridDataDir("/alice/data/2016/LHC16k");
       plugin->SetDataPattern("/pass3/AOD/ AliAOD.root");
       //plugin->SetDataPattern("/pass1/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC16l")){
+    } else if (runPeriod.Contains("LHC16l")){
       plugin->SetGridDataDir("/alice/data/2016/LHC16l");
       plugin->SetDataPattern("/pass3/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC16o")){
+    } else if (runPeriod.Contains("LHC16o")){
       plugin->SetGridDataDir("/alice/data/2016/LHC16o");
       plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC16p")){
+    } else if (runPeriod.Contains("LHC16p")){
       plugin->SetGridDataDir("/alice/data/2016/LHC16p");
       plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
-    }
-    
-    else if (runPeriod.Contains("LHC17h")){
+    } else if (runPeriod.Contains("LHC17h")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17h");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
       plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.Muons.root");
-    }
-    else if (runPeriod.Contains("LHC17i")){
+    } else if (runPeriod.Contains("LHC17i")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17i");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
       plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.Muons.root");
-    }
-    else if (runPeriod.Contains("LHC17k")){
+    } else if (runPeriod.Contains("LHC17k")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17k");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
       plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.Muons.root");
-    }
-    else if (runPeriod.Contains("LHC17l")){
+    } else if (runPeriod.Contains("LHC17l")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17l");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
       plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.Muons.root");
-    }
-    else if (runPeriod.Contains("LHC17m")){
+    } else if (runPeriod.Contains("LHC17m")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17m");
       //plugin->SetDataPattern("/pass1/AOD234/ AliAOD.Muons.root");
       plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.Muons.root");
-    }
-    else if (runPeriod.Contains("LHC17o")){
+    } else if (runPeriod.Contains("LHC17o")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17o");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
       plugin->SetDataPattern("/muon_calo_pass1/AOD203/ AliAOD.Muons.root");
-    }
-    else if (runPeriod.Contains("LHC17r")){
+    } else if (runPeriod.Contains("LHC17r")){
       plugin->SetGridDataDir("/alice/data/2017/LHC17r");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.Muons.root");
       plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.Muons.root");
-    }
-    else if (runPeriod.Contains("LHC18c")){
+    } else if (runPeriod.Contains("LHC18c")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18c");
       plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC18d")){
+    } else if (runPeriod.Contains("LHC18d")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18d");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
       plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC18e")){
+    } else if (runPeriod.Contains("LHC18e")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18e");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
       plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC18f")){
+    } else if (runPeriod.Contains("LHC18f")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18f");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
       plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC18l")){
+    } else if (runPeriod.Contains("LHC18l")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18l");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
       plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC18m")){
+    } else if (runPeriod.Contains("LHC18m")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18m");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
       plugin->SetDataPattern("/muon_calo_pass1/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC18o")){
+    } else if (runPeriod.Contains("LHC18o")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18o");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
       plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.root");
-    }
-    else if (runPeriod.Contains("LHC18p")){
+    } else if (runPeriod.Contains("LHC18p")){
       plugin->SetGridDataDir("/alice/data/2018/LHC18p");
       //plugin->SetDataPattern("/pass2/AOD/ AliAOD.root");
       plugin->SetDataPattern("/muon_calo_pass2/AOD/ AliAOD.root");

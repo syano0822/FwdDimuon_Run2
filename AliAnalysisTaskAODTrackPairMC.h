@@ -7,22 +7,22 @@
 #include "AliAnalysisTaskAODTrackPairUtils.h"
 
 class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
-  
+
  public:
-  
+
   AliAnalysisTaskAODTrackPairMC();
   AliAnalysisTaskAODTrackPairMC(const char* name);
   virtual ~AliAnalysisTaskAODTrackPairMC();
 
   virtual void   UserCreateOutputObjects();
   virtual void   UserExec(Option_t *option);
-  
+
   void setMC(bool isMC){fIsMC = isMC;}
 
   void setMixingAnalysis(bool isMix)
   {
-    fIsMixingAnalysis = isMix;    
-  }  
+    fIsMixingAnalysis = isMix;
+  }
   void setUtils(AliAnalysisTaskAODTrackPairUtils *utils)
   {
     fUtils = utils;
@@ -61,39 +61,40 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   }
 
  private:
-  
+
   AliAnalysisTaskAODTrackPairMC(const AliAnalysisTaskAODTrackPairMC&); // not implemented
   AliAnalysisTaskAODTrackPairMC& operator=(const AliAnalysisTaskAODTrackPairMC&); // not implemented
-  
+
   bool Initialize();
   bool MuonPairAnalysis();
-  bool MuonPairAnalysisEveMixing();  
+  bool MuonPairAnalysisEveMixing();
   bool MuonTrackQA(AliAODTrack* track);
+  bool FillingRecMuonTree(AliAODTrack* track);
   bool EventQA();
   bool isPrimaryMuonTrack(AliAODMCParticle *particle1);
   bool processMC();
 
-  AliAODEvent    *fEvent;  
+  AliAODEvent    *fEvent;
   AliEventPoolManager *fPoolMuonTrackMgr;
   AliAnalysisTaskAODTrackPairUtils* fUtils;
   TClonesArray   *fMCTrackArray;
 
-  bool fIsMC;  
+  bool fIsMC;
   bool fIsMixingAnalysis;
 
   int fRunNumber;
   int fTrackDepth;
   int fPoolSize;
-  
+
   unsigned int fTriggerMaskForSame;
   unsigned int fTriggerMaskForMixing;
-  
+
   float fReadyFraction;
-  
+
   bool onEvtMixingPoolVtxZ;
   bool onEvtMixingPoolCent;
   bool onEvtMixingPoolPsi;
-  
+
   bool fIsCINT7;
   bool fIsCMSL7;
   bool fIsCMSH7;
@@ -125,13 +126,19 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   TH1F* fHistEventCent;
   TH1F* fHistEventMulti;
   TH1F* fHistEventVtxCont;
-  
+
   TTree* fTreeRecMuonP;
   TTree* fTreeRecMuonN;
   float RecMuonPt;
   float RecMuonEta;
   float RecMuonRap;
   float RecMuonPhi;
+  float RecMuonThetaAbs;
+  float RecMuonChiSquare;
+  float RecMuonTriggerChiSquare;
+  int RecMuonTriggerMatch;
+  int RecMuonIsGoodTrack;
+
   float RecMCMuonPt;
   float RecMCMuonEta;
   float RecMCMuonRap;
@@ -146,16 +153,16 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
 
   TTree* fTreeULSDimuon;
   TTree* fTreeLSppDimuon;
-  TTree* fTreeLSmmDimuon;  
+  TTree* fTreeLSmmDimuon;
 
   TTree* fTreeMCULSDimuon;
   TTree* fTreeMCLSppDimuon;
-  TTree* fTreeMCLSmmDimuon;  
+  TTree* fTreeMCLSmmDimuon;
 
   TTree* fTreeMixULSDimuon;
   TTree* fTreeMixLSppDimuon;
-  TTree* fTreeMixLSmmDimuon;  
-  
+  TTree* fTreeMixLSmmDimuon;
+
   float RecDimuonPt;
   float RecDimuonRap;
   float RecDimuonMass;
