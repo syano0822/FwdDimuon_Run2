@@ -20,7 +20,7 @@ do
     aliroot -l -b -q runAnalysis.C\(\"${i}\",\"${MODE}\",${JDL},\"${DATA}\",0,${MIX}\)
 
     if [ ${MODE} == "terminate" ] && [ $JDL == 0 ]; then
-	mv AnalysisResults.root ${i}.root
+	mv Dimuon.root ${i}.root
     fi
 
 done
