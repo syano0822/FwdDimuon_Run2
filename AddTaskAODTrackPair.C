@@ -98,8 +98,7 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   cout<< onMixingAnalysis <<endl;
 
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
-  //AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");
-  AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"AnalysisResults.root");
+  AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");
   
   mgr->ConnectInput(task,0,cinput);
   mgr->ConnectOutput(task,1,coutput1);

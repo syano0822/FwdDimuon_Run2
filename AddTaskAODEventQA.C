@@ -1,24 +1,26 @@
 AliAnalysisTaskAODEventStudy* AddTaskAODEventQA(UInt_t offlineTriggerMask = AliVEvent::kAny,
-						float min_vtxz =-10,
-						float max_vtxz = 10,
-						int min_vtx_cont = 1,
-						float min_pair_rap = -4.0,
-						float max_pair_rap = -2.5,
-						string multi_method="SPDTracklets",
-						bool onPURej = true,
-						bool onLBcut = true,
-						bool onMuEtaCut = true,
-						bool onMuThetaAbsCut = true,
-						bool onMuMatchAptCut = true,
-						bool onMuMatchLptCut = true,
-						bool onMuMatchHptCut = true,
-						bool onMuChi2Cut = true,
-						bool onMuPdcaCut = true,
-						bool isMC=false,
-						bool isSelectEvt=true)
-{
-  
-  
+						 float min_vtxz =-10,
+						 float max_vtxz = 10,
+						 int min_vtx_cont = 1,
+						 float min_pair_rap = -4.0,
+						 float max_pair_rap = -2.5,
+						 string multi_method="SPDTracklets",
+						 bool onPURej = true,
+						 bool onLBcut = true,
+						 bool onMuEtaCut = true,
+						 bool onMuThetaAbsCut = true,
+						 bool onMuMatchAptCut = true,
+						 bool onMuMatchLptCut = true,
+						 bool onMuMatchHptCut = false,
+						 bool onMuChi2Cut = true,
+						 bool onMuPdcaCut = true,
+						 bool isMC=false,
+						 bool isSelectEvt=true,
+						 int paircuttype=1,
+						 double min_pairtrackptcut=0.5,
+						 bool onMixingAnalysis=false)
+
+{  
   AliMuonTrackCuts* fMuonTrackCuts = new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
   fMuonTrackCuts->SetIsMC(isMC);
   fMuonTrackCuts->SetAllowDefaultParams(true);
@@ -29,7 +31,7 @@ AliAnalysisTaskAODEventStudy* AddTaskAODEventQA(UInt_t offlineTriggerMask = AliV
   if(onMuMatchLptCut) selectionMask |=AliMuonTrackCuts::kMuMatchLpt;
   if(onMuMatchHptCut) selectionMask |=AliMuonTrackCuts::kMuMatchHpt;
   if(onMuPdcaCut) selectionMask |=AliMuonTrackCuts::kMuPdca;
-  if(onMuChi2Cut) selectionMask |=AliMuonTrackCuts::kMuTrackChiSquare;
+  if(onMuChi2Cut) selectionMask |=AliMuonTrackCuts::kMuTrackChiSquare;    
   fMuonTrackCuts->SetFilterMask(selectionMask);
   
   TFile* input = TFile::Open("./DownScale_Run2_CTP.root");
@@ -44,6 +46,7 @@ AliAnalysisTaskAODEventStudy* AddTaskAODEventQA(UInt_t offlineTriggerMask = AliV
   utils->setLocalBoardCut(onLBcut);
   utils->setMultiEstimateMethod(multi_method);
   utils->setMuonTrackCut(fMuonTrackCuts);
+  utils->setPairKinematicCut(paircuttype,min_pairtrackptcut);
   
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
@@ -63,7 +66,8 @@ AliAnalysisTaskAODEventStudy* AddTaskAODEventQA(UInt_t offlineTriggerMask = AliV
   mgr->AddTask(task);
   
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
-  AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("taskQA",TList::Class(),AliAnalysisManager::kOutputContainer,"AnalysisResults.root");
+  AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("taskQA",TList::Class(),AliAnalysisManager::kOutputContainer,"RunQA.root");
+  
   
   mgr->ConnectInput(task,0,cinput);
   mgr->ConnectOutput(task,1,coutput1);

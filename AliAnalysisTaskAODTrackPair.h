@@ -7,22 +7,22 @@
 #include "AliAnalysisTaskAODTrackPairUtils.h"
 
 class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
-  
+
  public:
-  
+
   AliAnalysisTaskAODTrackPair();
   AliAnalysisTaskAODTrackPair(const char* name);
   virtual ~AliAnalysisTaskAODTrackPair();
 
   virtual void   UserCreateOutputObjects();
   virtual void   UserExec(Option_t *option);
-  
+
   void setMC(bool isMC){fIsMC = isMC;}
 
   void setMixingAnalysis(bool isMix)
   {
-    fIsMixingAnalysis = isMix;    
-  }  
+    fIsMixingAnalysis = isMix;
+  }
   void setUtils(AliAnalysisTaskAODTrackPairUtils *utils)
   {
     fUtils = utils;
@@ -61,36 +61,37 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   }
 
  private:
-  
+
   AliAnalysisTaskAODTrackPair(const AliAnalysisTaskAODTrackPair&); // not implemented
   AliAnalysisTaskAODTrackPair& operator=(const AliAnalysisTaskAODTrackPair&); // not implemented
-  
+
   bool Initialize();
   bool MuonPairAnalysis();
-  bool MuonPairAnalysisEveMixing();  
+  bool MuonPairAnalysisEveMixing();
   bool MuonTrackQA(AliAODTrack* track);
+  bool MuonPairQA(AliAODDimuon* dimuon);
   bool EventQA();
 
-  AliAODEvent    *fEvent;  
+  AliAODEvent    *fEvent;
   AliEventPoolManager *fPoolMuonTrackMgr;
   AliAnalysisTaskAODTrackPairUtils* fUtils;
-  
-  bool fIsMC;  
+
+  bool fIsMC;
   bool fIsMixingAnalysis;
 
   int fRunNumber;
   int fTrackDepth;
   int fPoolSize;
-  
+
   unsigned int fTriggerMaskForSame;
   unsigned int fTriggerMaskForMixing;
-  
+
   float fReadyFraction;
-  
+
   bool onEvtMixingPoolVtxZ;
   bool onEvtMixingPoolCent;
   bool onEvtMixingPoolPsi;
-  
+
   bool fIsCINT7;
   bool fIsCMSL7;
   bool fIsCMSH7;
@@ -103,14 +104,10 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
 
   TList* fOutputList;
   TH2F* fEventCounter;
-  /*
-  THnSparse* fSparseULSDimuon;
-  THnSparse* fSparseLSppDimuon;
-  THnSparse* fSparseLSmmDimuon;
-  THnSparse* fSparseMixULSDimuon;
-  THnSparse* fSparseMixLSppDimuon;
-  THnSparse* fSparseMixLSmmDimuon;
-  */
+
+  TH2F* fHistTrackPairPtBalance;
+  TH2F* fHistTrackPairLocalBoardPair;
+
   TH2F* fHistTrackEta;
   TH2F* fHistTrackThetaAbs;
   TH2F* fHistTrackTriggerMatch;
@@ -125,12 +122,12 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
 
   TTree* fTreeULSDimuon;
   TTree* fTreeLSppDimuon;
-  TTree* fTreeLSmmDimuon;  
+  TTree* fTreeLSmmDimuon;
 
   TTree* fTreeMixULSDimuon;
   TTree* fTreeMixLSppDimuon;
-  TTree* fTreeMixLSmmDimuon;  
-  
+  TTree* fTreeMixLSmmDimuon;
+
   float RecDimuonPt;
   float RecDimuonRap;
   float RecDimuonMass;

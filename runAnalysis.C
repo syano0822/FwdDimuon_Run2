@@ -103,8 +103,8 @@ void runAnalysis(TString runPeriod = "LHC16k",
   bool onMuChi2Cut = true;
   bool onMuPdcaCut = false;
   bool isSelectEvt = isEventSelection;
-  int paircuttype = 0;
-  float min_pairtrackptcut = 0.0;  
+  int paircuttype = 1;
+  float min_pairtrackptcut = 0.5;  
   bool onMixingAnalysis = isMix;
 
 #if !defined (__CINT__) || defined (__CLING__)

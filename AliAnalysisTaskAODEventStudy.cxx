@@ -368,7 +368,6 @@ void AliAnalysisTaskAODEventStudy::UserExec(Option_t *){
 
   if(!Initialize()) return;  
   if(!fUtils->isAcceptEvent()) return;
-  
   RunQA();
   MultiplicityQA();
   TrackQA();
