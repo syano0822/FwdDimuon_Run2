@@ -107,14 +107,7 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
 
   TList* fOutputList;
   TH2F* fEventCounter;
-  /*
-  THnSparse* fSparseULSDimuon;
-  THnSparse* fSparseLSppDimuon;
-  THnSparse* fSparseLSmmDimuon;
-  THnSparse* fSparseMixULSDimuon;
-  THnSparse* fSparseMixLSppDimuon;
-  THnSparse* fSparseMixLSmmDimuon;
-  */
+
   TH2F* fHistTrackEta;
   TH2F* fHistTrackThetaAbs;
   TH2F* fHistTrackTriggerMatch;
@@ -138,11 +131,12 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   float RecMuonTriggerChiSquare;
   int RecMuonTriggerMatch;
   int RecMuonIsGoodTrack;
-
+  
   float RecMCMuonPt;
   float RecMCMuonEta;
   float RecMCMuonRap;
   float RecMCMuonPhi;
+  
   TTree* fTreeMCMuonP;
   TTree* fTreeMCMuonN;
   float MCMuonPt;
@@ -173,6 +167,7 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   float RecMCDimuonRap;
   float RecMCDimuonMass;
   float RecMCDimuonPdgCode;
+  
   int RecMCDimuon2Body;
   int RecMCDimuonDalitz;
 
