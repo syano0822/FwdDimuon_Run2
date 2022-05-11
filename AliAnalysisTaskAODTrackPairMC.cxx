@@ -145,15 +145,17 @@ RecDimuonDS(0.),
 RecMCDimuonPt(0.),
 RecMCDimuonRap(0.),
 RecMCDimuonMass(0.),
-RecMCDimuon2Body(0.),
-RecMCDimuonDalitz(0),
-RecMCDimuonPdgCode(0.),
+RecMCMom2Body(0.),
+RecMCMomDalitz(0),
+RecMCMomPdgCode(0.),
 MCDimuonPt(0.),
 MCDimuonRap(0.),
 MCDimuonMass(0.),
-MCDimuon2Body(0.),
-MCDimuonDalitz(0),
-MCDimuonPdgCode(0.),
+MCMom2Body(0.),
+MCMomDalitz(0),
+MCMomPt(0),
+MCMomEta(0),
+MCMomPdgCode(0.),
 MCDimuonDetected(0)
 {
 
@@ -245,15 +247,17 @@ RecDimuonDS(0.),
 RecMCDimuonPt(0.),
 RecMCDimuonRap(0.),
 RecMCDimuonMass(0.),
-RecMCDimuon2Body(0.),
-RecMCDimuonDalitz(0),
-RecMCDimuonPdgCode(0.),
+RecMCMom2Body(0.),
+RecMCMomDalitz(0),
+RecMCMomPdgCode(0.),
 MCDimuonPt(0.),
 MCDimuonRap(0.),
 MCDimuonMass(0.),
-MCDimuon2Body(0.),
-MCDimuonDalitz(0),
-MCDimuonPdgCode(0.),
+MCMom2Body(0.),
+MCMomDalitz(0),
+MCMomPt(0),
+MCMomEta(0),
+MCMomPdgCode(0.),
 MCDimuonDetected(0)
 {
 
@@ -316,9 +320,10 @@ MCDimuonDetected(0)
       fTreeULSDimuon->Branch("RecMCDimuonPt",&RecMCDimuonPt,"RecMCDimuonPt/F");
       fTreeULSDimuon->Branch("RecMCDimuonRap",&RecMCDimuonRap,"RecMCDimuonRap/F");
       fTreeULSDimuon->Branch("RecMCDimuonMass",&RecMCDimuonMass,"RecMCDimuonMass/F");
-      fTreeULSDimuon->Branch("RecMCDimuon2Body",&RecMCDimuon2Body,"RecMCDimuon2Body/I");
-      fTreeULSDimuon->Branch("RecMCDimuonDalitz",&RecMCDimuonDalitz,"RecMCDimuonDalitz/I");
-      fTreeULSDimuon->Branch("RecMCDimuonPdgCode",&RecMCDimuonPdgCode,"RecMCDimuonPdgCode/F");
+      fTreeULSDimuon->Branch("RecMCMom2Body",&RecMCMom2Body,"RecMCMom2Body/I");
+      fTreeULSDimuon->Branch("RecMCMomDalitz",&RecMCMomDalitz,"RecMCMomDalitz/I");
+      fTreeULSDimuon->Branch("RecMCMomPdgCode",&RecMCMomPdgCode,"RecMCMomPdgCode/F");
+      fTreeULSDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
       fOutputList->Add(fTreeULSDimuon);
 
       fTreeLSppDimuon = new TTree("fTreeLSppDimuon","");
@@ -330,7 +335,8 @@ MCDimuonDetected(0)
       fTreeLSppDimuon->Branch("RecMCDimuonPt",&RecMCDimuonPt,"RecMCDimuonPt/F");
       fTreeLSppDimuon->Branch("RecMCDimuonRap",&RecMCDimuonRap,"RecMCDimuonRap/F");
       fTreeLSppDimuon->Branch("RecMCDimuonMass",&RecMCDimuonMass,"RecMCDimuonMass/F");
-      fTreeLSppDimuon->Branch("RecMCDimuonPdgCode",&RecMCDimuonPdgCode,"RecMCDimuonPdgCode/F");
+      fTreeLSppDimuon->Branch("RecMCMomPdgCode",&RecMCMomPdgCode,"RecMCMomPdgCode/F");
+      fTreeLSppDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
       fOutputList->Add(fTreeLSppDimuon);
 
       fTreeLSmmDimuon = new TTree("fTreeLSmmDimuon","");
@@ -342,7 +348,8 @@ MCDimuonDetected(0)
       fTreeLSmmDimuon->Branch("RecMCDimuonPt",&RecMCDimuonPt,"RecMCDimuonPt/F");
       fTreeLSmmDimuon->Branch("RecMCDimuonRap",&RecMCDimuonRap,"RecMCDimuonRap/F");
       fTreeLSmmDimuon->Branch("RecMCDimuonMass",&RecMCDimuonMass,"RecMCDimuonMass/F");
-      fTreeLSmmDimuon->Branch("RecMCDimuonPdgCode",&RecMCDimuonPdgCode,"RecMCDimuonPdgCode/F");
+      fTreeLSmmDimuon->Branch("RecMCMomPdgCode",&RecMCMomPdgCode,"RecMCMomPdgCode/F");
+      fTreeLSmmDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
       fOutputList->Add(fTreeLSmmDimuon);
     } else {
       fTreeMixULSDimuon = new TTree("fTreeMixULSDimuon","");
@@ -374,30 +381,39 @@ MCDimuonDetected(0)
     fTreeMCULSDimuon->Branch("MCDimuonPt",&MCDimuonPt,"MCDimuonPt/F");
     fTreeMCULSDimuon->Branch("MCDimuonRap",&MCDimuonRap,"MCDimuonRap/F");
     fTreeMCULSDimuon->Branch("MCDimuonMass",&MCDimuonMass,"MCDimuonMass/F");
-    fTreeMCULSDimuon->Branch("MCDimuon2Body",&MCDimuon2Body,"MCDimuon2Body/I");
-    fTreeMCULSDimuon->Branch("MCDimuonDalitz",&MCDimuonDalitz,"MCDimuonDalitz/I");
-    fTreeMCULSDimuon->Branch("MCDimuonPdgCode",&MCDimuonPdgCode,"MCDimuonPdgCode/F");
+    fTreeMCULSDimuon->Branch("MCMom2Body",&MCMom2Body,"MCMom2Body/I");
+    fTreeMCULSDimuon->Branch("MCMomDalitz",&MCMomDalitz,"MCMomDalitz/I");
+    fTreeMCULSDimuon->Branch("MCMomPt",&MCMomPt,"MCMomPt/F");
+    fTreeMCULSDimuon->Branch("MCMomEta",&MCMomEta,"MCMomEta/F");
+    fTreeMCULSDimuon->Branch("MCMomPdgCode",&MCMomPdgCode,"MCMomPdgCode/F");
     fTreeMCULSDimuon->Branch("MCDimuonDetected",&MCDimuonDetected,"MCDimuonDetected/I");
+    fTreeMCULSDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
     fOutputList->Add(fTreeMCULSDimuon);
     
     fTreeMCLSppDimuon = new TTree("fTreeMCLSppDimuon","");
     fTreeMCLSppDimuon->Branch("MCDimuonPt",&MCDimuonPt,"MCDimuonPt/F");
     fTreeMCLSppDimuon->Branch("MCDimuonRap",&MCDimuonRap,"MCDimuonRap/F");
     fTreeMCLSppDimuon->Branch("MCDimuonMass",&MCDimuonMass,"MCDimuonMass/F");
-    fTreeMCLSppDimuon->Branch("MCDimuon2Body",&MCDimuon2Body,"MCDimuon2Body/I");
-    fTreeMCLSppDimuon->Branch("MCDimuonDalitz",&MCDimuonDalitz,"MCDimuonDalitz/I");
-    fTreeMCLSppDimuon->Branch("MCDimuonPdgCode",&MCDimuonPdgCode,"MCDimuonPdgCode/F");
+    fTreeMCLSppDimuon->Branch("MCMom2Body",&MCMom2Body,"MCMom2Body/I");
+    fTreeMCLSppDimuon->Branch("MCMomDalitz",&MCMomDalitz,"MCMomDalitz/I");
+    fTreeMCLSppDimuon->Branch("MCMomPt",&MCMomPt,"MCMomPt/F");
+    fTreeMCLSppDimuon->Branch("MCMomEta",&MCMomEta,"MCMomEta/F");
+    fTreeMCLSppDimuon->Branch("MCMomPdgCode",&MCMomPdgCode,"MCMomPdgCode/F");
     fTreeMCLSppDimuon->Branch("MCDimuonDetected",&MCDimuonDetected,"MCDimuonDetected/I");
+    fTreeMCLSppDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");    
     fOutputList->Add(fTreeMCLSppDimuon);
 
     fTreeMCLSmmDimuon = new TTree("fTreeMCLSmmDimuon","");
     fTreeMCLSmmDimuon->Branch("MCDimuonPt",&MCDimuonPt,"MCDimuonPt/F");
     fTreeMCLSmmDimuon->Branch("MCDimuonRap",&MCDimuonRap,"MCDimuonRap/F");
     fTreeMCLSmmDimuon->Branch("MCDimuonMass",&MCDimuonMass,"MCDimuonMass/F");
-    fTreeMCLSmmDimuon->Branch("MCDimuon2Body",&MCDimuon2Body,"MCDimuon2Body/I");
-    fTreeMCLSmmDimuon->Branch("MCDimuonDalitz",&MCDimuonDalitz,"MCDimuonDalitz/I");
-    fTreeMCLSmmDimuon->Branch("MCDimuonPdgCode",&MCDimuonPdgCode,"MCDimuonPdgCode/F");
+    fTreeMCLSmmDimuon->Branch("MCMom2Body",&MCMom2Body,"MCMom2Body/I");
+    fTreeMCLSmmDimuon->Branch("MCMomDalitz",&MCMomDalitz,"MCMomDalitz/I");
+    fTreeMCLSmmDimuon->Branch("MCMomPt",&MCMomPt,"MCMomPt/F");
+    fTreeMCLSmmDimuon->Branch("MCMomEta",&MCMomEta,"MCMomEta/F");
+    fTreeMCLSmmDimuon->Branch("MCMomPdgCode",&MCMomPdgCode,"MCMomPdgCode/F");
     fTreeMCLSmmDimuon->Branch("MCDimuonDetected",&MCDimuonDetected,"MCDimuonDetected/I");
+    fTreeMCLSmmDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");    
     fOutputList->Add(fTreeMCLSmmDimuon);
 
     fTreeRecMuonP = new TTree("fTreeRecMuonP","");
@@ -483,7 +499,7 @@ MCDimuonDetected(0)
     if(!Initialize()) return;
 
     if(!fUtils->isAcceptEvent()) return;
-
+    
     processMC();
 
     if ( !fIsMixingAnalysis ) {
@@ -782,33 +798,33 @@ MCDimuonDetected(0)
             continue;
           }
 	  
-          RecMCDimuonDalitz = 0;
-          RecMCDimuon2Body = 0;
-          RecMCDimuonPdgCode = mom_pdg;
+          RecMCMomDalitz = 0;
+          RecMCMom2Body = 0;
+          RecMCMomPdgCode = mom_pdg;
 
           if(mom_pdg == fUtils->fPdgCodeEta){
             if(fUtils->isDalitzProd()){
-              RecMCDimuonDalitz = 1;
+              RecMCMomDalitz = 1;
             } else{
-              RecMCDimuon2Body = 1;
+              RecMCMom2Body = 1;
             }
           } else if(mom_pdg == fUtils->fPdgCodeRho){
             if(fUtils->is2BodyProd()){
-              RecMCDimuon2Body = 1;
+              RecMCMom2Body = 1;
             }
           } else if(mom_pdg == fUtils->fPdgCodeOmega){
             if(fUtils->isDalitzProd()){
-              RecMCDimuonDalitz = 1;
+              RecMCMomDalitz = 1;
             } else {
-              RecMCDimuon2Body = 1;
+              RecMCMom2Body = 1;
             }
           } else if(mom_pdg == fUtils->fPdgCodePhi){
             if(fUtils->is2BodyProd()){
-              RecMCDimuon2Body = 1;
+              RecMCMom2Body = 1;
             }
           } else if(mom_pdg == fUtils->fPdgCodeEtaPrime){
             if(fUtils->isDalitzProd()){
-              RecMCDimuonDalitz = 1;
+              RecMCMomDalitz = 1;
             }
           }
 
@@ -893,10 +909,12 @@ MCDimuonDetected(0)
     TLorentzVector muon1,muon2,muon12;
 
     bool detect[2]={};
+    bool accept[2]={};
 
     for(Int_t iTrack1=0; iTrack1<fMCTrackArray->GetEntries(); ++iTrack1){
 
       detect[0] = false;
+      accept[0] = false;
 
       particle1 = (AliAODMCParticle*)fMCTrackArray->At(iTrack1);
 
@@ -910,6 +928,10 @@ MCDimuonDetected(0)
         if(iTrack1 == label) {
           detect[0]=true;
         }
+      }
+
+      if(171.0 * TMath::Pi() / 180. < particle1->Theta() && particle1->Theta() < 178.0 * TMath::Pi() / 180.) {
+	accept[0] = true;
       }
 
       MCMuonPt = particle1->Pt();
@@ -927,6 +949,7 @@ MCDimuonDetected(0)
       for(Int_t iTrack2=iTrack1+1; iTrack2<fMCTrackArray->GetEntries(); ++iTrack2){
 
         detect[1] = false;
+	accept[1] = false;
 
         particle2 = (AliAODMCParticle*)fMCTrackArray->At(iTrack2);
 
@@ -941,6 +964,9 @@ MCDimuonDetected(0)
             detect[1]=true;
           }
         }
+	if(171.0 * TMath::Pi() / 180. < particle2->Theta() && particle2->Theta() < 178.0 * TMath::Pi() / 180.) {
+	  accept[1] = true;
+	}
 
         int mom_pdg1 = fUtils->getMotherPdgCode(particle1);
         int mom_pdg2 = fUtils->getMotherPdgCode(particle2);
@@ -955,45 +981,50 @@ MCDimuonDetected(0)
 
           particle12 = (AliAODMCParticle*)fMCTrackArray->At(mom_label1);
 	  
+	  MCMomPt = particle12->Pt();
+	  MCMomEta = fabs(particle12->Eta());
+
           if(!particle12){
             continue;
           }
 
-          MCDimuonDalitz = 0;
-          MCDimuon2Body = 0;
-          MCDimuonPdgCode = mom_pdg1;
+          MCMomDalitz = 0;
+          MCMom2Body = 0;
+          MCMomPdgCode = mom_pdg1;
 
-          if ( detect[0]==true && detect[1]==true ) {
+          if ( accept[0]==true && accept[1]==true && detect[0]==true && detect[1]==true) {
             MCDimuonDetected = 2;
-          } else if ( (detect[0]==true && detect[1]==false) || (detect[0]==false && detect[1]==true) ) {
+	  } else if ( accept[0]==true && accept[1]==true ) {
             MCDimuonDetected = 1;
-          } else {
-            MCDimuonDetected = 0;
-          }
+	  } else {
+	    MCDimuonDetected = 0;
+	  }
+	  
+	  //cout<<accept[0]<<"   "<<accept[1]<<"   "<<detect[0]<<"   "<<detect[1]<<"   "<<MCDimuonDetected<<endl;
 
           if(mom_pdg1 == fUtils->fPdgCodeEta){
             if(fUtils->isDalitzProd()){
-              MCDimuonDalitz = 1;
+              MCMomDalitz = 1;
             } else{
-              MCDimuon2Body = 1;
+              MCMom2Body = 1;
             }
           } else if(mom_pdg1 == fUtils->fPdgCodeRho){
             if(fUtils->is2BodyProd()){
-              MCDimuon2Body = 1;
+              MCMom2Body = 1;
             }
           } else if(mom_pdg1 == fUtils->fPdgCodeOmega){
             if(fUtils->isDalitzProd()){
-              MCDimuonDalitz = 1;
+              MCMomDalitz = 1;
             } else {
-              MCDimuon2Body = 1;
+              MCMom2Body = 1;
             }
           } else if(mom_pdg1 == fUtils->fPdgCodePhi){
             if(fUtils->is2BodyProd()){
-              MCDimuon2Body = 1;
+              MCMom2Body = 1;
             }
           } else if(mom_pdg1 == fUtils->fPdgCodeEtaPrime){
             if(fUtils->isDalitzProd()){
-              MCDimuonDalitz = 1;
+              MCMomDalitz = 1;
             }
           }
 

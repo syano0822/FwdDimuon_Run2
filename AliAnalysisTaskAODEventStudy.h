@@ -147,6 +147,11 @@ class AliAnalysisTaskAODEventStudy : public AliAnalysisTaskSE {
 
   TH3F* fHistTrueChV0ACVtxZ_CINT7;
   TH3F* fHistTrueChV0ACVtxZ_Inel;
+  
+  TH2F* fHistNSPDTrkVtxZEta20[6];
+  TH2F* fHistNSPDTrkVtxZEta15[6];
+  TH2F* fHistNSPDTrkVtxZEta10[6];
+  TH2F* fHistNSPDTrkVtxZEta05[6];
 
   ClassDef(AliAnalysisTaskAODEventStudy, 1); // example of analysis
 };

@@ -30,7 +30,9 @@ void runAnalysisMC(TString runPeriod = "LHC16k",
   if(type != "data"){
     isMC = true;
     if(type == "LHC20f10a" || type == "LHC20f10b" || type == "LHC20f10c" || type == "Pythia6Perugia2011CCSemiMuonic" ||
-       type == "UncorrFlatMuons_GEANT4" || type == "UncorrFlatMuonsLowPt_GEANT4" || type == "OmegaDirect_GEANT4"){
+       type == "UncorrFlatMuons_GEANT4" || type == "UncorrFlatMuonsLowPt_GEANT4" || 
+       type == "EtaDirect_GEANT4" || type == "EtaDalitz_GEANT4" || type == "RhoDirect_GEANT4" || type == "OmegaDalitz_GEANT4" || type == "OmegaDirect_GEANT4" || 
+       type == "EtaPrimeDalitz_GEANT4" || type == "PhiDirect_GEANT4"){
       isEventSelection = false;
     }
   }
@@ -238,17 +240,22 @@ AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t 
     plugin->SetDataPattern("AliAOD.Muons.root");
     plugin->SetSplitMaxInputFileNumber(10);    
     plugin->SetNrunsPerMaster(5);
-  } else if(type == "OmegaDirect_GEANT4"){
+  } else if(type == "EtaDirect_GEANT4" || type == "EtaDalitz_GEANT4" || type == "RhoDirect_GEANT4" ||
+	    type == "OmegaDalitz_GEANT4" || type == "OmegaDirect_GEANT4" || 
+	    type == "EtaPrimeDalitz_GEANT4" || type == "PhiDirect_GEANT4"){
     if(runPeriod.Contains("16")){
-      plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2016/OmegaDirect_GEANT4");
+      plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2016/"+type);
       plugin->SetDataPattern("AliAOD.Muons.root");
+      plugin->SetSplitMaxInputFileNumber(10);    
+      plugin->SetNrunsPerMaster(5);
     } else if(runPeriod.Contains("17")){
-      plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2017/OmegaDirect_GEANT4");
+      plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2017/"+type);
       plugin->SetDataPattern("AliAOD.Muons.root");
     } else if(runPeriod.Contains("18")){
-      plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2018/OmegaDirect_GEANT4");      
+      plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2018/"+type);
       plugin->SetDataPattern("AliAOD.Muons.root");
     }    
+
   } else if(type == "UncorrFlatMuons_GEANT4"){
     if(runPeriod.Contains("16")){
       plugin->SetGridDataDir("/alice/cern.ch/user/s/syano/simulation/2016/UncorrFlatMuons_GEANT4");
