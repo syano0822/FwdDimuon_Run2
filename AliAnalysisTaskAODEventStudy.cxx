@@ -433,7 +433,7 @@ bool AliAnalysisTaskAODEventStudy::Initialize()
   return true;
 }
 
-void ::processMC()
+void AliAnalysisTaskAODEventStudy::processMC()
 {
   
   

@@ -35,7 +35,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   int getMotherPdgCode(AliAODMCParticle *part);
   int getMotherLabel(AliAODTrack *track);
   int getMotherLabel(AliAODMCParticle *part);
-  bool setTrueChPart();
+  bool setTrueCh();
   
   bool getTrueChPartInV0s(int &v0a, int& v0c)
   {
@@ -46,14 +46,14 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
 
   int getNTrueChTrkInfo(int spec)
   {
-    if (mode == 0) {
-      trk = fNChEta05;
-    } else if (mode == 1) {
-      trk = fNChEta10;
-    } else if (mode == 2){
-      trk = fNChEta15;
+    if (spec == 0) {
+      return fNChEta05;
+    } else if (spec == 1) {
+      return fNChEta10;
+    } else if (spec == 2){
+      return fNChEta15;
     } else {
-      trk = fNChEta20;
+      return fNChEta20;
     }
     return true;
   }
