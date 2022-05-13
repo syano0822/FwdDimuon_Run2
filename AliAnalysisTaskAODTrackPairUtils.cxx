@@ -14,9 +14,9 @@
 
 using namespace std;
 
-ClassImp(AliAnalysisTaskAODTrackPairUtils)       
+ClassImp(AliAnalysisTaskAODTrackPairUtils)
 
-AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),  
+AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fEvent(NULL),
   fMultSelection(NULL),
   fInputHandler(NULL),
@@ -27,7 +27,7 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fIsVtxZcut(true),
   fMaxVertexCutZ(-10),
   fMinVertexCutZ(10),
-  
+
   fIsPairRapCut(true),
   fMinPairRapCut(-4.0),
   fMaxPairRapCut(-2.5),
@@ -50,7 +50,7 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fHistDsCINT7(NULL),
   fHistDsCMSL7(NULL),
   fHistDsCMLL7(NULL),
-								       								       
+
   fVtxZ(0),
   fCent(0),
   fPsi(0),
@@ -71,7 +71,7 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fIsCMUL7(false),
   fIsCMLL7(false),
 
-  
+
   fIs0MSL(false),
   fIs0MSH(false),
   fIs0MUL(false),
@@ -98,7 +98,12 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fTimeV0C(0.),
 
   fNChV0A(0),
-  fNChV0C(0)
+  fNChV0C(0),
+
+  fNChEta05(0),
+  fNChEta10(0),
+  fNChEta15(0),
+  fNChEta20(0)
 
 {
 
@@ -106,9 +111,9 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
 
 AliAnalysisTaskAODTrackPairUtils::~AliAnalysisTaskAODTrackPairUtils()
 {
- 
-  
- 
+
+
+
 }
 
 void AliAnalysisTaskAODTrackPairUtils::setInit()
@@ -120,7 +125,7 @@ void AliAnalysisTaskAODTrackPairUtils::setInit()
   fVtxZ=-999;
   fCent=-999;
   fPsi=-999;
-  
+
   fTrueVtx[0] = -999;
   fTrueVtx[1] = -999;
   fTrueVtx[2] = -999;
@@ -137,12 +142,12 @@ void AliAnalysisTaskAODTrackPairUtils::setInit()
   fIsCMSH7=false;
   fIsCMUL7=false;
   fIsCMLL7=false;
-  
+
   fIs0MSL=false;
   fIs0MSH=false;
   fIs0MUL=false;
   fIs0MLL=false;
-  
+
   fIsDalitzProd=false;
   fIs2BodyProd=false;
 
@@ -165,38 +170,44 @@ void AliAnalysisTaskAODTrackPairUtils::setInit()
 
   fNChV0A = 0;
   fNChV0C = 0;
+
+  fNChEta05 = 0;
+  fNChEta10 = 0;
+  fNChEta15 = 0;
+  fNChEta20 = 0;
+
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent* event, AliVEventHandler* handler)
-{  
-  
+{
+
   setInit();
-  
-  fEvent = event;  
+
+  fEvent = event;
   if(!fEvent) return false;
 
   fInputHandler = handler;
   if(!fInputHandler) return false;
 
   fRunNumber = fEvent->GetRunNumber();
-  
+
   if(fIsMC){
     setMCEventInfo();
   }
 
   if(!fIsEvtSelect) return true;
-  
-  fMultSelection = (AliMultSelection *)fEvent->FindListObject("MultSelection");  
+
+  fMultSelection = (AliMultSelection *)fEvent->FindListObject("MultSelection");
   if(!fMultSelection) return false;
-  
+
   if(!setRunnumberIndex())
     return false;
   if(!setPeriodInfo())
     return false;
   if(!setTriggerInfo())
-    return false; 
+    return false;
   if(!setVtxZCentPsi())
-    return false;  
+    return false;
   if(!setDownScaleFactor())
     return false;
   if(!setSPDTrk())
@@ -205,7 +216,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent* event, AliVEventHan
     return false;
   if(!setVZERO())
     return false;
-  
+
   return true;
 }
 
@@ -216,12 +227,12 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameRunnumber()
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptEvent()
-{    
+{
 
   if(!fEvent) return false;
-  
+
   if(!fIsEvtSelect) return true;
-  
+
   if(fIsVtxZcut && (fMinVertexCutZ>fVtxZ || fVtxZ>fMaxVertexCutZ))
     return false;
   if(fIsVtxZcut && fNContVtx<fMinContVtx)
@@ -234,35 +245,35 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptEvent()
   if(fDSfactor < 0.000000000001) {
     return false;
   }
-  
+
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptMuonTrack(AliAODTrack* track){  
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptMuonTrack(AliAODTrack* track){
 
   if(!fMuonTrackCuts->IsSelected(track))
     return false;
-  
+
   return true;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptDimuon(AliAODDimuon* dimuon)
-{    
-  
+{
+
   AliAODTrack* track1 = dynamic_cast<AliAODTrack*>(dimuon->GetMu(0));
   AliAODTrack* track2 = dynamic_cast<AliAODTrack*>(dimuon->GetMu(1));
-  
+
   int triggerLB1 = AliAnalysisMuonUtility::GetLoCircuit(track1);
   int triggerLB2 = AliAnalysisMuonUtility::GetLoCircuit(track2);
 
   if( fIsLBCut && triggerLB1 == triggerLB2 ) {
     return false;
-  }  
-  
+  }
+
   if( fIsPairRapCut && !(fMinPairRapCut<fabs(dimuon->Y()) && fabs(dimuon->Y())<fMaxPairRapCut) ) {
     return false;
   }
-  
+
   if(fIsPairPtCutForOneTrack && !fIsPairPtCutForBothTracks){
     if(track1->Pt()<fMinPairPtCut && track2->Pt()<fMinPairPtCut){
       return false;
@@ -281,43 +292,43 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptDimuon(AliAODDimuon* dimuon)
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODTrack* track1,AliAODTrack* track2)
-{  
+{
   if(!fMCArray) return false;
-  
+
   if(!track1 || !track2) return false;
-  
+
   int label1 = track1->GetLabel();
   int label2 = track2->GetLabel();
-  
+
   if(label1<0 || label2<0) return false;
-  
+
   AliAODMCParticle *part1 = (AliAODMCParticle*)fMCArray->At(label1);
   AliAODMCParticle *part2 = (AliAODMCParticle*)fMCArray->At(label2);
-  
+
   if(!part1 || !part2) return false;
 
   int mom1 = part1->GetMother();
   int mom2 = part2->GetMother();
-  
+
   if(mom1 != mom2) return false;
 
   if(mom1<0){
     return false;
-  } 
+  }
   if(mom2<0){
     return false;
-  } 
+  }
 
   return true;
 }
 
 
 bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODMCParticle *part1, AliAODMCParticle *part2)
-{  
+{
   if(!fMCArray) return false;
-  
+
   if(!part1 || !part2) return false;
-  
+
   int mom1 = part1->GetMother();
   int mom2 = part2->GetMother();
 
@@ -325,79 +336,79 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODMCParticle *part1,
 
   if(mom1<0){
     return false;
-  } 
+  }
   if(mom2<0){
     return false;
-  } 
+  }
 
   return true;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isCharmQuarkOrigin(AliAODMCParticle* particle)
-{  
+{
   Int_t mother1 = particle->GetMother();
-  
+
   if(mother1<0) return false;
 
   AliAODMCParticle *particle_mother1 = (AliAODMCParticle*)fMCArray->At(mother1);
   if(!particle_mother1) return false;
 
   Int_t mom_pid1 = particle_mother1->GetPdgCode();
-  
+
   AliAODMCParticle* particle_origin = NULL;
 
   while(true) {
-    
+
     particle_mother1 = (AliAODMCParticle*)fMCArray->At(mother1);
-    
+
     if(!particle_mother1) break;
     else{
       mother1  = particle_mother1->GetMother();
-      mom_pid1 = particle_mother1->GetPdgCode();      
+      mom_pid1 = particle_mother1->GetPdgCode();
       if(fabs(mom_pid1) == 4){
 	return true;
       }
     }
-  }//end of while	    
+  }//end of while
 
   return false;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isBeautyQuarkOrigin(AliAODMCParticle* particle)
-{  
+{
   Int_t mother1 = particle->GetMother();
-  
+
   if(mother1<0) return false;
 
   AliAODMCParticle *particle_mother1 = (AliAODMCParticle*)fMCArray->At(mother1);
   if(!particle_mother1) return false;
 
   Int_t mom_pid1 = particle_mother1->GetPdgCode();
-  
+
   AliAODMCParticle* particle_origin = NULL;
 
   while(true) {
-    
+
     particle_mother1 = (AliAODMCParticle*)fMCArray->At(mother1);
-    
+
     if(!particle_mother1) break;
     else{
       mother1  = particle_mother1->GetMother();
-      mom_pid1 = particle_mother1->GetPdgCode();      
+      mom_pid1 = particle_mother1->GetPdgCode();
       if(fabs(mom_pid1) == 5){
 	return true;
       }
     }
-  }//end of while	    
-  
+  }//end of while
+
   return false;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isPrimary(AliAODMCParticle* particle){
-  
+
   if(!particle) return false;
-  
-  double vtx[3]={-999,-999,-999};  
+
+  double vtx[3]={-999,-999,-999};
   particle->XvYvZv(vtx);
   double length = sqrt(pow(vtx[0]-fTrueVtx[0],2) + pow(vtx[1]-fTrueVtx[1],2) + pow(vtx[2]-fTrueVtx[2],2));
 
@@ -406,15 +417,32 @@ bool AliAnalysisTaskAODTrackPairUtils::isPrimary(AliAODMCParticle* particle){
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::setTrueChPartInV0s()
+bool AliAnalysisTaskAODTrackPairUtils::setTrueCh()
 {
-  
+
   AliAODMCParticle *particle1 = NULL;
 
   for(Int_t iTrack1=0; iTrack1<fMCArray->GetEntries(); ++iTrack1){
     particle1 =  (AliAODMCParticle*)fMCArray->At(iTrack1);
-    if( 2.8<particle1->Eta() && particle1->Eta()<5.1 ) ++fNChV0A;
-    if( -3.7<particle1->Eta() && particle1->Eta()<-1.7 ) ++fNChV0C;    
+    if( 2.8<particle1->Eta() && particle1->Eta()<5.1 ) {
+      ++fNChV0A;
+    }
+    if( -3.7<particle1->Eta() && particle1->Eta()<-1.7 ) {
+      ++fNChV0C;
+    }
+    if( fabs(particle1->Eta())<0.5 ) {
+      ++fNChEta05;
+    }
+    if( fabs(particle1->Eta())<1.0 ) {
+      ++fNChEta10;
+    }
+    if( fabs(particle1->Eta())<1.5 ) {
+      ++fNChEta15;
+    }
+    if( fabs(particle1->Eta())<2.0 ) {
+      ++fNChEta20;
+    }
+    
   }
   return true;
 }
@@ -439,13 +467,13 @@ int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(AliAODTrack *track)
   if(!part) return false;
 
   int mom = part->GetMother();
-  
+
   if(mom<0) return -1;
 
   AliAODMCParticle *mpart = (AliAODMCParticle*)fMCArray->At(mom);
-  
+
   if(!mpart) return false;
-  
+
   return mpart->GetPdgCode();
 
 }
@@ -453,16 +481,16 @@ int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(AliAODTrack *track)
 int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(AliAODMCParticle *part)
 {
   if(!fMCArray) return false;
-  
+
   if(!part) return false;
-  
+
   int mom = part->GetMother();
-  
+
   if(mom<0) return -1;
 
-  AliAODMCParticle *mpart = (AliAODMCParticle*)fMCArray->At(mom);  
+  AliAODMCParticle *mpart = (AliAODMCParticle*)fMCArray->At(mom);
   if(!mpart) return false;
-  
+
   return mpart->GetPdgCode();
 
 }
@@ -479,22 +507,22 @@ int AliAnalysisTaskAODTrackPairUtils::getMotherLabel(AliAODTrack *track)
 
   AliAODMCParticle *part = (AliAODMCParticle*)fMCArray->At(label);
   if(!part) return false;
-  
+
   int mom = part->GetMother();
-  
+
   return mom;
-  
+
 }
 
 int AliAnalysisTaskAODTrackPairUtils::getMotherLabel(AliAODMCParticle *part)
 {
   if(!fMCArray) return false;
-  
+
   if(!part) return false;
-  
+
   int mom = part->GetMother();
-  
-  return mom;  
+
+  return mom;
 }
 
 
@@ -506,29 +534,29 @@ bool AliAnalysisTaskAODTrackPairUtils::setMCEventInfo(){
   if(!part) return false;
 
   part->XvYvZv(fTrueVtx);
-  
-  setTrueChPartInV0s();
+
+  setTrueCh();
 
   return true;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::setVtxZCentPsi()
 {
-  
+
   if(!fEvent) return false;
-  
+
   if(fIsMC && !fIsEvtSelect) return true;
 
   if(!fMultSelection) return false;
 
   AliAODVertex* vtx = (AliAODVertex*)fEvent->GetPrimaryVertexSPD();
-  
+
   if(!vtx) return false;
 
   fVtxZ = vtx->GetZ();
   fCent = fMultSelection->GetMultiplicityPercentile(fMultiMethod,false);
   fPsi  = 0;
-  
+
   fNContVtx = vtx->GetNContributors();
 
   fCentSPDTrk = fMultSelection->GetMultiplicityPercentile("SPDTracklets", false);
@@ -541,9 +569,9 @@ bool AliAnalysisTaskAODTrackPairUtils::setVtxZCentPsi()
 
 bool AliAnalysisTaskAODTrackPairUtils::setDownScaleFactor()
 {
-  
+
   if(fIsCMUL7 || fIsCMSH7){
-    fDSfactor = 1.;    
+    fDSfactor = 1.;
     return true;
   } else if(fIsCMLL7){
     if(!fHistDsCMLL7) {
@@ -567,13 +595,13 @@ bool AliAnalysisTaskAODTrackPairUtils::setDownScaleFactor()
       return true;
     }
   } else {
-    fDSfactor = 1.;  
+    fDSfactor = 1.;
     return true;
   }
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::setTriggerInfo()
-{  
+{
   if(!fEvent) return false;
   if(!fInputHandler) return false;
 
@@ -583,11 +611,11 @@ bool AliAnalysisTaskAODTrackPairUtils::setTriggerInfo()
     if( fFiredTrigName.find("V0R") != std::string::npos   && fFiredTrigName.find("V0L") != std::string::npos ){
       fIsCINT7 = true;
     } else  {
-      fIsCINT7 = false;;      
+      fIsCINT7 = false;;
     }
     if( fFiredTrigName.find("MULow") != std::string::npos && fIsCINT7 )
       fIsCMSL7 = true;
-    else 
+    else
       fIsCMSL7 = false;
 
     if( fFiredTrigName.find("MUHigh") != std::string::npos && fIsCINT7 )
@@ -605,7 +633,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setTriggerInfo()
     else
       fIsCMLL7 = false;;
   }
-  else{    
+  else{
     if(fInputHandler->IsEventSelected() & AliVEvent::kMuonUnlikeLowPt7){
       fIsCMUL7 = true;
     } else {
@@ -627,21 +655,21 @@ bool AliAnalysisTaskAODTrackPairUtils::setTriggerInfo()
       fIsCINT7 = false;
     }
   }
-  
+
   AliAODHeader *header = (AliAODHeader*)fEvent->GetHeader();
 
   uint inpmask = fEvent->GetHeader()->GetL0TriggerInputs();
-  
+
   bool is0MSLfired = (inpmask & (1<<(fInput0MSL-1)));
   bool is0MSHfired = (inpmask & (1<<(fInput0MSH-1)));
   bool is0MLLfired = (inpmask & (1<<(fInput0MLL-1)));
   bool is0MULfired = (inpmask & (1<<(fInput0MUL-1)));
-  
+
   fIs0MSL = (inpmask & (1<<(fInput0MSL-1)));
   fIs0MSH = (inpmask & (1<<(fInput0MSH-1)));
   fIs0MUL = (inpmask & (1<<(fInput0MUL-1)));
-  fIs0MLL = (inpmask & (1<<(fInput0MLL-1)));  
-  
+  fIs0MLL = (inpmask & (1<<(fInput0MLL-1)));
+
   /*
   if(fIs0MSL && !fIs0MUL && !fIs0MLL)        cout<<"0-level trigger : fIs0MSL"<<endl;
   else if( fIs0MSL && fIs0MUL && !fIs0MLL )  cout<<"0-level trigger : fIs0MSL fIs0MUL"<<endl;
@@ -671,7 +699,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setSPDTrk(){
       ++fNSPDTrkAll;
     }
   }
-  
+
   return true;
 }
 
@@ -685,8 +713,8 @@ bool AliAnalysisTaskAODTrackPairUtils::setSPDClust()
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::setVZERO(){
-  
-  AliAODVZERO * aodV0 = fEvent->GetVZEROData();  
+
+  AliAODVZERO * aodV0 = fEvent->GetVZEROData();
   if(!aodV0) return false;
 
   fChV0A = aodV0->GetMTotV0A();
@@ -694,13 +722,13 @@ bool AliAnalysisTaskAODTrackPairUtils::setVZERO(){
   fChV0M = fChV0A + fChV0C;
   fTimeV0A = aodV0->GetV0ATime();
   fTimeV0C = aodV0->GetV0CTime();
-  
+
   return true;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
-  if(296690<=fRunNumber && fRunNumber<=297624){    
+  if(296690<=fRunNumber && fRunNumber<=297624){
     fPeriod     = "LHC18r";
     fCollSystem = "PbPb5TeV";
     fPass       = "pass1";
@@ -710,7 +738,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MSL = 20;
   }
   else if(295584<=fRunNumber && fRunNumber<=296623){
-    
+
     fPeriod     = "LHC18q";
     fCollSystem = "PbPb5TeV";
     fPass       = "pass1";
@@ -720,7 +748,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MSL = 20;
   }
   else if(294009<=fRunNumber && fRunNumber<=295232){
-    
+
     fPeriod     = "LHC18p";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -730,7 +758,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MSL = 20;
   }
   else if(293368<=fRunNumber && fRunNumber<=293898){
-    
+
     fPeriod     = "LHC18o";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -741,7 +769,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MSL = 20;
   }
   else if(290167<=fRunNumber && fRunNumber<=292839){
-    
+
     fPeriod     = "LHC18m";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -752,7 +780,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MSL = 20;
   }
   else if(289240<=fRunNumber && fRunNumber<=289971){
-    
+
     fPeriod     = "LHC18l";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -763,7 +791,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   }
   else if(286982<=fRunNumber && fRunNumber<=287977){
-    
+
     fPeriod     = "LHC18f";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -773,7 +801,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MSL = 20;
   }
   else if(286380<=fRunNumber && fRunNumber<=286958){
-    
+
     fPeriod     = "LHC18e";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -783,7 +811,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MSL = 20;
   }
   else if(285978<=fRunNumber && fRunNumber<=286350){
-    
+
     fPeriod     = "LHC18d";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -791,10 +819,10 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MLL = 5;
     fInput0MUL = 18;
     fInput0MSL = 20;
-    
+
   }
   else if(285466<=fRunNumber && fRunNumber<=285958){
-    
+
     fPeriod     = "LHC18c";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -805,7 +833,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   }
   else if(282504<=fRunNumber && fRunNumber<=282704){
-    
+
     fPeriod     = "LHC17r";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -816,7 +844,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   }
   else if(282365<=fRunNumber && fRunNumber<=282441){
-    
+
     fPeriod     = "LHC17q";
     fCollSystem = "pp5TeV";
     fPass       = "pass1";
@@ -826,7 +854,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MSL = 20;
   }
   else if(282008<=fRunNumber && fRunNumber<=282343){
-    
+
     fPeriod     = "LHC17p";
     fCollSystem = "pp5TeV";
     fPass       = "pass1";
@@ -837,7 +865,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   }
   else if(280282<=fRunNumber && fRunNumber<=281961){
-    
+
     fPeriod     = "LHC17o";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -848,7 +876,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   }
   else if(278818<=fRunNumber && fRunNumber<=280140){
-    
+
     fPeriod     = "LHC17m";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -859,7 +887,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   }
   else if(276551<=fRunNumber && fRunNumber<=278729){
-    
+
     fPeriod     = "LHC17l";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -870,7 +898,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   }
   else if(274690<=fRunNumber && fRunNumber<=276508){
-    
+
     fPeriod     = "LHC17k";
     fCollSystem = "pp13TeV";
     fPass       = "pass2";
@@ -881,7 +909,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   }
   else if(273486<=fRunNumber && fRunNumber<=274442){
-    
+
     fPeriod     = "LHC17i";
     fCollSystem = "pp13TeV";
     fPass       = "pass1";
@@ -893,7 +921,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   }
   else if(271839<=fRunNumber && fRunNumber<=273103){
-    
+
     fPeriod     = "LHC17h";
     fCollSystem = "pp13TeV";
     fPass       = "pass2";
@@ -904,7 +932,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   }
   else if(266405<=fRunNumber && fRunNumber<=267131){
-    
+
     fPeriod     = "LHC16s";
     fCollSystem = "Pbp8TeV";
     fPass       = "pass1";
@@ -924,7 +952,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MLL = 11;
     fInput0MUL = 21;
     fInput0MSL = 18;
-    
+
   }
   else if(265015<=fRunNumber && fRunNumber<=265525){
 
@@ -966,7 +994,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MSH = 19;
     fInput0MLL = 20;
     fInput0MUL = 21;
-    
+
   }
   else if(260218<=fRunNumber && fRunNumber<=260647){
 
@@ -988,8 +1016,8 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MLL = 20;
     fInput0MUL = 21;
   }
-  else if(256504<=fRunNumber && fRunNumber<=258574){  
-    
+  else if(256504<=fRunNumber && fRunNumber<=258574){
+
     fPeriod     = "LHC16k";
     fCollSystem = "pp13TeV";
     fPass       = "pass3";
@@ -999,7 +1027,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MUL = 21;
   }
   else if(256146<=fRunNumber && fRunNumber<=256420){
-    
+
     fPeriod     = "LHC16j";
     fCollSystem = "pp13TeV";
     fPass       = "pass2";
@@ -1020,7 +1048,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MUL = 21;
   }
   else if(254378<=fRunNumber && fRunNumber<=255469){
-    
+
     fPeriod     = "LHC16h";
     fCollSystem = "pp13TeV";
     fPass       = "pass2";
@@ -1031,10 +1059,10 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
     fInput0MUL = 21;
   }
   else if(244918<=fRunNumber && fRunNumber<=246994){
-    
+
     fPeriod     = "LHC15o";
     fCollSystem = "PbPb5TeV";
-    
+
     fInput0MSL = 18;
     fInput0MSH = 19;
     fInput0MLL = 20;
@@ -1043,7 +1071,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
   else{
     return false;
   }
-  
+
   fMuonTrackCuts->SetPassName(fPass);
 
   return true;
@@ -1051,7 +1079,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::setRunnumberIndex(){
-  
+
   if(fRunNumber == 255465)       fRunNumberIndex = 0;
   else if(fRunNumber == 255463)  fRunNumberIndex = 1;
   else if(fRunNumber == 255447)  fRunNumberIndex = 2;
@@ -3488,6 +3516,6 @@ bool AliAnalysisTaskAODTrackPairUtils::setRunnumberIndex(){
   else if(fRunNumber == 296691)  fRunNumberIndex = 2433;
   else if(fRunNumber == 296690)  fRunNumberIndex = 2434;
   else                           return false;
-  
+
   return true;
 }

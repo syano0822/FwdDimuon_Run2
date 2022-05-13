@@ -70,7 +70,8 @@ class AliAnalysisTaskAODEventStudy : public AliAnalysisTaskSE {
   void triggerQA();
   void MultiplicityQA();
   void FillMultiplicityQA(int index);
-
+  void processMC();
+  
   AliAODEvent                      *fEvent;  
   AliAnalysisTaskAODTrackPairUtils *fUtils;
   TClonesArray   *fMCTrackArray;
@@ -127,13 +128,7 @@ class AliAnalysisTaskAODEventStudy : public AliAnalysisTaskSE {
   TH2F* fHistCorrV0ACentrality[6];
   TH2F* fHistCorrV0CCentrality[6];
   TH2F* fHistCorrSPDTrkCentrality[6];
-  /*
-  TH2F* fHistCorrChV0AChV0C[6];
-  TH2F* fHistCorrCentSPDTrkV0M[6];
-  TH2F* fHistCorrCentSPDTrkV0A[6];
-  TH2F* fHistCorrCentSPDTrkV0C[6];
-  TH2F* fHistCorrCentV0AV0C[6];
-  */
+
   TH1F* fHistPtMatchAll[6];
   TH1F* fHistPtMatchApt[6];
   TH1F* fHistPtMatchLpt[6];
@@ -152,6 +147,11 @@ class AliAnalysisTaskAODEventStudy : public AliAnalysisTaskSE {
   TH2F* fHistNSPDTrkVtxZEta15[6];
   TH2F* fHistNSPDTrkVtxZEta10[6];
   TH2F* fHistNSPDTrkVtxZEta05[6];
+
+  TH2F* fHistNTrueChTrkVtxZEta20[6];
+  TH2F* fHistNTrueChTrkVtxZEta15[6];
+  TH2F* fHistNTrueChTrkVtxZEta10[6];
+  TH2F* fHistNTrueChTrkVtxZEta05[6];
 
   ClassDef(AliAnalysisTaskAODEventStudy, 1); // example of analysis
 };
