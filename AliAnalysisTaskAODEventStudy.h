@@ -148,10 +148,22 @@ class AliAnalysisTaskAODEventStudy : public AliAnalysisTaskSE {
   TH2F* fHistNSPDTrkVtxZEta10[6];
   TH2F* fHistNSPDTrkVtxZEta05[6];
 
+  TH2F* fHistNCorrSPDTrkVtxZEta10[6];
+  TH2F* fHistNCorrSPDTrkVtxZEta05[6];
+
   TH2F* fHistNTrueChTrkVtxZEta20[6];
   TH2F* fHistNTrueChTrkVtxZEta15[6];
   TH2F* fHistNTrueChTrkVtxZEta10[6];
   TH2F* fHistNTrueChTrkVtxZEta05[6];
+
+  TH2F* fHistNTrueChTrkNSPDTrkEta20[6];
+  TH2F* fHistNTrueChTrkNSPDTrkEta15[6];
+  TH2F* fHistNTrueChTrkNSPDTrkEta10[6];
+  TH2F* fHistNTrueChTrkNSPDTrkEta05[6];
+  TH2F* fHistNTrueChTrkCorrectedNSPDTrkEta20[6];
+  TH2F* fHistNTrueChTrkCorrectedNSPDTrkEta15[6];
+  TH2F* fHistNTrueChTrkCorrectedNSPDTrkEta10[6];
+  TH2F* fHistNTrueChTrkCorrectedNSPDTrkEta05[6];
 
   ClassDef(AliAnalysisTaskAODEventStudy, 1); // example of analysis
 };

@@ -18,7 +18,8 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
 						     bool isSelectEvt=true,
 						     int paircuttype=1,
 						     double min_pairtrackptcut=0.5,
-						     bool onMixingAnalysis=false)
+						     bool onMixingAnalysis=false,
+						     bool isMidMuonAnalysis=false)
 
 {
 
@@ -48,6 +49,12 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
   utils->setMultiEstimateMethod(multi_method);
   utils->setMuonTrackCut(fMuonTrackCuts);
   utils->setPairKinematicCut(paircuttype,min_pairtrackptcut);
+  utils->setMidMuonAna(isMidMuonAnalysis);  
+  if (isMidMuonAnalysis) {
+    utils->setMuonSelectSigmaTPC(-1.,+1.);
+    utils->setMuonSelectSigmaTOF(-1.,+1.);
+    utils->setMidTrackKinematicRange(0.05,0.45,-0.8,+0.8);
+  }
 
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
@@ -73,29 +80,31 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
   task->setEvtMixingPoolPsi(true);
   task->setMixingAnalysis(onMixingAnalysis);
   task->setMC(isMC);
+  task->setMidMuonAna(isMidMuonAnalysis);
   mgr->AddTask(task);
-
-  cout<< min_vtxz <<endl;
-  cout<< max_vtxz <<endl;
-  cout<<  min_vtx_cont <<endl;
-  cout<< min_pair_rap <<endl;
-  cout<< max_pair_rap <<endl;
-  cout<< multi_method <<endl;
-  cout<< onPURej <<endl;
-  cout<< onLBcut <<endl;
-  cout<< onMuEtaCut <<endl;
-  cout<< onMuThetaAbsCut <<endl;
-  cout<< onMuMatchAptCut <<endl;
-  cout<< onMuMatchLptCut <<endl;
-  cout<< onMuMatchHptCut <<endl;
-  cout<< onMuChi2Cut <<endl;
-  cout<< onMuPdcaCut <<endl;
-  cout<< isMC <<endl;
-  cout<< isSelectEvt <<endl;
-  cout<< paircuttype <<endl;
-  cout<< min_pairtrackptcut <<endl;
-  cout<< onMixingAnalysis <<endl;
-
+ 
+  cout<<"min_vtxz="<< min_vtxz <<endl;
+  cout<<"max_vtxz="<< max_vtxz <<endl;
+  cout<<"min_vtx_cont="<<  min_vtx_cont <<endl;
+  cout<<"min_pair_rap="<< min_pair_rap <<endl;
+  cout<<"max_pair_rap="<< max_pair_rap <<endl;
+  cout<<"multi_method="<< multi_method <<endl;
+  cout<<"onPURej="<< onPURej <<endl;
+  cout<<"onLBcut="<< onLBcut <<endl;
+  cout<<"onMuEtaCut="<< onMuEtaCut <<endl;
+  cout<<"onMuThetaAbsCut="<< onMuThetaAbsCut <<endl;
+  cout<<"onMuMatchAptCut="<< onMuMatchAptCut <<endl;
+  cout<<"onMuMatchLptCut="<< onMuMatchLptCut <<endl;
+  cout<<"onMuMatchHptCut="<< onMuMatchHptCut <<endl;
+  cout<<"onMuChi2Cut="<< onMuChi2Cut <<endl;
+  cout<<"onMuPdcaCut="<< onMuPdcaCut <<endl;
+  cout<<"isMC="<< isMC <<endl;
+  cout<<"isSelectEvt="<< isSelectEvt <<endl;
+  cout<<"paircuttype="<< paircuttype <<endl;
+  cout<<"min_pairtrackptcut="<< min_pairtrackptcut <<endl;
+  cout<<"onMixingAnalysis="<< onMixingAnalysis <<endl;
+  cout<<"isMidMuonAnalysis="<< isMidMuonAnalysis <<endl;
+  
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");
 

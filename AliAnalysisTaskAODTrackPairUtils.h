@@ -3,6 +3,8 @@
 
 #include "TNamed.h"
 #include "TFile.h"
+#include "TRandom1.h"
+
 #include "AliMuonTrackCuts.h"
 #include "AliVEventHandler.h"
 #include "AliAnalysisMuonUtility.h"
@@ -16,14 +18,22 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   ~AliAnalysisTaskAODTrackPairUtils();
 
   bool setEvent(AliAODEvent* event, AliVEventHandler* handler);
+  bool setMCEventInfo();
+  void setPeriod(string period){
+    fPeriod = period;    
+  }
   void setMCArray(TClonesArray* array){fMCArray = array;}
   void setMC(bool isMC){fIsMC = isMC;}
   void setEvtSelection(bool isEvtSel){fIsEvtSelect=isEvtSel;}
-  bool setMCEventInfo();
-
   bool isAcceptEvent();
-  bool isAcceptMuonTrack(AliAODTrack* track);
-  bool isAcceptDimuon(AliAODDimuon* dimuon);
+  bool isAcceptTrackKinematics(AliAODTrack* track);
+  bool isAcceptFwdMuonTrack(AliAODTrack* track);
+  bool isAcceptFwdDimuon(AliAODDimuon* dimuon);
+  bool isAcceptMidMuonTrack(AliAODTrack* track);
+  bool isAcceptMidDimuon(AliAODDimuon* dimuon);
+
+  bool isAcceptMidTrackQuality(AliAODTrack* track);
+  bool isAcceptMidPid(AliAODTrack* track,AliPID::EParticleType pid);
   
   bool isSameMotherPair(AliAODTrack* track1,AliAODTrack* track2);
   bool isSameMotherPair(AliAODMCParticle *part1, AliAODMCParticle *part2);
@@ -31,10 +41,15 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   bool isBeautyQuarkOrigin(AliAODMCParticle* particle);
   bool isHeavyFlavorOrigin(AliAODMCParticle* particle);
   bool isPrimary(AliAODMCParticle* particle);
+  
   int getMotherPdgCode(AliAODTrack *track);
   int getMotherPdgCode(AliAODMCParticle *part);
   int getMotherLabel(AliAODTrack *track);
   int getMotherLabel(AliAODMCParticle *part);
+
+  double getTOFSigma(AliAODTrack *track1,AliPID::EParticleType pid);
+  double getTPCSigma(AliAODTrack *track1,AliPID::EParticleType pid);
+
   bool setTrueCh();
   
   bool getTrueChPartInV0s(int &v0a, int& v0c)
@@ -57,7 +72,27 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     }
     return true;
   }
-  
+
+  float getSPDTrkCorr(float vtxz, int spec)
+  {           
+    if(spec==0) {
+      if(!fHistSPDTrkCorrEta05) {
+	return 0;
+      } else {
+	float delta = fHistSPDTrkCorrEta05->GetBinContent(fHistSPDTrkCorrEta05->GetXaxis()->FindBin(vtxz));
+	return fRandom->Poisson(delta);
+      }     
+    } else if (spec==1){
+      if(!fHistSPDTrkCorrEta10) {
+	return 0;
+      } else {
+	float delta = fHistSPDTrkCorrEta10->GetBinContent(fHistSPDTrkCorrEta10->GetXaxis()->FindBin(vtxz));
+	return fRandom->Poisson(delta);
+      }     
+    } else {
+      return 0;
+    }        
+  }
 
   bool isMC(){
     return fIsMC;
@@ -77,6 +112,9 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     return fIs2BodyProd;
   }
 
+  void setMidMuonAna(bool isMidMuon){
+    fIsMidMuonAna = isMidMuon;
+  }
   //////////////////////////////////////////////////////////////////////////////////////////////
   //Set analysis cut flags
   //////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +161,24 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   {
     fIsLBCut = flag;
   }
+
+  void setMuonSelectSigmaTPC(float min, float max)
+  {
+    fMinMuonSigmaTPC = min;
+    fMaxMuonSigmaTPC = max;
+  }
+  void setMuonSelectSigmaTOF(float min, float max)
+  {
+    fMinMuonSigmaTOF = min;
+    fMaxMuonSigmaTOF = max;
+  }
+  void setMidTrackKinematicRange(float minpt,float maxpt,float mineta, float maxeta)
+  {
+    fMinMidTrackPt = minpt;
+    fMaxMidTrackPt = maxpt;
+    fMinMidTrackEta = mineta;
+    fMaxMidTrackEta = maxeta;
+  }
   
   //////////////////////////////////////////////////////////////////////////////////////////////
   //Set analysis object
@@ -142,7 +198,11 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     fHistDsCMSL7  = (TH1F*)inFile->Get("DS_MSL7")->Clone("fHistDsCMSL7");
     fHistDsCINT7  = (TH1F*)inFile->Get("DS_INT7")->Clone("fHistDsCINT7");
   }  
-  
+  void setSPDTrkCorrHist(TFile* inFile, string period)
+  {       
+    fHistSPDTrkCorrEta05 = (TH1D*)inFile->Get(Form("HistDeltaSPDEta05_CINT7_%s",period.c_str()))->Clone("f05");
+    fHistSPDTrkCorrEta10 = (TH1D*)inFile->Get(Form("HistDeltaSPDEta10_CINT7_%s",period.c_str()))->Clone("f10");
+  }
   //////////////////////////////////////////////////////////////////////////////////////////////
   //Get the analysis variables
   //////////////////////////////////////////////////////////////////////////////////////////////
@@ -204,6 +264,15 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     else 
       return 0;
   }
+  int getNCorrSPDTrkInfo(int spec){
+    if(spec==0){
+      return fNSPDTrk05 + getSPDTrkCorr(getVtxZ(),spec);
+    } else if(spec==1){
+      return fNSPDTrk10 + getSPDTrkCorr(getVtxZ(),spec);
+    } else {
+      return 0;
+    }
+  }
   int getNSPDClustInfo(int spec){
     if(spec==0)
       return fNClustSPD1;
@@ -263,7 +332,6 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   {
     return fMuonTrackCuts;
   }
-  
 
   const int fPdgCodeEta = 221;
   const int fPdgCodeRho = 113;
@@ -284,6 +352,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   bool setSPDTrk();
   bool setSPDClust();
   bool setVZERO();
+
 
   AliAODEvent* fEvent;
   AliMultSelection* fMultSelection;  
@@ -326,7 +395,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   TH1F* fHistDsCMSL7;
   TH1F* fHistDsCINT7;
   TH1F* fHistDsCMLL7;
-  
+
   double fVtxZ;
   double fCent;
   double fPsi;
@@ -378,7 +447,31 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   int fNChEta10;
   int fNChEta15;
   int fNChEta20;
+  
+  AliPIDResponse* fPIDResponse;
+  TRandom1 *fRandom;
 
+  TH1D* fHistSPDTrkCorrEta05;
+  TH1D* fHistSPDTrkCorrEta10;
+  
+  float fMinTrackPt;
+  float fMaxTrackPt;
+  float fMinTrackEta;
+  float fMaxTrackEta;
+  
+  float fMinMidTrackPt;
+  float fMaxMidTrackPt;
+  float fMinMidTrackEta;
+  float fMaxMidTrackEta;
+
+  float fMinMuonSigmaTPC;
+  float fMaxMuonSigmaTPC;
+  float fMinMuonSigmaTOF;
+  float fMaxMuonSigmaTOF;
+  
+  bool fIsMidMuonAna;
+
+  
   ClassDef(AliAnalysisTaskAODTrackPairUtils, 1); // example of analysis
 };
 

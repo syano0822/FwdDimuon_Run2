@@ -17,8 +17,13 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   virtual void   UserCreateOutputObjects();
   virtual void   UserExec(Option_t *option);
 
-  void setMC(bool isMC){fIsMC = isMC;}
+  void setMC(bool isMC){
+    fIsMC = isMC;
+  }
 
+  void setMidMuonAna(bool isMidMuon){
+    fIsMidMuonAna = isMidMuon;
+  }  
   void setMixingAnalysis(bool isMix)
   {
     fIsMixingAnalysis = isMix;
@@ -65,18 +70,24 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   AliAnalysisTaskAODTrackPair(const AliAnalysisTaskAODTrackPair&); // not implemented
   AliAnalysisTaskAODTrackPair& operator=(const AliAnalysisTaskAODTrackPair&); // not implemented
 
-  bool Initialize();
-  bool MuonPairAnalysis();
-  bool MuonPairAnalysisEveMixing();
-  bool MuonTrackQA(AliAODTrack* track);
-  bool MuonPairQA(AliAODDimuon* dimuon);
   bool EventQA();
-
+  bool Initialize();
+  bool FwdMuonPairAnalysis();
+  bool FwdMuonPairAnalysisEveMixing();
+  bool FwdMuonTrackQA(AliAODTrack* track);
+  bool FwdMuonPairQA(AliAODDimuon* dimuon);
+  
+  bool MidMuonTrackQA(AliAODTrack* track);
+  bool MidMuonPairQA(AliAODDimuon* dimuon);
+  bool MidMuonPairAnalysis();
+  bool MidMuonPairAnalysisEveMixing();
+  
   AliAODEvent    *fEvent;
   AliEventPoolManager *fPoolMuonTrackMgr;
   AliAnalysisTaskAODTrackPairUtils* fUtils;
 
   bool fIsMC;
+  bool fIsMidMuonAna;
   bool fIsMixingAnalysis;
 
   int fRunNumber;
@@ -133,6 +144,29 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   float RecDimuonMass;
   float RecDimuonCent;
   float RecDimuonDS;
+
+  TTree *fTreeMidMuon;
+  float fTrackPt;
+  float fTrackP;
+  float fTrackTheta;
+  float fTrackPhi;
+  float fTrackLength;
+  float fTrackBeta;
+  float fTrackTrackChi2perNDF;
+  float fTrackTrackITSNcls;
+  float fTrackTrackTPCNcls;
+  float fTrackTrackTOFNcls;
+  float fTrackTrackTPCChi2;
+  float fTrackTrackITSChi2;
+  float fTrackTPCCrossedRows;
+  float fTrackTPCFindableNcls;
+  float fTrackTOFBCTime;
+  float fTrackTOFKinkIndex;
+  float fTrackDCAxy;
+  float fTrackDCAz;
+  float fTrackTPCsigmaMuon;
+  float fTrackTOFsigmaMuon;
+  bool fTrackTrueMuonLabel;
 
   ClassDef(AliAnalysisTaskAODTrackPair, 1); // example of analysis
 };

@@ -6,11 +6,15 @@
 #include "AliMultSelection.h"
 #include "AliAODTrack.h"
 #include "AliAODMCParticle.h"
+#include "AliPIDResponse.h"
+
 #include "AliAnalysisTaskAODTrackPairUtils.h"
 
 #include "TDatabasePDG.h"
 #include "TClonesArray.h"
+
 #include "iostream"
+#include <time.h>
 
 using namespace std;
 
@@ -47,10 +51,14 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fCollSystem("pp13TeV"),
   fPass("pass1"),
   fMultiMethod("SPDtracklet"),
+
   fHistDsCINT7(NULL),
   fHistDsCMSL7(NULL),
   fHistDsCMLL7(NULL),
-
+  
+  fHistSPDTrkCorrEta05(NULL),
+  fHistSPDTrkCorrEta10(NULL),
+  
   fVtxZ(0),
   fCent(0),
   fPsi(0),
@@ -71,7 +79,6 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fIsCMUL7(false),
   fIsCMLL7(false),
 
-
   fIs0MSL(false),
   fIs0MSH(false),
   fIs0MUL(false),
@@ -87,7 +94,7 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fNSPDTrk15(0),
   fNSPDTrk20(0),
   fNSPDTrkAll(0),
-
+  
   fNClustSPD1(0),
   fNClustSPD2(0),
 
@@ -103,10 +110,31 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fNChEta05(0),
   fNChEta10(0),
   fNChEta15(0),
-  fNChEta20(0)
+  fNChEta20(0),
 
+  fPIDResponse(NULL),
+
+  fMinTrackPt(0.05),
+  fMaxTrackPt(0.45),
+  fMinTrackEta(-0.8),
+  fMaxTrackEta(+0.8),
+  
+  fMinMuonSigmaTPC(-3),
+  fMaxMuonSigmaTPC(3),
+  fMinMuonSigmaTOF(-3),
+  fMaxMuonSigmaTOF(3),
+  
+  fMinMidTrackPt(0.05),
+  fMaxMidTrackPt(0.45),
+  fMinMidTrackEta(-0.8),
+  fMaxMidTrackEta(+0.8),
+
+  fIsMidMuonAna(false)
 {
-
+  fRandom = new TRandom1();
+  time_t t;
+  time(&t);  
+  fRandom->SetSeed(t);
 }
 
 AliAnalysisTaskAODTrackPairUtils::~AliAnalysisTaskAODTrackPairUtils()
@@ -118,7 +146,7 @@ AliAnalysisTaskAODTrackPairUtils::~AliAnalysisTaskAODTrackPairUtils()
 
 void AliAnalysisTaskAODTrackPairUtils::setInit()
 {
-
+  
   fEvent=NULL;
   fMultSelection=NULL;
 
@@ -180,50 +208,85 @@ void AliAnalysisTaskAODTrackPairUtils::setInit()
 
 bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent* event, AliVEventHandler* handler)
 {
-
   setInit();
 
-  fEvent = event;
+  fEvent = event;  
   if(!fEvent) return false;
-
+  
   fInputHandler = handler;
   if(!fInputHandler) return false;
-
+  
+  if(fIsMidMuonAna){
+    if(!fPIDResponse){
+      fPIDResponse=fInputHandler->GetPIDResponse();
+      if(!fPIDResponse) {
+	return false;
+      }
+    }  
+  }
+  
   fRunNumber = fEvent->GetRunNumber();
 
   if(fIsMC){
     setMCEventInfo();
   }
 
-  if(!fIsEvtSelect) return true;
+  if(!fIsEvtSelect){
+    return true;
+  }
 
   fMultSelection = (AliMultSelection *)fEvent->FindListObject("MultSelection");
-  if(!fMultSelection) return false;
-
-  if(!setRunnumberIndex())
+  if(!fMultSelection){
     return false;
-  if(!setPeriodInfo())
+  }
+  
+  if(!fIsMidMuonAna){
+    if(!setRunnumberIndex()){
+      return false;
+    }
+  }
+  
+  if(!setPeriodInfo()){
     return false;
-  if(!setTriggerInfo())
+  }
+  
+  if(!setTriggerInfo()){
     return false;
-  if(!setVtxZCentPsi())
+  }
+  
+  if(!setVtxZCentPsi()){
     return false;
-  if(!setDownScaleFactor())
+  }
+  
+  if (!fIsMidMuonAna) {
+    if(!setDownScaleFactor()){
+      return false;
+    }
+  }
+  
+  if(!setSPDTrk()){
     return false;
-  if(!setSPDTrk())
+  }
+  
+  if(!setSPDClust()){
     return false;
-  if(!setSPDClust())
+  }
+  
+  if(!setVZERO()){
     return false;
-  if(!setVZERO())
-    return false;
+  }
 
   return true;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isSameRunnumber()
 {
-  if(fRunNumber == fEvent->GetRunNumber()) return true;
-  else return false;
+  if(fRunNumber == fEvent->GetRunNumber()) {
+    return true;
+  }
+  else {
+    return false;
+  }  
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptEvent()
@@ -239,17 +302,20 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptEvent()
     return false;
   if(fIsPUcut && fEvent->IsPileupFromSPDInMultBins())
     return false;
-  if(fMultSelection && fMultSelection->GetMultiplicityPercentile(fMultiMethod,false)<0 && fMultSelection->GetMultiplicityPercentile(fMultiMethod,false)>100.){
+  if(fMultSelection && fMultSelection->GetMultiplicityPercentile(fMultiMethod,false)<0 &&
+     fMultSelection->GetMultiplicityPercentile(fMultiMethod,false)>100.){
     return false;
   }
-  if(fDSfactor < 0.000000000001) {
-    return false;
+  if(!fIsMidMuonAna){
+    if(fDSfactor < 0.000000000001) {
+      return false;
+    }
   }
 
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptMuonTrack(AliAODTrack* track){
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptFwdMuonTrack(AliAODTrack* track){
 
   if(!fMuonTrackCuts->IsSelected(track))
     return false;
@@ -257,7 +323,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMuonTrack(AliAODTrack* track){
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptDimuon(AliAODDimuon* dimuon)
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptFwdDimuon(AliAODDimuon* dimuon)
 {
 
   AliAODTrack* track1 = dynamic_cast<AliAODTrack*>(dimuon->GetMu(0));
@@ -291,6 +357,91 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptDimuon(AliAODDimuon* dimuon)
   return true;
 }
 
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidDimuon(AliAODDimuon* dimuon)
+{
+
+  AliAODTrack* track1 = dynamic_cast<AliAODTrack*>(dimuon->GetMu(0));
+  AliAODTrack* track2 = dynamic_cast<AliAODTrack*>(dimuon->GetMu(1));
+  
+  if( fIsPairRapCut && !(fMinPairRapCut<fabs(dimuon->Y()) && fabs(dimuon->Y())<fMaxPairRapCut) ) {
+    return false;
+  }
+  
+  if(fIsPairPtCutForOneTrack && !fIsPairPtCutForBothTracks){
+    if(track1->Pt()<fMinPairPtCut && track2->Pt()<fMinPairPtCut){
+      return false;
+    }
+  } else if (!fIsPairPtCutForOneTrack && fIsPairPtCutForBothTracks) {
+    if(track1->Pt()<fMinPairPtCut || track2->Pt()<fMinPairPtCut){
+      return false;
+    }
+  } else if (!fIsPairPtCutForOneTrack && !fIsPairPtCutForBothTracks) {
+    return true;
+  } else {
+    return false;
+  }
+
+  return true;
+}
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptTrackKinematics(AliAODTrack* track){  
+  if(track->Pt()<fMinTrackPt || fMaxTrackPt<track->Pt()) return false;
+  if(track->Eta()<fMinTrackEta || fMaxTrackEta<track->Eta()) return false;  
+  return true;
+}
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidMuonTrack(AliAODTrack* track){    
+  if(!isAcceptMidTrackQuality(track)) return false;
+  if(!isAcceptMidPid(track,AliPID::kMuon)) return false;
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidTrackQuality(AliAODTrack* track){    
+  return track->TestFilterBit(AliAODTrack::kTrkGlobal) ? true : false;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(AliAODTrack* track, AliPID::EParticleType pid){
+
+  float minSigmaRangeTPC=0;
+  float maxSigmaRangeTPC=0;
+  float minSigmaRangeTOF=0;
+  float maxSigmaRangeTOF=0;
+
+  if(pid == AliPID::kMuon){
+    minSigmaRangeTPC = fMinMuonSigmaTPC;
+    maxSigmaRangeTPC = fMaxMuonSigmaTPC;
+    minSigmaRangeTOF = fMinMuonSigmaTOF;
+    maxSigmaRangeTOF = fMaxMuonSigmaTOF;
+  }
+  else{
+    return false;
+  }
+  
+  float fSigmaTPC = fPIDResponse->NumberOfSigmasTPC(track, pid);
+  float fSigmaTOF = fPIDResponse->NumberOfSigmasTOF(track, pid);
+  
+  float fSigmaTPCTOF = sqrt(fSigmaTPC*fSigmaTPC + fSigmaTOF*fSigmaTOF);
+  
+  bool hasTOFhit = true;
+  
+  if( fabs(fSigmaTOF)>990 ) {
+    hasTOFhit = false;
+  }
+  
+  if(hasTOFhit){    
+    if(minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF){
+      return true;
+    } else{
+      return false;
+    }
+  } else{
+    if(minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC){
+      return true;
+    } else{
+      return false;
+    }
+  }
+
+}
+
 bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODTrack* track1,AliAODTrack* track2)
 {
   if(!fMCArray) return false;
@@ -321,7 +472,6 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODTrack* track1,AliA
 
   return true;
 }
-
 
 bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODMCParticle *part1, AliAODMCParticle *part2)
 {
@@ -419,11 +569,19 @@ bool AliAnalysisTaskAODTrackPairUtils::isPrimary(AliAODMCParticle* particle){
 
 bool AliAnalysisTaskAODTrackPairUtils::setTrueCh()
 {
-
   AliAODMCParticle *particle1 = NULL;
 
   for(Int_t iTrack1=0; iTrack1<fMCArray->GetEntries(); ++iTrack1){
+
     particle1 =  (AliAODMCParticle*)fMCArray->At(iTrack1);
+
+    if(!particle1->IsPhysicalPrimary()){
+      continue;
+    }
+    if(fabs(particle1->Charge()) < 1){
+      continue;
+    }    
+        
     if( 2.8<particle1->Eta() && particle1->Eta()<5.1 ) {
       ++fNChV0A;
     }
@@ -649,10 +807,18 @@ bool AliAnalysisTaskAODTrackPairUtils::setTriggerInfo()
     } else {
       fIsCMSL7 = false;
     }
-    if(fInputHandler->IsEventSelected() & AliVEvent::kINT7inMUON){
-      fIsCINT7 = true;
+    if(!fIsMidMuonAna){
+      if(fInputHandler->IsEventSelected() & AliVEvent::kINT7inMUON){
+	fIsCINT7 = true;
+      } else {
+	fIsCINT7 = false;
+      }
     } else {
-      fIsCINT7 = false;
+      if(fInputHandler->IsEventSelected() & AliVEvent::kINT7){
+	fIsCINT7 = true;
+      } else {
+	fIsCINT7 = false;
+      }
     }
   }
 
@@ -725,7 +891,14 @@ bool AliAnalysisTaskAODTrackPairUtils::setVZERO(){
 
   return true;
 }
-
+double AliAnalysisTaskAODTrackPairUtils::getTOFSigma(AliAODTrack* track1,AliPID::EParticleType pid)
+{
+  return fPIDResponse->NumberOfSigmasTOF(track1,pid);
+}
+double AliAnalysisTaskAODTrackPairUtils::getTPCSigma(AliAODTrack* track1,AliPID::EParticleType pid)
+{
+  return fPIDResponse->NumberOfSigmasTPC(track1,pid);
+}
 bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo(){
 
   if(296690<=fRunNumber && fRunNumber<=297624){

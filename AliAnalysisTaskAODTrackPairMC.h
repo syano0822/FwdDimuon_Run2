@@ -17,8 +17,12 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   virtual void   UserCreateOutputObjects();
   virtual void   UserExec(Option_t *option);
 
-  void setMC(bool isMC){fIsMC = isMC;}
-
+  void setMC(bool isMC){
+    fIsMC = isMC;
+  }
+  void setMidMuonAna(bool isMidMuon){
+    fIsMidMuonAna = isMidMuon;
+  }
   void setMixingAnalysis(bool isMix)
   {
     fIsMixingAnalysis = isMix;
@@ -66,9 +70,9 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   AliAnalysisTaskAODTrackPairMC& operator=(const AliAnalysisTaskAODTrackPairMC&); // not implemented
 
   bool Initialize();
-  bool MuonPairAnalysis();
-  bool MuonPairAnalysisEveMixing();
-  bool MuonTrackQA(AliAODTrack* track);
+  bool FwdMuonPairAnalysis();
+  bool FwdMuonPairAnalysisEveMixing();
+  bool FwdMuonTrackQA(AliAODTrack* track);
   bool FillingRecMuonTree(AliAODTrack* track);
   bool EventQA();
   bool isPrimaryMuonTrack(AliAODMCParticle *particle1);
@@ -181,6 +185,8 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   int MCMomDalitz;
   int MCDimuonDetected;
 
+  bool fIsMidMuonAna;
+  
   ClassDef(AliAnalysisTaskAODTrackPairMC, 1); // example of analysis
 };
 

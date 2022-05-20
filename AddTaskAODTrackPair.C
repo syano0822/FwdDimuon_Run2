@@ -5,6 +5,7 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
 						 int min_vtx_cont = 1,
 						 float min_pair_rap = -4.0,
 						 float max_pair_rap = -2.5,
+						 string period = "LHC18c",
 						 string multi_method="SPDTracklets",
 						 bool onPURej = true,
 						 bool onLBcut = true,
@@ -19,7 +20,9 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
 						 bool isSelectEvt=true,
 						 int paircuttype=1,
 						 double min_pairtrackptcut=0.5,
-						 bool onMixingAnalysis=false)
+						 bool onMixingAnalysis=false,
+						 bool isMidMuonAnalysis=false
+						 )
 
 {
     
@@ -37,11 +40,13 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   fMuonTrackCuts->SetFilterMask(selectionMask);
   
   TFile* input = TFile::Open("./DownScale_Run2_CTP.root");
+  TFile* input2 = TFile::Open("./SPDMultiCorrection.root");
 
   AliAnalysisTaskAODTrackPairUtils *utils = new AliAnalysisTaskAODTrackPairUtils();
   utils->setMC(isMC);
   utils->setEvtSelection(isSelectEvt);
   utils->setDownScalingHist(input);
+  utils->setSPDTrkCorrHist(input2,period);
   utils->setVertexCut(min_vtxz,max_vtxz,min_vtx_cont);
   utils->setPairRapidityCut(min_pair_rap,max_pair_rap);
   utils->setPileupRejectionCut(onPURej);
@@ -49,7 +54,14 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   utils->setMultiEstimateMethod(multi_method);
   utils->setMuonTrackCut(fMuonTrackCuts);
   utils->setPairKinematicCut(paircuttype,min_pairtrackptcut);
-  
+  utils->setMidMuonAna(isMidMuonAnalysis);  
+  utils->setPeriod(period);
+  if (isMidMuonAnalysis) {
+    utils->setMuonSelectSigmaTPC(-1.,+1.);
+    utils->setMuonSelectSigmaTOF(-1.,+1.);
+    utils->setMidTrackKinematicRange(0.05,0.45,-0.8,+0.8);
+  }
+
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
     ::Error("AddTaskAODMuonEventSelection", "No analysis manager to connect to");
@@ -74,29 +86,32 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   task->setEvtMixingPoolPsi(true);
   task->setMixingAnalysis(onMixingAnalysis);
   task->setMC(isMC);
+  task->setMidMuonAna(isMidMuonAnalysis);
   mgr->AddTask(task);
-
-  cout<< min_vtxz <<endl;
-  cout<< max_vtxz <<endl;
-  cout<<  min_vtx_cont <<endl;
-  cout<< min_pair_rap <<endl;
-  cout<< max_pair_rap <<endl;
-  cout<< multi_method <<endl;
-  cout<< onPURej <<endl;
-  cout<< onLBcut <<endl;
-  cout<< onMuEtaCut <<endl;
-  cout<< onMuThetaAbsCut <<endl;
-  cout<< onMuMatchAptCut <<endl;
-  cout<< onMuMatchLptCut <<endl;
-  cout<< onMuMatchHptCut <<endl;
-  cout<< onMuChi2Cut <<endl;
-  cout<< onMuPdcaCut <<endl;
-  cout<< isMC <<endl;
-  cout<< isSelectEvt <<endl;
-  cout<< paircuttype <<endl;
-  cout<< min_pairtrackptcut <<endl;
-  cout<< onMixingAnalysis <<endl;
-
+  
+  cout<<"min_vtxz="<< min_vtxz <<endl;
+  cout<<"max_vtxz="<< max_vtxz <<endl;
+  cout<<"min_vtx_cont="<<  min_vtx_cont <<endl;
+  cout<<"min_pair_rap="<< min_pair_rap <<endl;
+  cout<<"max_pair_rap="<< max_pair_rap <<endl;
+  cout<<"period="<< period <<endl;
+  cout<<"multi_method="<< multi_method <<endl;
+  cout<<"onPURej="<< onPURej <<endl;
+  cout<<"onLBcut="<< onLBcut <<endl;
+  cout<<"onMuEtaCut="<< onMuEtaCut <<endl;
+  cout<<"onMuThetaAbsCut="<< onMuThetaAbsCut <<endl;
+  cout<<"onMuMatchAptCut="<< onMuMatchAptCut <<endl;
+  cout<<"onMuMatchLptCut="<< onMuMatchLptCut <<endl;
+  cout<<"onMuMatchHptCut="<< onMuMatchHptCut <<endl;
+  cout<<"onMuChi2Cut="<< onMuChi2Cut <<endl;
+  cout<<"onMuPdcaCut="<< onMuPdcaCut <<endl;
+  cout<<"isMC="<< isMC <<endl;
+  cout<<"isSelectEvt="<< isSelectEvt <<endl;
+  cout<<"paircuttype="<< paircuttype <<endl;
+  cout<<"min_pairtrackptcut="<< min_pairtrackptcut <<endl;
+  cout<<"onMixingAnalysis="<< onMixingAnalysis <<endl;
+  cout<<"isMidMuonAnalysis="<< isMidMuonAnalysis <<endl;
+  
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");
   

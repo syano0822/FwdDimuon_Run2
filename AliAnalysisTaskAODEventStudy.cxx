@@ -141,10 +141,24 @@ AliAnalysisTaskAODEventStudy::AliAnalysisTaskAODEventStudy() : AliAnalysisTaskSE
   fHistNSPDTrkVtxZEta10(),
   fHistNSPDTrkVtxZEta05(),
 
+  fHistNCorrSPDTrkVtxZEta10(),
+  fHistNCorrSPDTrkVtxZEta05(),
+
+  
   fHistNTrueChTrkVtxZEta20(),
   fHistNTrueChTrkVtxZEta15(),
   fHistNTrueChTrkVtxZEta10(),
-  fHistNTrueChTrkVtxZEta05() 
+  fHistNTrueChTrkVtxZEta05(),
+
+  fHistNTrueChTrkNSPDTrkEta20(),
+  fHistNTrueChTrkNSPDTrkEta15(),
+  fHistNTrueChTrkNSPDTrkEta10(),
+  fHistNTrueChTrkNSPDTrkEta05(),
+
+  fHistNTrueChTrkCorrectedNSPDTrkEta20(),
+  fHistNTrueChTrkCorrectedNSPDTrkEta15(),
+  fHistNTrueChTrkCorrectedNSPDTrkEta10(),
+  fHistNTrueChTrkCorrectedNSPDTrkEta05()
 {
   
 }
@@ -232,11 +246,24 @@ AliAnalysisTaskAODEventStudy::AliAnalysisTaskAODEventStudy(const char* name) :
   fHistNSPDTrkVtxZEta15(),
   fHistNSPDTrkVtxZEta10(),
   fHistNSPDTrkVtxZEta05(),
-  
+
+  fHistNCorrSPDTrkVtxZEta10(),
+  fHistNCorrSPDTrkVtxZEta05(),
+
   fHistNTrueChTrkVtxZEta20(),
   fHistNTrueChTrkVtxZEta15(),
   fHistNTrueChTrkVtxZEta10(),
-  fHistNTrueChTrkVtxZEta05()
+  fHistNTrueChTrkVtxZEta05(),
+
+  fHistNTrueChTrkNSPDTrkEta20(),
+  fHistNTrueChTrkNSPDTrkEta15(),
+  fHistNTrueChTrkNSPDTrkEta10(),
+  fHistNTrueChTrkNSPDTrkEta05(),
+
+  fHistNTrueChTrkCorrectedNSPDTrkEta20(),
+  fHistNTrueChTrkCorrectedNSPDTrkEta15(),
+  fHistNTrueChTrkCorrectedNSPDTrkEta10(),
+  fHistNTrueChTrkCorrectedNSPDTrkEta05()
 {  
     
   trig4NormalizationMap.emplace(trig4Normalization::CINT7,"CINT7");
@@ -356,6 +383,11 @@ void AliAnalysisTaskAODEventStudy::UserCreateOutputObjects()
     fOutputList->Add(fHistNSPDTrkVtxZEta10[itrig]);
     fOutputList->Add(fHistNSPDTrkVtxZEta05[itrig]);
 
+    fHistNCorrSPDTrkVtxZEta10[itrig] = new TH2F(Form("fHistNCorrSPDTrkVtxZEta10_%s",trigName[itrig].c_str()),"",200,-10,10,150,0,150);
+    fHistNCorrSPDTrkVtxZEta05[itrig] = new TH2F(Form("fHistNCorrSPDTrkVtxZEta05_%s",trigName[itrig].c_str()),"",200,-10,10,150,0,150);
+    fOutputList->Add(fHistNCorrSPDTrkVtxZEta10[itrig]);
+    fOutputList->Add(fHistNCorrSPDTrkVtxZEta05[itrig]);
+
     if (fIsMC){
       fHistNTrueChTrkVtxZEta20[itrig] = new TH2F(Form("fHistNTrueChTrkVtxZEta20_%s",trigName[itrig].c_str()),"",200,-10,10,150,0,150);
       fHistNTrueChTrkVtxZEta15[itrig] = new TH2F(Form("fHistNTrueChTrkVtxZEta15_%s",trigName[itrig].c_str()),"",200,-10,10,150,0,150);
@@ -365,8 +397,32 @@ void AliAnalysisTaskAODEventStudy::UserCreateOutputObjects()
       fOutputList->Add(fHistNTrueChTrkVtxZEta15[itrig]);
       fOutputList->Add(fHistNTrueChTrkVtxZEta10[itrig]);
       fOutputList->Add(fHistNTrueChTrkVtxZEta05[itrig]);
+    
+      fHistNTrueChTrkNSPDTrkEta20[itrig] = new TH2F(Form("fHistNTrueChTrkNSPDTrkEta20_%s",trigName[itrig].c_str()),
+							     "",150,0,150,150,0,150);
+      fHistNTrueChTrkNSPDTrkEta15[itrig] = new TH2F(Form("fHistNTrueChTrkNSPDTrkEta15_%s",trigName[itrig].c_str()),
+							     "",150,0,150,150,0,150);
+      fHistNTrueChTrkNSPDTrkEta10[itrig] = new TH2F(Form("fHistNTrueChTrkNSPDTrkEta10_%s",trigName[itrig].c_str()),
+							     "",150,0,150,150,0,150);
+      fHistNTrueChTrkNSPDTrkEta05[itrig] = new TH2F(Form("fHistNTrueChTrkNSPDTrkEta05_%s",trigName[itrig].c_str()),
+							     "",150,0,150,150,0,150);
+      fOutputList->Add(fHistNTrueChTrkNSPDTrkEta20[itrig]);
+      fOutputList->Add(fHistNTrueChTrkNSPDTrkEta15[itrig]);
+      fOutputList->Add(fHistNTrueChTrkNSPDTrkEta10[itrig]);
+      fOutputList->Add(fHistNTrueChTrkNSPDTrkEta05[itrig]);
 
-      
+      fHistNTrueChTrkCorrectedNSPDTrkEta20[itrig] = new TH2F(Form("fHistNTrueChTrkCorrectedNSPDTrkEta20_%s",trigName[itrig].c_str()),
+							     "",150,0,150,150,0,150);
+      fHistNTrueChTrkCorrectedNSPDTrkEta15[itrig] = new TH2F(Form("fHistNTrueChTrkCorrectedNSPDTrkEta15_%s",trigName[itrig].c_str()),
+							     "",150,0,150,150,0,150);
+      fHistNTrueChTrkCorrectedNSPDTrkEta10[itrig] = new TH2F(Form("fHistNTrueChTrkCorrectedNSPDTrkEta10_%s",trigName[itrig].c_str()),
+							     "",150,0,150,150,0,150);
+      fHistNTrueChTrkCorrectedNSPDTrkEta05[itrig] = new TH2F(Form("fHistNTrueChTrkCorrectedNSPDTrkEta05_%s",trigName[itrig].c_str()),
+							     "",150,0,150,150,0,150);
+      fOutputList->Add(fHistNTrueChTrkCorrectedNSPDTrkEta20[itrig]);
+      fOutputList->Add(fHistNTrueChTrkCorrectedNSPDTrkEta15[itrig]);
+      fOutputList->Add(fHistNTrueChTrkCorrectedNSPDTrkEta10[itrig]);
+      fOutputList->Add(fHistNTrueChTrkCorrectedNSPDTrkEta05[itrig]);      
     }
   }
   
@@ -502,6 +558,10 @@ void AliAnalysisTaskAODEventStudy::RunQA()
 
 void AliAnalysisTaskAODEventStudy::FillMultiplicityQA(int index)
 {
+  
+  float corr05 = fUtils->getSPDTrkCorr(fUtils->getVtxZ(),0);
+  float corr10 = fUtils->getSPDTrkCorr(fUtils->getVtxZ(),1);
+  
   fHistCentrality[index]->Fill(fUtils->getCentClass());
   fHistCentVtxZ[index]->Fill(fUtils->getVtxZ(),fUtils->getCentClass());
   fHistSPDTrkEta05Centrality[index]->Fill(fUtils->getNSPDTrkInfo(0),fUtils->getCentClass());
@@ -516,21 +576,32 @@ void AliAnalysisTaskAODEventStudy::FillMultiplicityQA(int index)
   fHistCorrV0MCentrality[index]->Fill(fUtils->getCentClass(1),fUtils->getCentClass());
   fHistCorrV0ACentrality[index]->Fill(fUtils->getCentClass(2),fUtils->getCentClass());
   fHistCorrV0CCentrality[index]->Fill(fUtils->getCentClass(3),fUtils->getCentClass());
+
   fHistNSPDTrkVtxZEta05[index]->Fill(fUtils->getVtxZ(),fUtils->getNSPDTrkInfo(0));
   fHistNSPDTrkVtxZEta10[index]->Fill(fUtils->getVtxZ(),fUtils->getNSPDTrkInfo(1));
   fHistNSPDTrkVtxZEta15[index]->Fill(fUtils->getVtxZ(),fUtils->getNSPDTrkInfo(2));
   fHistNSPDTrkVtxZEta20[index]->Fill(fUtils->getVtxZ(),fUtils->getNSPDTrkInfo(3));
 
-  if (fIsMC){
+  fHistNCorrSPDTrkVtxZEta05[index]->Fill(fUtils->getVtxZ(),fUtils->getNSPDTrkInfo(0) + corr05);
+  fHistNCorrSPDTrkVtxZEta10[index]->Fill(fUtils->getVtxZ(),fUtils->getNSPDTrkInfo(1) + corr10);
+  
+  if (fIsMC){    
     fHistNTrueChTrkVtxZEta05[index]->Fill(fUtils->getVtxZ(),fUtils->getNTrueChTrkInfo(0));
     fHistNTrueChTrkVtxZEta10[index]->Fill(fUtils->getVtxZ(),fUtils->getNTrueChTrkInfo(1));
     fHistNTrueChTrkVtxZEta15[index]->Fill(fUtils->getVtxZ(),fUtils->getNTrueChTrkInfo(2));
     fHistNTrueChTrkVtxZEta20[index]->Fill(fUtils->getVtxZ(),fUtils->getNTrueChTrkInfo(3));
 
+    fHistNTrueChTrkNSPDTrkEta05[index]->Fill(fUtils->getNSPDTrkInfo(0),fUtils->getNTrueChTrkInfo(0));
+    fHistNTrueChTrkNSPDTrkEta10[index]->Fill(fUtils->getNSPDTrkInfo(1),fUtils->getNTrueChTrkInfo(1));
+    fHistNTrueChTrkNSPDTrkEta15[index]->Fill(fUtils->getNSPDTrkInfo(2),fUtils->getNTrueChTrkInfo(2));
+    fHistNTrueChTrkNSPDTrkEta20[index]->Fill(fUtils->getNSPDTrkInfo(3),fUtils->getNTrueChTrkInfo(3));
     
-  }
-  
-  
+    fHistNTrueChTrkCorrectedNSPDTrkEta05[index]->Fill(fUtils->getNSPDTrkInfo(0)+corr05,fUtils->getNTrueChTrkInfo(0));
+    fHistNTrueChTrkCorrectedNSPDTrkEta10[index]->Fill(fUtils->getNSPDTrkInfo(1)+corr10,fUtils->getNTrueChTrkInfo(1));
+    fHistNTrueChTrkCorrectedNSPDTrkEta15[index]->Fill(fUtils->getNSPDTrkInfo(2),fUtils->getNTrueChTrkInfo(2));
+    fHistNTrueChTrkCorrectedNSPDTrkEta20[index]->Fill(fUtils->getNSPDTrkInfo(3),fUtils->getNTrueChTrkInfo(3));
+    
+  }   
 }
 
 void AliAnalysisTaskAODEventStudy::triggerQA(){
@@ -620,7 +691,7 @@ void AliAnalysisTaskAODEventStudy::TrackQA()
     
     AliAODTrack* track = (AliAODTrack*)fEvent->GetTrack(iTrack);
     
-    if(!fUtils->isAcceptMuonTrack(track)) continue;
+    if(!fUtils->isAcceptFwdMuonTrack(track)) continue;
  
     if( fIsCINT7 ){ 
       FillTrackQA(0,track);

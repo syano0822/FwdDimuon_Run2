@@ -81,14 +81,7 @@ fIsCMLL7(false),
 
 fOutputList(NULL),
 fEventCounter(NULL),
-/*
-fSparseULSDimuon(NULL),
-fSparseLSppDimuon(NULL),
-fSparseLSmmDimuon(NULL),
-fSparseMixULSDimuon(NULL),
-fSparseMixLSppDimuon(NULL),
-fSparseMixLSmmDimuon(NULL),
-*/
+
 fHistTrackEta(NULL),
 fHistTrackThetaAbs(NULL),
 fHistTrackTriggerMatch(NULL),
@@ -156,7 +149,9 @@ MCMomDalitz(0),
 MCMomPt(0),
 MCMomEta(0),
 MCMomPdgCode(0.),
-MCDimuonDetected(0)
+MCDimuonDetected(0),
+
+fIsMidMuonAna(0)
 {
 
 }
@@ -258,9 +253,10 @@ MCMomDalitz(0),
 MCMomPt(0),
 MCMomEta(0),
 MCMomPdgCode(0.),
-MCDimuonDetected(0)
-{
+MCDimuonDetected(0),
 
+fIsMidMuonAna(0)
+{
   double fCentBins[] = {-1,10,20,30,40,50,60,70,80,90,101};
   double fVtxBins[] = {-50,-10.5,-6,-2,0,2,6,10.5,50};
   double fPsiBins[] = {-10,-1.5,-1.0,-0.5,0,0.5,1.0,1.5,10};
@@ -503,7 +499,7 @@ MCDimuonDetected(0)
     processMC();
 
     if ( !fIsMixingAnalysis ) {
-      MuonPairAnalysis();
+      FwdMuonPairAnalysis();
     }
 
 
@@ -582,7 +578,7 @@ MCDimuonDetected(0)
     return true;
   }
 
-  bool AliAnalysisTaskAODTrackPairMC::MuonTrackQA(AliAODTrack* track){
+  bool AliAnalysisTaskAODTrackPairMC::FwdMuonTrackQA(AliAODTrack* track){
     fHistTrackEta->Fill(track->Pt(),track->Eta());
     fHistTrackThetaAbs->Fill(track->Pt(),AliAnalysisMuonUtility::GetThetaAbsDeg(track));
     fHistTrackTriggerMatch->Fill(track->Pt(),AliAnalysisMuonUtility::GetMatchTrigger(track));
@@ -620,7 +616,7 @@ MCDimuonDetected(0)
     RecMuonChiSquare = AliAnalysisMuonUtility::GetChi2perNDFtracker(track);
     RecMuonTriggerChiSquare = AliAnalysisMuonUtility::GetChi2MatchTrigger(track);
 
-    if (fUtils->isAcceptMuonTrack(track)) {
+    if (fUtils->isAcceptFwdMuonTrack(track)) {
       RecMuonIsGoodTrack = 1;
     } else {
       RecMuonIsGoodTrack = 0;
@@ -635,7 +631,7 @@ MCDimuonDetected(0)
     return true;
   }
 
-  bool AliAnalysisTaskAODTrackPairMC::MuonPairAnalysisEveMixing(){
+  bool AliAnalysisTaskAODTrackPairMC::FwdMuonPairAnalysisEveMixing(){
 
     if( !(fInputHandler->IsEventSelected() & fTriggerMaskForMixing) ) return false;
 
@@ -658,7 +654,7 @@ MCDimuonDetected(0)
 
       AliAODTrack *track1 = (AliAODTrack*)fEvent->GetTrack(iTrack1);
 
-      if(!fUtils->isAcceptMuonTrack(track1)) continue;
+      if(!fUtils->isAcceptFwdMuonTrack(track1)) continue;
 
       if (pool->IsReady()){
 
@@ -672,12 +668,12 @@ MCDimuonDetected(0)
 
             AliAODTrack* track2 = (AliAODTrack*)__track2__->Clone();
 
-            if(!fUtils->isAcceptMuonTrack(track2)) continue;
+            if(!fUtils->isAcceptFwdMuonTrack(track2)) continue;
 
             AliAODDimuon* dimuon = new AliAODDimuon();
             dimuon->SetMuons(track1,track2);
 
-            if(!fUtils->isAcceptDimuon(dimuon)) continue;
+            if(!fUtils->isAcceptFwdDimuon(dimuon)) continue;
 
             double fill[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fUtils->getCentClass()};
 
@@ -720,7 +716,7 @@ MCDimuonDetected(0)
     return true;
   }
 
-  bool AliAnalysisTaskAODTrackPairMC::MuonPairAnalysis()
+  bool AliAnalysisTaskAODTrackPairMC::FwdMuonPairAnalysis()
   {
 
     if(!fIsMC && !(fInputHandler->IsEventSelected() & fTriggerMaskForSame) ) return false;
@@ -760,20 +756,20 @@ MCDimuonDetected(0)
 
       FillingRecMuonTree(track1);
 
-      if(!fUtils->isAcceptMuonTrack(track1)) continue;
+      if(!fUtils->isAcceptFwdMuonTrack(track1)) continue;
 
-      MuonTrackQA(track1);
+      FwdMuonTrackQA(track1);
       
       for(Int_t iTrack2=iTrack1+1; iTrack2<nTrack; ++iTrack2){
 
         track2 = (AliAODTrack*)fEvent->GetTrack(iTrack2);
 
-        if(!fUtils->isAcceptMuonTrack(track2)) continue;
+        if(!fUtils->isAcceptFwdMuonTrack(track2)) continue;
 
         dimuon = new AliAODDimuon();
         dimuon->SetMuons(track1,track2);
 
-        if(!fUtils->isAcceptDimuon(dimuon)) continue;
+        if(!fUtils->isAcceptFwdDimuon(dimuon)) continue;
 
         if(track1->GetLabel()<0 || track2->GetLabel()<0) continue;
 
