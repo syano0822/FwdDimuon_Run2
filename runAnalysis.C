@@ -104,8 +104,8 @@ void runAnalysis(string runPeriod = "LHC16k",
   bool onMuChi2Cut = true;
   bool onMuPdcaCut = false;
   bool isSelectEvt = isEventSelection;
-  int paircuttype = 1;
-  float min_pairtrackptcut = 0.5;  
+  int paircuttype = 0;
+  float min_pairtrackptcut = 0.0;  
   bool onMixingAnalysis = isMix;
   bool isMidMuonAnalysis = false;
   

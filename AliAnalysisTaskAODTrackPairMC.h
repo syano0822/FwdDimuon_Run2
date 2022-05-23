@@ -171,6 +171,9 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   float RecMCDimuonRap;
   float RecMCDimuonMass;
   float RecMCMomPdgCode;
+  float RecMCMomMass;
+  float RecMCMomEta;
+  float RecMCMomPt;
   
   int RecMCMom2Body;
   int RecMCMomDalitz;

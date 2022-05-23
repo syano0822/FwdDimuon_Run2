@@ -141,6 +141,10 @@ RecMCDimuonMass(0.),
 RecMCMom2Body(0.),
 RecMCMomDalitz(0),
 RecMCMomPdgCode(0.),
+RecMCMomMass(0),
+RecMCMomEta(0),
+RecMCMomPt(0),
+
 MCDimuonPt(0.),
 MCDimuonRap(0.),
 MCDimuonMass(0.),
@@ -245,6 +249,9 @@ RecMCDimuonMass(0.),
 RecMCMom2Body(0.),
 RecMCMomDalitz(0),
 RecMCMomPdgCode(0.),
+RecMCMomMass(0),
+RecMCMomEta(0),
+RecMCMomPt(0),
 MCDimuonPt(0.),
 MCDimuonRap(0.),
 MCDimuonMass(0.),
@@ -319,6 +326,9 @@ fIsMidMuonAna(0)
       fTreeULSDimuon->Branch("RecMCMom2Body",&RecMCMom2Body,"RecMCMom2Body/I");
       fTreeULSDimuon->Branch("RecMCMomDalitz",&RecMCMomDalitz,"RecMCMomDalitz/I");
       fTreeULSDimuon->Branch("RecMCMomPdgCode",&RecMCMomPdgCode,"RecMCMomPdgCode/F");
+      fTreeULSDimuon->Branch("RecMCMomMass",&RecMCMomMass,"RecMCMomMass/F");
+      fTreeULSDimuon->Branch("RecMCMomEta",&RecMCMomEta,"RecMCMomEta/F");
+      fTreeULSDimuon->Branch("RecMCMomPt",&RecMCMomPt,"RecMCMomPt/F");
       fTreeULSDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
       fOutputList->Add(fTreeULSDimuon);
 
@@ -332,6 +342,9 @@ fIsMidMuonAna(0)
       fTreeLSppDimuon->Branch("RecMCDimuonRap",&RecMCDimuonRap,"RecMCDimuonRap/F");
       fTreeLSppDimuon->Branch("RecMCDimuonMass",&RecMCDimuonMass,"RecMCDimuonMass/F");
       fTreeLSppDimuon->Branch("RecMCMomPdgCode",&RecMCMomPdgCode,"RecMCMomPdgCode/F");
+      fTreeLSppDimuon->Branch("RecMCMomMass",&RecMCMomMass,"RecMCMomMass/F");
+      fTreeLSppDimuon->Branch("RecMCMomEta",&RecMCMomEta,"RecMCMomEta/F");
+      fTreeLSppDimuon->Branch("RecMCMomPt",&RecMCMomPt,"RecMCMomPt/F");     
       fTreeLSppDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
       fOutputList->Add(fTreeLSppDimuon);
 
@@ -345,6 +358,9 @@ fIsMidMuonAna(0)
       fTreeLSmmDimuon->Branch("RecMCDimuonRap",&RecMCDimuonRap,"RecMCDimuonRap/F");
       fTreeLSmmDimuon->Branch("RecMCDimuonMass",&RecMCDimuonMass,"RecMCDimuonMass/F");
       fTreeLSmmDimuon->Branch("RecMCMomPdgCode",&RecMCMomPdgCode,"RecMCMomPdgCode/F");
+      fTreeLSmmDimuon->Branch("RecMCMomMass",&RecMCMomMass,"RecMCMomMass/F");
+      fTreeLSmmDimuon->Branch("RecMCMomEta",&RecMCMomEta,"RecMCMomEta/F");
+      fTreeLSmmDimuon->Branch("RecMCMomPt",&RecMCMomPt,"RecMCMomPt/F");     
       fTreeLSmmDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
       fOutputList->Add(fTreeLSmmDimuon);
     } else {
@@ -797,7 +813,7 @@ fIsMidMuonAna(0)
           RecMCMomDalitz = 0;
           RecMCMom2Body = 0;
           RecMCMomPdgCode = mom_pdg;
-
+	  
           if(mom_pdg == fUtils->fPdgCodeEta){
             if(fUtils->isDalitzProd()){
               RecMCMomDalitz = 1;
@@ -823,7 +839,7 @@ fIsMidMuonAna(0)
               RecMCMomDalitz = 1;
             }
           }
-
+	  
 	  particle1 = (AliAODMCParticle*)fMCTrackArray->At(track1->GetLabel());
 	  particle2 = (AliAODMCParticle*)fMCTrackArray->At(track2->GetLabel());
 	  
@@ -832,8 +848,17 @@ fIsMidMuonAna(0)
           muon12 = muon1 + muon2;
 
           RecMCDimuonPt = muon12.Pt();
-          RecMCDimuonRap = fabs(muon12.Y());
+          RecMCDimuonRap = fabs(muon12.Rapidity());
           RecMCDimuonMass = muon12.M();
+	  
+	  RecMCMomPt = particle12->Pt();
+	  RecMCMomEta = particle12->Eta();
+
+	  if ( mom_pdg == fUtils->fPdgCodeRho ) {
+	    RecMCMomMass = RecMCDimuonMass;
+	  } else {
+	    RecMCMomMass = particle12->M();
+	  }
 	  
           if(dimuon->Charge() == 0) {
             fTreeULSDimuon->Fill();
@@ -963,7 +988,7 @@ fIsMidMuonAna(0)
 	if(171.0 * TMath::Pi() / 180. < particle2->Theta() && particle2->Theta() < 178.0 * TMath::Pi() / 180.) {
 	  accept[1] = true;
 	}
-
+	
         int mom_pdg1 = fUtils->getMotherPdgCode(particle1);
         int mom_pdg2 = fUtils->getMotherPdgCode(particle2);
         int mom_label1 = fUtils->getMotherLabel(particle1);
@@ -979,7 +1004,7 @@ fIsMidMuonAna(0)
 	  
 	  MCMomPt = particle12->Pt();
 	  MCMomEta = fabs(particle12->Eta());
-
+	  
           if(!particle12){
             continue;
           }
@@ -987,7 +1012,7 @@ fIsMidMuonAna(0)
           MCMomDalitz = 0;
           MCMom2Body = 0;
           MCMomPdgCode = mom_pdg1;
-
+	  
           if ( accept[0]==true && accept[1]==true && detect[0]==true && detect[1]==true) {
             MCDimuonDetected = 2;
 	  } else if ( accept[0]==true && accept[1]==true ) {
@@ -996,8 +1021,6 @@ fIsMidMuonAna(0)
 	    MCDimuonDetected = 0;
 	  }
 	  
-	  //cout<<accept[0]<<"   "<<accept[1]<<"   "<<detect[0]<<"   "<<detect[1]<<"   "<<MCDimuonDetected<<endl;
-
           if(mom_pdg1 == fUtils->fPdgCodeEta){
             if(fUtils->isDalitzProd()){
               MCMomDalitz = 1;

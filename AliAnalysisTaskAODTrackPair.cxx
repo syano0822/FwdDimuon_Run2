@@ -228,7 +228,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char* name) :
 					      fNVtxZBins,(double*)fVtxBins,
 					      fNPsiBins,(double*)fPsiBins);
   fPoolMuonTrackMgr->SetTargetValues(fTrackDepth,(double)fReadyFraction,fPoolSize);
-
+  
   // Define input and output slots here
   // Input slot #0 works with a TChain
   DefineInput(0, TChain::Class());
@@ -414,7 +414,7 @@ bool AliAnalysisTaskAODTrackPair::Initialize() {
 bool AliAnalysisTaskAODTrackPair::EventQA() {
   fHistEventVtxZ->Fill(fUtils->getVtxZ());
   fHistEventCent->Fill(fUtils->getCentClass());
-  fHistEventMulti->Fill(fUtils->getNSPDTrkInfo(4));
+  fHistEventMulti->Fill(fUtils->getNCorrSPDTrkInfo(1));
   fHistEventVtxCont->Fill(fUtils->getVtxCont());
   return true;
 }
