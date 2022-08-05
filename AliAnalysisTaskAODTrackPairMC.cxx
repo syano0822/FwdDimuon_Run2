@@ -346,7 +346,7 @@ fIsMidMuonAna(0)
       fTreeLSppDimuon->Branch("RecMCMomEta",&RecMCMomEta,"RecMCMomEta/F");
       fTreeLSppDimuon->Branch("RecMCMomPt",&RecMCMomPt,"RecMCMomPt/F");     
       fTreeLSppDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
-      fOutputList->Add(fTreeLSppDimuon);
+      //fOutputList->Add(fTreeLSppDimuon);
 
       fTreeLSmmDimuon = new TTree("fTreeLSmmDimuon","");
       fTreeLSmmDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
@@ -362,7 +362,7 @@ fIsMidMuonAna(0)
       fTreeLSmmDimuon->Branch("RecMCMomEta",&RecMCMomEta,"RecMCMomEta/F");
       fTreeLSmmDimuon->Branch("RecMCMomPt",&RecMCMomPt,"RecMCMomPt/F");     
       fTreeLSmmDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
-      fOutputList->Add(fTreeLSmmDimuon);
+      //fOutputList->Add(fTreeLSmmDimuon);
     } else {
       fTreeMixULSDimuon = new TTree("fTreeMixULSDimuon","");
       fTreeMixULSDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
@@ -393,12 +393,15 @@ fIsMidMuonAna(0)
     fTreeMCULSDimuon->Branch("MCDimuonPt",&MCDimuonPt,"MCDimuonPt/F");
     fTreeMCULSDimuon->Branch("MCDimuonRap",&MCDimuonRap,"MCDimuonRap/F");
     fTreeMCULSDimuon->Branch("MCDimuonMass",&MCDimuonMass,"MCDimuonMass/F");
+    fTreeMCULSDimuon->Branch("MCDimuonDetected",&MCDimuonDetected,"MCDimuonDetected/I");
+    fTreeMCULSDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
+    fTreeMCULSDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
+    fTreeMCULSDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");
     fTreeMCULSDimuon->Branch("MCMom2Body",&MCMom2Body,"MCMom2Body/I");
     fTreeMCULSDimuon->Branch("MCMomDalitz",&MCMomDalitz,"MCMomDalitz/I");
     fTreeMCULSDimuon->Branch("MCMomPt",&MCMomPt,"MCMomPt/F");
     fTreeMCULSDimuon->Branch("MCMomEta",&MCMomEta,"MCMomEta/F");
-    fTreeMCULSDimuon->Branch("MCMomPdgCode",&MCMomPdgCode,"MCMomPdgCode/F");
-    fTreeMCULSDimuon->Branch("MCDimuonDetected",&MCDimuonDetected,"MCDimuonDetected/I");
+    fTreeMCULSDimuon->Branch("MCMomPdgCode",&MCMomPdgCode,"MCMomPdgCode/F");    
     fTreeMCULSDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
     fOutputList->Add(fTreeMCULSDimuon);
     
@@ -413,7 +416,7 @@ fIsMidMuonAna(0)
     fTreeMCLSppDimuon->Branch("MCMomPdgCode",&MCMomPdgCode,"MCMomPdgCode/F");
     fTreeMCLSppDimuon->Branch("MCDimuonDetected",&MCDimuonDetected,"MCDimuonDetected/I");
     fTreeMCLSppDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");    
-    fOutputList->Add(fTreeMCLSppDimuon);
+    //fOutputList->Add(fTreeMCLSppDimuon);
 
     fTreeMCLSmmDimuon = new TTree("fTreeMCLSmmDimuon","");
     fTreeMCLSmmDimuon->Branch("MCDimuonPt",&MCDimuonPt,"MCDimuonPt/F");
@@ -426,7 +429,7 @@ fIsMidMuonAna(0)
     fTreeMCLSmmDimuon->Branch("MCMomPdgCode",&MCMomPdgCode,"MCMomPdgCode/F");
     fTreeMCLSmmDimuon->Branch("MCDimuonDetected",&MCDimuonDetected,"MCDimuonDetected/I");
     fTreeMCLSmmDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");    
-    fOutputList->Add(fTreeMCLSmmDimuon);
+    //fOutputList->Add(fTreeMCLSmmDimuon);
 
     fTreeRecMuonP = new TTree("fTreeRecMuonP","");
     fTreeRecMuonP->Branch("RecMuonPt",&RecMuonPt,"RecMuonPt/F");
@@ -931,9 +934,10 @@ fIsMidMuonAna(0)
 
     bool detect[2]={};
     bool accept[2]={};
-
+    int detect_track_label[2]={};
+    
     for(Int_t iTrack1=0; iTrack1<fMCTrackArray->GetEntries(); ++iTrack1){
-
+      
       detect[0] = false;
       accept[0] = false;
 
@@ -948,9 +952,10 @@ fIsMidMuonAna(0)
         int label = track->GetLabel();
         if(iTrack1 == label) {
           detect[0]=true;
-        }
+	  detect_track_label[0] = iMCHTrack;
+	}
       }
-
+      
       if(171.0 * TMath::Pi() / 180. < particle1->Theta() && particle1->Theta() < 178.0 * TMath::Pi() / 180.) {
 	accept[0] = true;
       }
@@ -983,6 +988,7 @@ fIsMidMuonAna(0)
           int label = track->GetLabel();
           if(iTrack2==label) {
             detect[1]=true;
+	    detect_track_label[1] = iMCHTrack;
           }
         }
 	if(171.0 * TMath::Pi() / 180. < particle2->Theta() && particle2->Theta() < 178.0 * TMath::Pi() / 180.) {
@@ -1055,6 +1061,26 @@ fIsMidMuonAna(0)
           MCDimuonRap = fabs(muon12.Rapidity());
           MCDimuonMass = muon12.M();
 
+	  RecDimuonPt = 0;
+	  RecDimuonRap = 0;
+	  RecDimuonMass = 0;
+	  
+	  if( MCDimuonDetected && detect_track_label[0] != detect_track_label[1] ){
+	    AliAODTrack* track1 = (AliAODTrack*)fEvent->GetTrack(detect_track_label[0]);
+	    AliAODTrack* track2 = (AliAODTrack*)fEvent->GetTrack(detect_track_label[1]);
+	    if ( track1 && track2 ) {
+	      AliAODDimuon* dimuon = new AliAODDimuon();
+	      dimuon->SetMuons(track1,track2);
+	      if(dimuon->Charge() == 0){
+		RecDimuonPt = dimuon->Pt();
+		RecDimuonRap = fabs(dimuon->Y());
+		RecDimuonMass = dimuon->M();
+	      }
+	      delete dimuon;
+	    }
+	  } 
+
+	  
           if(particle1->Charge() + particle2->Charge() == 0) {
             fTreeMCULSDimuon->Fill();
           } else if(particle1->Charge() + particle2->Charge() > 0) {

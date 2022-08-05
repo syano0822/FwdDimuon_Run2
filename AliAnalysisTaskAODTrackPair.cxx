@@ -250,14 +250,12 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects()
   fOutputList = new TList();
   fOutputList->SetOwner(true);
 
-  double bins_cent_hist[]={0.,1.,2.,3.,4.,5.,10.,20.,30.,50.,70.,100.};
-  int binnum_cent_hist = sizeof(bins_cent_hist)/sizeof(double) - 1;
-
   double bins_event_hist[]={0,1,2,3,4,5,6,7,8,9,10};
   int binnum_event_hist = sizeof(bins_event_hist)/sizeof(double) - 1;
 
-  std::string event_label[]={"CMUL7","CMLL7","CMUL7orCMLL7","CMUL7andCMLL7","CMUL7withDS","CMLL7withDS","CMUL7orCMLL7withDS","CMUL7andCMLL7withDS"};
-  fEventCounter = new TH2F("fEventCounter","",binnum_event_hist,bins_event_hist,binnum_cent_hist,bins_cent_hist);
+  std::string event_label[]=
+    {"CMUL7","CMLL7","CMUL7orCMLL7","CMUL7andCMLL7","CMUL7withDS","CMLL7withDS","CMUL7orCMLL7withDS","CMUL7andCMLL7withDS"};
+  fEventCounter = new TH2F("fEventCounter","",11,0,11,200,0,200);
   for(unsigned int iname=0; iname<sizeof(event_label)/sizeof(std::string); ++iname) {
     fEventCounter->GetXaxis()->SetBinLabel(iname+1,event_label[iname].c_str());
   }
@@ -548,22 +546,22 @@ bool AliAnalysisTaskAODTrackPair::FwdMuonPairAnalysis()
   if(!fIsMC && !(fInputHandler->IsEventSelected() & fTriggerMaskForSame) ){
     return false;
   }
-    
+
   if(fIsCMUL7){
-    fEventCounter->Fill(0.,fUtils->getCentClass());
-    fEventCounter->Fill(4.,fUtils->getCentClass(),(double)1./fUtils->getDS());
+    fEventCounter->Fill(0.,fUtils->getNCorrSPDTrkInfo(1));
+    fEventCounter->Fill(4.,fUtils->getNCorrSPDTrkInfo(1),(double)1./fUtils->getDS());
   }
   if(fIsCMLL7){
-    fEventCounter->Fill(1.,fUtils->getCentClass());
-    fEventCounter->Fill(5.,fUtils->getCentClass(),(double)1./fUtils->getDS());
+    fEventCounter->Fill(1.,fUtils->getNCorrSPDTrkInfo(1));
+    fEventCounter->Fill(5.,fUtils->getNCorrSPDTrkInfo(1),(double)1./fUtils->getDS());
   }
   if(fIsCMUL7 || fIsCMLL7){
-    fEventCounter->Fill(2.,fUtils->getCentClass());
-    fEventCounter->Fill(6.,fUtils->getCentClass(),(double)1./fUtils->getDS());
+    fEventCounter->Fill(2.,fUtils->getNCorrSPDTrkInfo(1));
+    fEventCounter->Fill(6.,fUtils->getNCorrSPDTrkInfo(1),(double)1./fUtils->getDS());
   }
   if(fIsCMUL7 && fIsCMLL7){
-    fEventCounter->Fill(3.,fUtils->getCentClass());
-    fEventCounter->Fill(7.,fUtils->getCentClass(),(double)1./fUtils->getDS());
+    fEventCounter->Fill(3.,fUtils->getNCorrSPDTrkInfo(1));
+    fEventCounter->Fill(7.,fUtils->getNCorrSPDTrkInfo(1),(double)1./fUtils->getDS());
   }
 
   Int_t nTrack = fEvent->GetNumberOfTracks();

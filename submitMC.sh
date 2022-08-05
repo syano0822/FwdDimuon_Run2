@@ -38,16 +38,10 @@ function main_func () {
 
     if [ ${MODE} == "terminate" ] && [ $JDL == 0 ]; then
 	mv Dimuon.root ${period}.root
+	chmod 755 ./${period}.root
+	mv ./${period}.root $PER_DIR
+	rm -rf ${DIR_OUT}
     fi
-
-    
-    
-    
-
-    chmod 755 ./${period}.root
-    mv ./${period}.root $PER_DIR
-
-    rm -rf ${DIR_OUT}
 }
 
 

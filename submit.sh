@@ -17,7 +17,8 @@ fi
 for i in ${PERIOD[@]}
 do
     echo ${i}
-    aliroot -l -b -q runAnalysis.C\(\"${i}\",\"${MODE}\",${JDL},\"${DATA}\",0,${MIX}\
+    
+    aliroot -l -b -q runAnalysis.C\(\"${i}\",\"${MODE}\",${JDL},\"${DATA}\",0,${MIX}\)
 
     if [ ${MODE} == "terminate" ] && [ $JDL == 0 ]; then
 	mv Dimuon.root ${i}.root
