@@ -156,7 +156,9 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   float fTrackTOFsigmaMuon;
   int fTrackGlobal;
   int fTrackGlobalNoDCA;
+  int fTrackTPConly;
   int fTrackPdgCode;
+  int fTrackMotherPdgCode;
 
   TTree* fTreeRecMuonP;
   TTree* fTreeRecMuonN;

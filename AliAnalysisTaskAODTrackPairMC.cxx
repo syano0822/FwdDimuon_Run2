@@ -188,7 +188,9 @@ fIsMidMuonAna(0),
   fTrackTOFsigmaMuon(0.),
   fTrackGlobal(0),
   fTrackGlobalNoDCA(0),
-  fTrackPdgCode(0)
+  fTrackTPConly(0),
+  fTrackPdgCode(0),
+  fTrackMotherPdgCode(0)
 
 
 {
@@ -330,7 +332,9 @@ MCDimuonDetected(0),
   fTrackTOFsigmaMuon(0.),
   fTrackGlobal(0),
   fTrackGlobalNoDCA(0),
-  fTrackPdgCode(0)
+  fTrackTPConly(0),
+  fTrackPdgCode(0),
+  fTrackMotherPdgCode(0)
 
 {
   double fCentBins[] = {-1,10,20,30,40,50,60,70,80,90,101};
@@ -380,7 +384,7 @@ MCDimuonDetected(0),
       fEventCounter->GetXaxis()->SetBinLabel(iname+1,event_label[iname].c_str());
     }
 
-    fOutputList->Add(fEventCounter);
+    //fOutputList->Add(fEventCounter);
 
     if ( !fIsMixingAnalysis ){
       fTreeULSDimuon = new TTree("fTreeULSDimuon","");
@@ -399,7 +403,7 @@ MCDimuonDetected(0),
       fTreeULSDimuon->Branch("RecMCMomEta",&RecMCMomEta,"RecMCMomEta/F");
       fTreeULSDimuon->Branch("RecMCMomPt",&RecMCMomPt,"RecMCMomPt/F");
       fTreeULSDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
-      fOutputList->Add(fTreeULSDimuon);
+      //fOutputList->Add(fTreeULSDimuon);
 
       fTreeLSppDimuon = new TTree("fTreeLSppDimuon","");
       fTreeLSppDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
@@ -439,7 +443,7 @@ MCDimuonDetected(0),
       fTreeMixULSDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");
       fTreeMixULSDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");
       fTreeMixULSDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
-      fOutputList->Add(fTreeMixULSDimuon);
+      //fOutputList->Add(fTreeMixULSDimuon);
 
       fTreeMixLSppDimuon = new TTree("fTreeMixLSppDimuon","");
       fTreeMixLSppDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
@@ -447,7 +451,7 @@ MCDimuonDetected(0),
       fTreeMixLSppDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");
       fTreeMixLSppDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");
       fTreeMixLSppDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
-      fOutputList->Add(fTreeMixLSppDimuon);
+      //fOutputList->Add(fTreeMixLSppDimuon);
 
       fTreeMixLSmmDimuon = new TTree("fTreeMixLSmmDimuon","");
       fTreeMixLSmmDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
@@ -455,7 +459,7 @@ MCDimuonDetected(0),
       fTreeMixLSmmDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");
       fTreeMixLSmmDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");
       fTreeMixLSmmDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
-      fOutputList->Add(fTreeMixLSmmDimuon);
+      //fOutputList->Add(fTreeMixLSmmDimuon);
     }
 
     fTreeMCULSDimuon = new TTree("fTreeMCULSDimuon","");
@@ -472,7 +476,7 @@ MCDimuonDetected(0),
     fTreeMCULSDimuon->Branch("MCMomEta",&MCMomEta,"MCMomEta/F");
     fTreeMCULSDimuon->Branch("MCMomPdgCode",&MCMomPdgCode,"MCMomPdgCode/F");    
     fTreeMCULSDimuon->Branch("RunNumber",&fRunNumber,"fRunNumber/I");
-    fOutputList->Add(fTreeMCULSDimuon);
+    //fOutputList->Add(fTreeMCULSDimuon);
     
     fTreeMCLSppDimuon = new TTree("fTreeMCLSppDimuon","");
     fTreeMCLSppDimuon->Branch("MCDimuonPt",&MCDimuonPt,"MCDimuonPt/F");
@@ -514,7 +518,7 @@ MCDimuonDetected(0),
     fTreeRecMuonP->Branch("RecMuonChiSquare",&RecMuonChiSquare,"RecMuonChiSquare/F");
     fTreeRecMuonP->Branch("RecMuonTriggerChiSquare",&RecMuonTriggerChiSquare,"RecMuonTriggerChiSquare/F");
     fTreeRecMuonP->Branch("RecMuonIsGoodTrack",&RecMuonIsGoodTrack,"RecMuonIsGoodTrack/I");
-    fOutputList->Add(fTreeRecMuonP);
+    //fOutputList->Add(fTreeRecMuonP);
 
     fTreeRecMuonN = new TTree("fTreeRecMuonN","");
     fTreeRecMuonN->Branch("RecMuonPt",&RecMuonPt,"RecMuonPt/F");
@@ -530,7 +534,7 @@ MCDimuonDetected(0),
     fTreeRecMuonN->Branch("RecMuonChiSquare",&RecMuonChiSquare,"RecMuonChiSquare/F");
     fTreeRecMuonN->Branch("RecMuonTriggerChiSquare",&RecMuonTriggerChiSquare,"RecMuonTriggerChiSquare/F");
     fTreeRecMuonN->Branch("RecMuonIsGoodTrack",&RecMuonIsGoodTrack,"RecMuonIsGoodTrack/I");
-    fOutputList->Add(fTreeRecMuonN);
+    //fOutputList->Add(fTreeRecMuonN);
 
     fTreeMCMuonP = new TTree("fTreeMCMuonP","");
     fTreeMCMuonP->Branch("MCMuonPt",&MCMuonPt,"MCMuonPt/F");
@@ -538,7 +542,7 @@ MCDimuonDetected(0),
     fTreeMCMuonP->Branch("MCMuonRap",&MCMuonRap,"MCMuonRap/F");
     fTreeMCMuonP->Branch("MCMuonPhi",&MCMuonPhi,"MCMuonPhi/F");
     fTreeMCMuonP->Branch("MCMuonDetect",&MCMuonDetect,"MCMuonDetect/I");
-    fOutputList->Add(fTreeMCMuonP);
+    //fOutputList->Add(fTreeMCMuonP);
 
     fTreeMCMuonN = new TTree("fTreeMCMuonN","");
     fTreeMCMuonN->Branch("MCMuonPt",&MCMuonPt,"MCMuonPt/F");
@@ -546,7 +550,7 @@ MCDimuonDetected(0),
     fTreeMCMuonN->Branch("MCMuonRap",&MCMuonRap,"MCMuonRap/F");
     fTreeMCMuonN->Branch("MCMuonPhi",&MCMuonPhi,"MCMuonPhi/F");
     fTreeMCMuonN->Branch("MCMuonDetect",&MCMuonDetect,"MCMuonDetect/I");
-    fOutputList->Add(fTreeMCMuonN);
+    //fOutputList->Add(fTreeMCMuonN);
 
     fHistEventVtxZ = new TH1F("fHistEventVtxZ","",60,-30,30);
     fHistEventCent = new TH1F("fHistEventCent","",100,0,100);
@@ -556,20 +560,21 @@ MCDimuonDetected(0),
     fOutputList->Add(fHistEventCent);
     fOutputList->Add(fHistEventMulti);
     fOutputList->Add(fHistEventVtxCont);
-
+   
     fHistTrackEta = new TH2F("fHistTrackEta","",20,0,10,25,-4.5,-2.0);
     fHistTrackThetaAbs = new TH2F("fHistTrackThetaAbs","",20,0,10,60,0,15);
     fHistTrackTriggerMatch = new TH2F("fHistTrackTriggerMatch","",20,0,10,5,0,5);
     fHistTrackPDCA = new TH2F("fHistTrackPDCA","",20,0,10,200,0,20);
     fHistTrackChiSquare = new TH2F("fHistTrackChiSquare","",20,0,10,100,0,10);
     fHistTriggerChiSquare = new TH2F("fHistTriggerChiSquare","",20,0,10,100,0,10);
+    /*
     fOutputList->Add(fHistTrackEta);
     fOutputList->Add(fHistTrackThetaAbs);
     fOutputList->Add(fHistTrackTriggerMatch);
     fOutputList->Add(fHistTrackPDCA);
     fOutputList->Add(fHistTrackChiSquare);
     fOutputList->Add(fHistTriggerChiSquare);
-
+    */
     fTreeML = new TTree("fTreeML","Tree for machine leraning for PID");
     fTreeML->Branch("fTrackPt", &fTrackPt, "fTrackPt/F");
     fTreeML->Branch("fTrackP", &fTrackP, "fTrackP/F");
@@ -585,8 +590,8 @@ MCDimuonDetected(0),
     fTreeML->Branch("fTrackTrackITSChi2", &fTrackTrackITSChi2, "fTrackTrackITSChi2/F");
     fTreeML->Branch("fTrackTPCCrossedRows", &fTrackTPCCrossedRows, "fTrackTPCCrossedRows/F");
     fTreeML->Branch("fTrackTPCFindableNcls", &fTrackTPCFindableNcls, "fTrackTPCFindableNcls/F");
-    fTreeML->Branch("fTrackTOFBCTime", &fTrackTOFBCTime, "fTrackTOFBCTime/F");
-    fTreeML->Branch("fTrackTOFKinkIndex", &fTrackTOFKinkIndex, "fTrackTOFKinkIndex/F");
+    //fTreeML->Branch("fTrackTOFBCTime", &fTrackTOFBCTime, "fTrackTOFBCTime/F");
+    //fTreeML->Branch("fTrackTOFKinkIndex", &fTrackTOFKinkIndex, "fTrackTOFKinkIndex/F");
     fTreeML->Branch("fTrackDCAxy", &fTrackDCAxy, "fTrackDCAxy/F");
     fTreeML->Branch("fTrackDCAz", &fTrackDCAz, "fTrackDCAz/F");
     fTreeML->Branch("fTrackTPCsigmaPion", &fTrackTPCsigmaPion, "fTrackTPCsigmaPion/F");
@@ -601,7 +606,9 @@ MCDimuonDetected(0),
     fTreeML->Branch("fTrackTOFsigmaMuon", &fTrackTOFsigmaMuon, "fTrackTOFsigmaMuon/F");    
     fTreeML->Branch("fTrackGlobal", &fTrackGlobal, "fTrackGlobal/I");
     fTreeML->Branch("fTrackGlobalNoDCA", &fTrackGlobalNoDCA, "fTrackGlobalNoDCA/I");
+    fTreeML->Branch("fTrackTPConly", &fTrackTPConly, "fTrackTPConly/I");
     fTreeML->Branch("fTrackPdgCode", &fTrackPdgCode, "fTrackPdgCode/I");
+    fTreeML->Branch("fTrackMotherPdgCode", &fTrackMotherPdgCode, "fTrackMotherPdgCode/I");
     
     fOutputList->Add(fTreeML);
 
@@ -728,8 +735,6 @@ MCDimuonDetected(0),
     
     TRandom1 *random = new TRandom1();
     
-
-
     AliAODMCParticle* particle;
     AliAODTrack *track;
 
@@ -739,7 +744,9 @@ MCDimuonDetected(0),
       
       track = (AliAODTrack*)fEvent->GetTrack(iTrack);
       
-      if (track->TestFilterBit(AliAODTrack::kTrkGlobalNoDCA) == false){
+      if (track->TestFilterBit(AliAODTrack::kTrkGlobal) == false && 
+	  track->TestFilterBit(AliAODTrack::kTrkGlobalNoDCA) == false && 
+	  track->TestFilterBit(AliAODTrack::kTrkTPCOnly) == false){
 	continue;
       }
 
@@ -818,16 +825,30 @@ MCDimuonDetected(0),
       fTrackTOFsigmaMuon = fUtils->getTOFSigma(track,AliPID::kMuon);
       fTrackGlobal = track->TestFilterBit(AliAODTrack::kTrkGlobal) ? 1 : 0;
       fTrackGlobalNoDCA = track->TestFilterBit(AliAODTrack::kTrkGlobalNoDCA) ? 1 : 0;
-      
+      fTrackTPConly = track->TestFilterBit(AliAODTrack::kTrkTPCOnly) ? 1 : 0;
+
       if(fIsMC && fMCTrackArray && track->GetLabel()>0){
 	particle = (AliAODMCParticle*)fMCTrackArray->At(track->GetLabel());
 	if (particle){
 	  fTrackPdgCode = particle->GetPdgCode();
+	  int mom = particle->GetMother();
+	  if (mom>0) {
+	    particle = (AliAODMCParticle*)fMCTrackArray->At(mom);
+	    if (particle) {
+	      fTrackMotherPdgCode = particle->GetPdgCode();
+	    } else {
+	      fTrackMotherPdgCode = 0;
+	    }
+	  } else {
+	    fTrackMotherPdgCode = 0;
+	  }
 	} else {
 	  fTrackPdgCode = 0;
+	  fTrackMotherPdgCode = 0;
 	}
       } else{
 	fTrackPdgCode= 0;
+	fTrackMotherPdgCode = 0;
       }
       fTreeML->Fill();
     }
