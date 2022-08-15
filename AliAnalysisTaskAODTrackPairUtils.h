@@ -47,8 +47,8 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   int getMotherLabel(AliAODTrack *track);
   int getMotherLabel(AliAODMCParticle *part);
 
-  double getTOFSigma(AliAODTrack *track1,AliPID::EParticleType pid);
-  double getTPCSigma(AliAODTrack *track1,AliPID::EParticleType pid);
+  float getTOFSigma(AliAODTrack *track1,AliPID::EParticleType pid);
+  float getTPCSigma(AliAODTrack *track1,AliPID::EParticleType pid);
 
   bool setTrueCh();
   
@@ -161,17 +161,48 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   {
     fIsLBCut = flag;
   }
-
-  void setMuonSelectSigmaTPC(float min, float max)
-  {
+  
+  void setPionSelectSigmaTPC(float min, float max){
+    fMinPionSigmaTPC = min;
+    fMaxPionSigmaTPC = max;
+  }
+  void setPionSelectSigmaTOF(float min, float max){
+    fMinPionSigmaTOF = min;
+    fMaxPionSigmaTOF = max;
+  }
+  void setKaonSelectSigmaTPC(float min, float max){
+    fMinKaonSigmaTPC = min;
+    fMaxKaonSigmaTPC = max;
+  }
+  void setKaonSelectSigmaTOF(float min, float max){
+    fMinKaonSigmaTOF = min;
+    fMaxKaonSigmaTOF = max;
+  }
+  void setProtonSelectSigmaTPC(float min, float max){
+    fMinProtonSigmaTPC = min;
+    fMaxProtonSigmaTPC = max;
+  }
+  void setProtonSelectSigmaTOF(float min, float max){
+    fMinProtonSigmaTOF = min;
+    fMaxProtonSigmaTOF = max;
+  }
+  void setElectronSelectSigmaTPC(float min, float max){
+    fMinElectronSigmaTPC = min;
+    fMaxElectronSigmaTPC = max;
+  }
+  void setElectronSelectSigmaTOF(float min, float max){
+    fMinElectronSigmaTOF = min;
+    fMaxElectronSigmaTOF = max;
+  }
+  void setMuonSelectSigmaTPC(float min, float max){
     fMinMuonSigmaTPC = min;
     fMaxMuonSigmaTPC = max;
   }
-  void setMuonSelectSigmaTOF(float min, float max)
-  {
+  void setMuonSelectSigmaTOF(float min, float max){
     fMinMuonSigmaTOF = min;
     fMaxMuonSigmaTOF = max;
   }
+
   void setMidTrackKinematicRange(float minpt,float maxpt,float mineta, float maxeta)
   {
     fMinMidTrackPt = minpt;
@@ -200,8 +231,12 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   }  
   void setSPDTrkCorrHist(TFile* inFile, string period)
   {       
-    fHistSPDTrkCorrEta05 = (TH1D*)inFile->Get(Form("HistDeltaSPDEta05_CINT7_%s",period.c_str()))->Clone("f05");
-    fHistSPDTrkCorrEta10 = (TH1D*)inFile->Get(Form("HistDeltaSPDEta10_CINT7_%s",period.c_str()))->Clone("f10");
+    if (inFile->Get(Form("HistDeltaSPDEta05_CINT7_%s",period.c_str()))) {
+      fHistSPDTrkCorrEta05 = (TH1D*)inFile->Get(Form("HistDeltaSPDEta05_CINT7_%s",period.c_str()))->Clone("f05");
+    }
+    if (inFile->Get(Form("HistDeltaSPDEta10_CINT7_%s",period.c_str()))) {
+      fHistSPDTrkCorrEta10 = (TH1D*)inFile->Get(Form("HistDeltaSPDEta10_CINT7_%s",period.c_str()))->Clone("f10");
+    }
   }
   //////////////////////////////////////////////////////////////////////////////////////////////
   //Get the analysis variables
@@ -463,6 +498,26 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   float fMaxMidTrackPt;
   float fMinMidTrackEta;
   float fMaxMidTrackEta;
+
+  float fMinPionSigmaTPC;
+  float fMaxPionSigmaTPC;
+  float fMinPionSigmaTOF;
+  float fMaxPionSigmaTOF;
+
+  float fMinKaonSigmaTPC;
+  float fMaxKaonSigmaTPC;
+  float fMinKaonSigmaTOF;
+  float fMaxKaonSigmaTOF;
+
+  float fMinProtonSigmaTPC;
+  float fMaxProtonSigmaTPC;
+  float fMinProtonSigmaTOF;
+  float fMaxProtonSigmaTOF;
+
+  float fMinElectronSigmaTPC;
+  float fMaxElectronSigmaTPC;
+  float fMinElectronSigmaTOF;
+  float fMaxElectronSigmaTOF;
 
   float fMinMuonSigmaTPC;
   float fMaxMuonSigmaTPC;

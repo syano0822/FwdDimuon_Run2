@@ -73,6 +73,7 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   bool FwdMuonPairAnalysis();
   bool FwdMuonPairAnalysisEveMixing();
   bool FwdMuonTrackQA(AliAODTrack* track);
+  bool MidTrackQA();
   bool FillingRecMuonTree(AliAODTrack* track);
   bool EventQA();
   bool isPrimaryMuonTrack(AliAODMCParticle *particle1);
@@ -123,6 +124,39 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   TH1F* fHistEventCent;
   TH1F* fHistEventMulti;
   TH1F* fHistEventVtxCont;
+
+  TTree *fTreeML;
+  float fTrackPt;
+  float fTrackP;
+  float fTrackTheta;
+  float fTrackPhi;
+  float fTrackLength;
+  float fTrackBeta;
+  float fTrackTrackChi2perNDF;
+  float fTrackTrackITSNcls;
+  float fTrackTrackTPCNcls;
+  float fTrackTrackTOFNcls;
+  float fTrackTrackTPCChi2;
+  float fTrackTrackITSChi2;
+  float fTrackTPCCrossedRows;
+  float fTrackTPCFindableNcls;
+  float fTrackTOFBCTime;
+  float fTrackTOFKinkIndex;
+  float fTrackDCAxy;
+  float fTrackDCAz;
+  float fTrackTPCsigmaPion;
+  float fTrackTOFsigmaPion;
+  float fTrackTPCsigmaKaon;
+  float fTrackTOFsigmaKaon;
+  float fTrackTPCsigmaProton;
+  float fTrackTOFsigmaProton;
+  float fTrackTPCsigmaElectron;
+  float fTrackTOFsigmaElectron;
+  float fTrackTPCsigmaMuon;
+  float fTrackTOFsigmaMuon;
+  int fTrackGlobal;
+  int fTrackGlobalNoDCA;
+  int fTrackPdgCode;
 
   TTree* fTreeRecMuonP;
   TTree* fTreeRecMuonN;

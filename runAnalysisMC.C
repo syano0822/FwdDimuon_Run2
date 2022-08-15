@@ -108,13 +108,14 @@ void runAnalysisMC(TString runPeriod = "LHC16k",
   int paircuttype = 0;
   float min_pairtrackptcut = 0.0;  
   bool onMixingAnalysis = isMix;
+  bool isMidMuonAnalysis = false;
 
 #if !defined (__CINT__) || defined (__CLING__)
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
   gInterpreter->LoadMacro("AliAnalysisTaskAODEventStudy.cxx++g");
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairMC.cxx++g");
   AliAnalysisTaskAODTrackPairMC *task
-    = reinterpret_cast<AliAnalysisTaskAODTrackPairMC*>(gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPairMC.C(%u, %f, %f, %d, %f, %f, \"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d)",
+    = reinterpret_cast<AliAnalysisTaskAODTrackPairMC*>(gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPairMC.C(%u, %f, %f, %d, %f, %f, \"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d)",
 										     offlineTriggerMask,
 										     min_vtxz,
 										     max_vtxz,
@@ -135,14 +136,15 @@ void runAnalysisMC(TString runPeriod = "LHC16k",
 										     isSelectEvt,
 										     paircuttype,
 										     min_pairtrackptcut,
-										     onMixingAnalysis
+										     onMixingAnalysis,
+										     isMidMuonAnalysis
 										     )));
 #else
   gROOT->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
   gROOT->LoadMacro("AliAnalysisTaskAODEventStudy.cxx++g");
   gROOT->LoadMacro("AliAnalysisTaskAODTrackPairMC.cxx++g");
   gROOT->LoadMacro("AddTaskAODTrackPairMC.C");
-  AliAnalysisTaskAODTrackPairMC* task = AddTaskAODTrackPair(offlineTriggerMask,
+  AliAnalysisTaskAODTrackPairMC* task = AddTaskAODTrackPairMC(offlineTriggerMask,
 							  min_vtxz,
 							  max_vtxz,
 							  min_vtx_cont,
@@ -162,7 +164,8 @@ void runAnalysisMC(TString runPeriod = "LHC16k",
 							  isSelectEvt,
 							  paircuttype,
 							  min_pairtrackptcut,
-							  onMixingAnalysis							  
+							  onMixingAnalysis,
+							  isMidMuonAnalysis
 							  );
 #endif
   

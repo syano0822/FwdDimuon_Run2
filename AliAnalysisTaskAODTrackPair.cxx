@@ -379,7 +379,7 @@ void AliAnalysisTaskAODTrackPair::UserExec(Option_t *)
   if(!fUtils->isAcceptEvent()) return;
 
   EventQA();
-
+  
   if(!fIsMidMuonAna) {
     if ( !fIsMixingAnalysis ) {
       FwdMuonPairAnalysis();
@@ -650,7 +650,7 @@ bool AliAnalysisTaskAODTrackPair::MidMuonTrackQA(AliAODTrack* track){
   fTrackTrueMuonLabel = false;
   
   fTreeMidMuon->Fill();
-
+  
   return true;
 }
 
@@ -675,12 +675,12 @@ bool AliAnalysisTaskAODTrackPair::MidMuonPairAnalysis()
     if(!fUtils->isAcceptMidTrackQuality(track1)){
       continue;
     }
-
+    
     MidMuonTrackQA(track1);
 
     if(!fUtils->isAcceptTrackKinematics(track1)){
       continue;
-    }    
+    }
     if(!fUtils->isAcceptMidMuonTrack(track1)){
       continue;
     }

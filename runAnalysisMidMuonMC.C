@@ -1,13 +1,13 @@
 #include "AliAnalysisTaskAODTrackPairUtils.h"
 #include "AliAnalysisTaskAODEventStudy.h"
-#include "AliAnalysisTaskAODTrackPair.h"
+#include "AliAnalysisTaskAODTrackPairMC.h"
 
-AliAnalysisGrid* CreateAlienHandler(TString period, TString run_mode, Bool_t isJDL, TString type,bool onMixingAnalysis);
+AliAnalysisGrid* CreateAlienHandler(string period, string run_mode, Bool_t isJDL, string type,bool onMixingAnalysis);
 
-void runAnalysisMidMuonMC(TString runPeriod = "LHC16k",
-			  TString run_mode  = "test",
+void runAnalysisMidMuonMC(string runPeriod = "LHC16k",
+			  string run_mode  = "test",
 			  Bool_t isJDL      = true,
-			  TString type      = "data",
+			  string type      = "data",
 			  Bool_t  local     = false,
 			  bool isMix        = false)
 {
@@ -29,12 +29,15 @@ void runAnalysisMidMuonMC(TString runPeriod = "LHC16k",
 
   if(type != "data"){
     isMC = true;
+
     if(type == "LHC20f10a" || type == "LHC20f10b" || type == "LHC20f10c" || type == "Pythia6Perugia2011CCSemiMuonic" ||
-       type == "UncorrFlatMuons_GEANT4" ){
+       type == "UncorrFlatMuons_GEANT4" || type == "UncorrFlatMuonsLowPt_GEANT4" || 
+       type == "EtaDirect_GEANT4" || type == "EtaDalitz_GEANT4" || type == "RhoDirect_GEANT4" || type == "OmegaDalitz_GEANT4" || type == "OmegaDirect_GEANT4" || 
+       type == "EtaPrimeDalitz_GEANT4" || type == "PhiDirect_GEANT4"){
       isEventSelection = false;
     }
   }
-  
+
   // create the analysis manager
   AliAnalysisManager *mgr = new AliAnalysisManager("AnalysisTaskExample");
   AliAODInputHandler *aodH = new AliAODInputHandler();
@@ -77,15 +80,12 @@ void runAnalysisMidMuonMC(TString runPeriod = "LHC16k",
     }
   }
 #endif
-
-#if !defined (__CINT__) || defined (__CLING__) //ROOT6
-  AliAnalysisTaskPIDResponse *pidtask=reinterpret_cast<AliAnalysisTaskPIDResponse*>
-    (gInterpreter->ExecuteMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C()"));
-#else //ROOT5
-  gROOT->LoadMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C");
-  AliAnalysisTaskPIDResponse *pidtask=AddTaskPIDResponse();
-#endif
- 
+  
+  //AliAnalysisTaskPIDResponse *pidTask=reinterpret_cast<AliAnalysisTaskPIDResponse*>
+  //(gInterpreter->ExecuteMacro(Form("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C (%d,%d,%d,%d)",isMC,false,true,1)));    
+  
+  AliAnalysisTaskPIDResponse *pidtask=reinterpret_cast<AliAnalysisTaskPIDResponse*>(gInterpreter->ExecuteMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C(1)"));
+  
   TFile* input = TFile::Open("./DownScale_Run2_CTP.root");
   
   unsigned int offlineTriggerMask;
@@ -98,15 +98,16 @@ void runAnalysisMidMuonMC(TString runPeriod = "LHC16k",
   float min_vtxz =-10;
   float max_vtxz = 10;
   int min_vtx_cont = 1;
-  float min_pair_rap = -0.8;
-  float max_pair_rap =  0.8;
+  float min_pair_rap = 2.5;
+  float max_pair_rap = 4;
+  string period = runPeriod;
   string multi_method="SPDTracklets";
   bool onPURej = true;
-  bool onLBcut = false;
+  bool onLBcut = true;
   bool onMuEtaCut = true;
-  bool onMuThetaAbsCut = false;
-  bool onMuMatchAptCut = false;
-  bool onMuMatchLptCut = false;
+  bool onMuThetaAbsCut = true;
+  bool onMuMatchAptCut = true;
+  bool onMuMatchLptCut = true;
   bool onMuMatchHptCut = false;
   bool onMuChi2Cut = true;
   bool onMuPdcaCut = false;
@@ -116,63 +117,68 @@ void runAnalysisMidMuonMC(TString runPeriod = "LHC16k",
   bool onMixingAnalysis = isMix;
   bool isMidMuonAnalysis = true;
 
+
 #if !defined (__CINT__) || defined (__CLING__)
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
   gInterpreter->LoadMacro("AliAnalysisTaskAODEventStudy.cxx++g");
-  gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPair.cxx++g");
-  AliAnalysisTaskAODTrackPair *task
-    = reinterpret_cast<AliAnalysisTaskAODTrackPair*>(gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, \"%s\", %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d)",
-										     offlineTriggerMask,
-										     min_vtxz,
-										     max_vtxz,
-										     min_vtx_cont,
-										     min_pair_rap,
-										     max_pair_rap,
-										     multi_method.c_str(),
-										     onPURej,
-										     onLBcut,
-										     onMuEtaCut,
-										     onMuThetaAbsCut,
-										     onMuMatchAptCut,
-										     onMuMatchLptCut,
-										     onMuMatchHptCut,
-										     onMuChi2Cut,
-										     onMuPdcaCut,
-										     isMC,
-										     isSelectEvt,
-										     paircuttype,
-										     min_pairtrackptcut,
-										     onMixingAnalysis,
-										     isMidMuonAnalysis
-										     )));
+  gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairMC.cxx++g");
+  AliAnalysisTaskAODTrackPairMC *task
+    = reinterpret_cast<AliAnalysisTaskAODTrackPairMC*>
+    (gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPairMC.C(%u, %f, %f, %d, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d)",
+				     offlineTriggerMask,
+				     min_vtxz,
+				     max_vtxz,
+				     min_vtx_cont,
+				     min_pair_rap,
+				     max_pair_rap,
+				     period.c_str(),
+				     multi_method.c_str(),
+				     onPURej,
+				     onLBcut,
+				     onMuEtaCut,
+				     onMuThetaAbsCut,
+				     onMuMatchAptCut,
+				     onMuMatchLptCut,
+				     onMuMatchHptCut,
+				     onMuChi2Cut,
+				     onMuPdcaCut,
+				     isMC,
+				     isSelectEvt,
+				     paircuttype,
+				     min_pairtrackptcut,
+				     onMixingAnalysis,
+				     isMidMuonAnalysis
+				     )));
 #else
   gROOT->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
   gROOT->LoadMacro("AliAnalysisTaskAODEventStudy.cxx++g");
-  gROOT->LoadMacro("AliAnalysisTaskAODTrackPair.cxx++g");
-  gROOT->LoadMacro("AddTaskAODTrackPair.C");
-  AliAnalysisTaskAODTrackPair* task = AddTaskAODTrackPair(offlineTriggerMask,
-							  min_vtxz,
-							  max_vtxz,
-							  min_vtx_cont,
-							  min_pair_rap,
-							  max_pair_rap,
-							  multi_method.c_str(),
-							  onPURej,
-							  onLBcut,
-							  onMuEtaCut,
-							  onMuThetaAbsCut,
-							  onMuMatchAptCut,
-							  onMuMatchLptCut,
-							  onMuMatchHptCut,
-							  onMuChi2Cut,
-							  onMuPdcaCut,
-							  isMC,
-							  isSelectEvt,
-							  paircuttype,
-							  min_pairtrackptcut,
-							  onMixingAnalysis,
-							  isMidMuonAnalysis
-							  );
+  gROOT->LoadMacro("AliAnalysisTaskAODTrackPairMC.cxx++g");
+  gROOT->LoadMacro("AddTaskAODTrackPairMC.C");
+  AliAnalysisTaskAODTrackPairMC* task = AddTaskAODTrackPairMC(
+							      offlineTriggerMask,
+							      min_vtxz,
+							      max_vtxz,
+							      min_vtx_cont,
+							      min_pair_rap,
+							      max_pair_rap,
+							      period.c_str(),
+							      multi_method.c_str(),
+							      onPURej,
+							      onLBcut,
+							      onMuEtaCut,
+							      onMuThetaAbsCut,
+							      onMuMatchAptCut,
+							      onMuMatchLptCut,
+							      onMuMatchHptCut,
+							      onMuChi2Cut,
+							      onMuPdcaCut,
+							      isMC,
+							      isSelectEvt,
+							      paircuttype,
+							      min_pairtrackptcut,
+							      onMixingAnalysis,
+							      isMidMuonAnalysis
+							      );
 #endif
   
   if(!mgr->InitAnalysis()) return;
@@ -201,86 +207,125 @@ void runAnalysisMidMuonMC(TString runPeriod = "LHC16k",
   
 }
 
-AliAnalysisGrid* CreateAlienHandler(TString runPeriod, TString run_mode, Bool_t isJDL, TString type, bool onMixingAnalysis){
+AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t isJDL, string type, bool onMixingAnalysis){
   
   AliAnalysisAlien *plugin = new AliAnalysisAlien();
   
   plugin->SetMergeViaJDL(isJDL);
-  if(run_mode=="terminate")
+
+  if(run_mode=="terminate"){
     plugin->SetRunMode("terminate");
-  if(run_mode=="full")
+  }
+  if(run_mode=="full"){
     plugin->SetRunMode("full");
-  if(run_mode=="test")
+  }
+  if(run_mode=="test"){
     plugin->SetRunMode("test");
-  if(run_mode=="offline")
+  }
+  if(run_mode=="offline"){
     plugin->SetRunMode("offline");
-  
+  }
+    
   plugin->SetAPIVersion("V1.1x");
-  plugin->SetAliPhysicsVersion("vAN-20220401-1");
+  plugin->SetAliPhysicsVersion("vAN-20220805_ROOT6-1");
   plugin->SetDefaultOutputs(kTRUE);
   
-  if (onMixingAnalysis) {
-    plugin->SetGridWorkingDir("PWGLF/AOD/"+runPeriod+"/LowMassMidDimuonMix/"+type);
+  if (onMixingAnalysis) {    
+    plugin->SetGridWorkingDir(Form("PWGLF/AOD/%s/LowMassDimuonMixMC/%s",runPeriod.c_str(),type.c_str()));
   } else {
-    plugin->SetGridWorkingDir("PWGLF/AOD/"+runPeriod+"/LowMassMidDimuon/"+type);
+    plugin->SetGridWorkingDir(Form("PWGLF/AOD/%s/LowMassDimuonMC/%s",runPeriod.c_str(),type.c_str()));
   }
+  
   plugin->SetGridOutputDir("output");
 
-  plugin->SetSplitMaxInputFileNumber(30);    
-  plugin->SetNrunsPerMaster(45);
+  plugin->SetSplitMaxInputFileNumber(5);    
+  //plugin->SetNrunsPerMaster();
   
-  if(type == "data"){
-    plugin->SetRunPrefix("000");
-    if (runPeriod.Contains("LHC18c")){
-      plugin->SetGridDataDir("/alice/data/2018/LHC18c");
-      if (runPeriod.Contains("FAST")) {
-	plugin->SetDataPattern("/pass2_FAST/AOD/ AliAOD.root");
-      } else {
-	plugin->SetDataPattern("/pass2_CENT/AOD/ AliAOD.root");
-      }
-    }
-  } else {
-    if (runPeriod.Contains("LHC18c")){
-      if (runPeriod.Contains("FAST")) {
-	if (runPeriod.Contains("EXTRA")){
-	  plugin->SetGridDataDir("/alice/sim/2018/LHC18h1_extra");
-	} else {
-	  plugin->SetGridDataDir("/alice/sim/2018/LHC18h1_fast");
-	}	
-	plugin->SetDataPattern("/AOD237/ AliAOD.root");
-      } else {
-	plugin->SetGridDataDir("/alice/sim/2018/LHC18h1_cent");
-	plugin->SetDataPattern("/AOD237/ AliAOD.root");
-      }
-    }
+  //LHC17q, 
+  if(type == "LHC21j1a_cent_woSDD"){
+    plugin->SetGridDataDir("/alice/sim/2021/LHC21j1a_cent_woSDD");
+    plugin->SetDataPattern("/AOD/ AliAOD.root");
+  } else if(type == "LHC21j1a_fast"){
+    plugin->SetGridDataDir("/alice/sim/2021/LHC21j1a_fast");
+    plugin->SetDataPattern("/AOD/ AliAOD.root");
+  } else if(type == "LHC20g14a"){
+    plugin->SetGridDataDir("/alice/sim/2020/LHC20g14a");
+    plugin->SetDataPattern("/AOD243/ AliAOD.root");
+  } else if(type == "LHC18c8b_fast"){
+    plugin->SetGridDataDir("/alice/sim/2018/LHC18c8b_fast");
+    plugin->SetDataPattern("/AOD/ AliAOD.root");
+  } else if(type == "LHC18c8b_cent_woSDD"){
+    plugin->SetGridDataDir("/alice/sim/2018/LHC18c8b_cent_woSDD");
+    plugin->SetDataPattern("/AOD/ AliAOD.root");
+  } else if(type == "LHC18c8b_cent"){
+    plugin->SetGridDataDir("/alice/sim/2018/LHC18c8b_cent");
+    plugin->SetDataPattern("/AOD/ AliAOD.root");
+  } else if(type == "LHC19h6a"){
+    plugin->SetGridDataDir("/alice/sim/2020/LHC19h6a");
+    plugin->SetDataPattern("/AOD243/ AliAOD.root");
+  } else if(type == "data"){
+    
+    plugin->SetRunPrefix("000");    
   }
   
-  if(runPeriod.Contains("LHC18c")){
-    plugin->AddRunNumber(285958); plugin->AddRunNumber(285957); plugin->AddRunNumber(285946); plugin->AddRunNumber(285917);
-    plugin->AddRunNumber(285893); plugin->AddRunNumber(285892); plugin->AddRunNumber(285869); plugin->AddRunNumber(285851);
-    plugin->AddRunNumber(285830); plugin->AddRunNumber(285812); plugin->AddRunNumber(285811); plugin->AddRunNumber(285810);
-    plugin->AddRunNumber(285806); plugin->AddRunNumber(285805); plugin->AddRunNumber(285804); plugin->AddRunNumber(285781);
-    plugin->AddRunNumber(285778); plugin->AddRunNumber(285777); plugin->AddRunNumber(285756); plugin->AddRunNumber(285755);
-    plugin->AddRunNumber(285753); plugin->AddRunNumber(285722); plugin->AddRunNumber(285698); plugin->AddRunNumber(285666);
-    plugin->AddRunNumber(285664); plugin->AddRunNumber(285663); plugin->AddRunNumber(285662); plugin->AddRunNumber(285643);
-    plugin->AddRunNumber(285642); plugin->AddRunNumber(285641); plugin->AddRunNumber(285640); plugin->AddRunNumber(285639);
-    plugin->AddRunNumber(285603); plugin->AddRunNumber(285602); plugin->AddRunNumber(285601); plugin->AddRunNumber(285599);
-    plugin->AddRunNumber(285578); plugin->AddRunNumber(285577); plugin->AddRunNumber(285576); plugin->AddRunNumber(285575);
-    plugin->AddRunNumber(285557); plugin->AddRunNumber(285550); plugin->AddRunNumber(285545); plugin->AddRunNumber(285516);
-    plugin->AddRunNumber(285515); plugin->AddRunNumber(285497); plugin->AddRunNumber(285496); plugin->AddRunNumber(285481);
-    plugin->AddRunNumber(285471);
+  if(runPeriod.find("LHC17q") != std::string::npos){//p-p 5 TeV
+    //plugin->SetNrunsPerMaster(4);
+    plugin->AddRunNumber(282365);
+    plugin->AddRunNumber(282366);
+    plugin->AddRunNumber(282367);
+  }
+  
+  if(runPeriod.find("LHC17p_FAST") != std::string::npos){//p-p 5 TeV
+    plugin->SetNrunsPerMaster(4);
+    plugin->AddRunNumber(282343); plugin->AddRunNumber(282342); plugin->AddRunNumber(282341); plugin->AddRunNumber(282340); plugin->AddRunNumber(282314); plugin->AddRunNumber(282313); 
+    plugin->AddRunNumber(282312); plugin->AddRunNumber(282309); plugin->AddRunNumber(282307); plugin->AddRunNumber(282306); plugin->AddRunNumber(282305); plugin->AddRunNumber(282304);
+    plugin->AddRunNumber(282303); plugin->AddRunNumber(282302); plugin->AddRunNumber(282247); plugin->AddRunNumber(282230); plugin->AddRunNumber(282229); plugin->AddRunNumber(282227); 
+    plugin->AddRunNumber(282224); plugin->AddRunNumber(282206); plugin->AddRunNumber(282189); plugin->AddRunNumber(282147); plugin->AddRunNumber(282146); plugin->AddRunNumber(282127); 
+    plugin->AddRunNumber(282126); plugin->AddRunNumber(282125); plugin->AddRunNumber(282123); plugin->AddRunNumber(282122); plugin->AddRunNumber(282120); plugin->AddRunNumber(282119); 
+    plugin->AddRunNumber(282118); plugin->AddRunNumber(282099); plugin->AddRunNumber(282098); plugin->AddRunNumber(282078); plugin->AddRunNumber(282051); plugin->AddRunNumber(282050);
+    plugin->AddRunNumber(282031); plugin->AddRunNumber(282030); plugin->AddRunNumber(282025); plugin->AddRunNumber(282021); plugin->AddRunNumber(282016); plugin->AddRunNumber(282008);
+ }
+
+  if(runPeriod.find("LHC17p_woSDD_No1") != std::string::npos){//p-p 5 TeV
+    plugin->SetNrunsPerMaster(4);
+    plugin->AddRunNumber(282343); plugin->AddRunNumber(282342); plugin->AddRunNumber(282341); plugin->AddRunNumber(282340); plugin->AddRunNumber(282314); plugin->AddRunNumber(282313); 
+    plugin->AddRunNumber(282312); plugin->AddRunNumber(282309); plugin->AddRunNumber(282307); plugin->AddRunNumber(282306); plugin->AddRunNumber(282305); plugin->AddRunNumber(282304); 
+    plugin->AddRunNumber(282303); plugin->AddRunNumber(282302); plugin->AddRunNumber(282247); plugin->AddRunNumber(282230); plugin->AddRunNumber(282229); plugin->AddRunNumber(282227); 
+    plugin->AddRunNumber(282224); plugin->AddRunNumber(282206); plugin->AddRunNumber(282189); plugin->AddRunNumber(282147); plugin->AddRunNumber(282146); plugin->AddRunNumber(282127); 
+    plugin->AddRunNumber(282126); plugin->AddRunNumber(282125); plugin->AddRunNumber(282123); plugin->AddRunNumber(282122); plugin->AddRunNumber(282120); plugin->AddRunNumber(282119); 
+    plugin->AddRunNumber(282118); plugin->AddRunNumber(282098); plugin->AddRunNumber(282078); plugin->AddRunNumber(282051); plugin->AddRunNumber(282050);
+    plugin->AddRunNumber(282031); plugin->AddRunNumber(282030); plugin->AddRunNumber(282025); plugin->AddRunNumber(282021); plugin->AddRunNumber(282016); plugin->AddRunNumber(282008);
+  }
+  if(runPeriod.find("LHC17p_woSDD_No2") != std::string::npos){//p-p 5 TeV
+    plugin->AddRunNumber(282099);
+  }
+
+  if(runPeriod.find("LHC16q") != std::string::npos){//p-Pb 5 TeV
+    plugin->SetNrunsPerMaster(4);
+    plugin->AddRunNumber(265525); plugin->AddRunNumber(265521); plugin->AddRunNumber(265501); plugin->AddRunNumber(265500); plugin->AddRunNumber(265499); plugin->AddRunNumber(265435);
+    plugin->AddRunNumber(265427); plugin->AddRunNumber(265426); plugin->AddRunNumber(265425); plugin->AddRunNumber(265424); plugin->AddRunNumber(265422); plugin->AddRunNumber(265421);
+    plugin->AddRunNumber(265420); plugin->AddRunNumber(265419); plugin->AddRunNumber(265388); plugin->AddRunNumber(265387); plugin->AddRunNumber(265385); plugin->AddRunNumber(265384);
+    plugin->AddRunNumber(265383); plugin->AddRunNumber(265381); plugin->AddRunNumber(265378); plugin->AddRunNumber(265377); plugin->AddRunNumber(265344); plugin->AddRunNumber(265343);
+    plugin->AddRunNumber(265342); plugin->AddRunNumber(265339); plugin->AddRunNumber(265338); plugin->AddRunNumber(265336); plugin->AddRunNumber(265334); plugin->AddRunNumber(265332);
+    plugin->AddRunNumber(265309);
+  }
+
+  if(runPeriod.find("LHC16t") != std::string::npos){//p-Pb 5 TeV
+    plugin->SetNrunsPerMaster(4);
+    plugin->AddRunNumber(267166); plugin->AddRunNumber(267165); plugin->AddRunNumber(267164); plugin->AddRunNumber(267163);
   }
 
   plugin->AddIncludePath("-I. -I$ROOTSYS/include -I$ALICE_ROOT -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include");
 
-  plugin->SetAnalysisSource("AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPair.cxx");
+  plugin->SetAnalysisSource("AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPairMC.cxx");
   plugin->SetAdditionalLibs("libSTEERBase.so libESD.so libAOD.so libANALYSIS.so libANALYSISalice.so libANALYSISaliceBase.so libCORRFW.so libOADB.so libCore.so libTree.so libGeom.so libVMC.so libPhysics.so "
-			    "AliAnalysisTaskAODTrackPairUtils.h AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.h AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPair.h AliAnalysisTaskAODTrackPair.cxx");
+			    "AliAnalysisTaskAODTrackPairUtils.h AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.h AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPairMC.h AliAnalysisTaskAODTrackPairMC.cxx");
   
   //Set Job
   plugin->SetExecutableCommand("aliroot -b -q");
-  plugin->SetAnalysisMacro("analysis_syano_"+type+"_"+runPeriod+".C");
-  plugin->SetExecutable("analysis_syano_"+type+"_"+runPeriod+".sh");
+  //Form("analysis_syano_%s_%s.C",type.c_str(),runPeriod.c_str())
+  plugin->SetAnalysisMacro(Form("analysis_syano_%s_%s.C",type.c_str(),runPeriod.c_str()));
+  plugin->SetExecutable(Form("analysis_syano_%s_%s.sh",type.c_str(),runPeriod.c_str()));
   
   if(type == "data") plugin->SetNtestFiles(1);
   else               plugin->SetNtestFiles(1);

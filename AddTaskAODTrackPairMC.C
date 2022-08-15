@@ -1,9 +1,10 @@
-AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask = AliVEvent::kAny,
+AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(uint offlineTriggerMask = AliVEvent::kAny,
 						     float min_vtxz =-10,
 						     float max_vtxz = 10,
 						     int min_vtx_cont = 1,
 						     float min_pair_rap = -4.0,
 						     float max_pair_rap = -2.5,
+						     string period = "LHC18c",
 						     string multi_method="SPDTracklets",
 						     bool onPURej = true,
 						     bool onLBcut = true,
@@ -19,10 +20,11 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
 						     int paircuttype=1,
 						     double min_pairtrackptcut=0.5,
 						     bool onMixingAnalysis=false,
-						     bool isMidMuonAnalysis=false)
+						     bool isMidMuonAnalysis=false
+						     )
 
 {
-
+    
   AliMuonTrackCuts* fMuonTrackCuts = new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
   fMuonTrackCuts->SetIsMC(isMC);
   fMuonTrackCuts->SetAllowDefaultParams(true);
@@ -33,15 +35,17 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
   if(onMuMatchLptCut) selectionMask |=AliMuonTrackCuts::kMuMatchLpt;
   if(onMuMatchHptCut) selectionMask |=AliMuonTrackCuts::kMuMatchHpt;
   if(onMuPdcaCut) selectionMask |=AliMuonTrackCuts::kMuPdca;
-  if(onMuChi2Cut) selectionMask |=AliMuonTrackCuts::kMuTrackChiSquare;
+  if(onMuChi2Cut) selectionMask |=AliMuonTrackCuts::kMuTrackChiSquare;    
   fMuonTrackCuts->SetFilterMask(selectionMask);
-
+  
   TFile* input = TFile::Open("./DownScale_Run2_CTP.root");
+  TFile* input2 = TFile::Open("./SPDMultiCorrection.root");
 
   AliAnalysisTaskAODTrackPairUtils *utils = new AliAnalysisTaskAODTrackPairUtils();
   utils->setMC(isMC);
   utils->setEvtSelection(isSelectEvt);
   utils->setDownScalingHist(input);
+  utils->setSPDTrkCorrHist(input2,period);
   utils->setVertexCut(min_vtxz,max_vtxz,min_vtx_cont);
   utils->setPairRapidityCut(min_pair_rap,max_pair_rap);
   utils->setPileupRejectionCut(onPURej);
@@ -50,6 +54,7 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
   utils->setMuonTrackCut(fMuonTrackCuts);
   utils->setPairKinematicCut(paircuttype,min_pairtrackptcut);
   utils->setMidMuonAna(isMidMuonAnalysis);  
+  utils->setPeriod(period);
   if (isMidMuonAnalysis) {
     utils->setMuonSelectSigmaTPC(-1.,+1.);
     utils->setMuonSelectSigmaTOF(-1.,+1.);
@@ -61,13 +66,13 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
     ::Error("AddTaskAODMuonEventSelection", "No analysis manager to connect to");
     return NULL;
   }
-
+  
   if (!mgr->GetInputEventHandler()) {
     ::Error("AddTaskAODMuonEventSelection", "This task requires an input event handler");
     return NULL;
   }
-
-  AliAnalysisTaskAODTrackPairMC* task = new AliAnalysisTaskAODTrackPairMC("dimuonMC");
+    
+  AliAnalysisTaskAODTrackPairMC* task = new AliAnalysisTaskAODTrackPairMC("dimuon");
   if(isSelectEvt){
     task->SelectCollisionCandidates(offlineTriggerMask);
   }
@@ -82,12 +87,13 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
   task->setMC(isMC);
   task->setMidMuonAna(isMidMuonAnalysis);
   mgr->AddTask(task);
- 
+  
   cout<<"min_vtxz="<< min_vtxz <<endl;
   cout<<"max_vtxz="<< max_vtxz <<endl;
   cout<<"min_vtx_cont="<<  min_vtx_cont <<endl;
   cout<<"min_pair_rap="<< min_pair_rap <<endl;
   cout<<"max_pair_rap="<< max_pair_rap <<endl;
+  cout<<"period="<< period <<endl;
   cout<<"multi_method="<< multi_method <<endl;
   cout<<"onPURej="<< onPURej <<endl;
   cout<<"onLBcut="<< onLBcut <<endl;
@@ -107,7 +113,7 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(UInt_t offlineTriggerMask =
   
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");
-
+  
   mgr->ConnectInput(task,0,cinput);
   mgr->ConnectOutput(task,1,coutput1);
 

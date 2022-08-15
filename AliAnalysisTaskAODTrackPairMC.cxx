@@ -155,7 +155,42 @@ MCMomEta(0),
 MCMomPdgCode(0.),
 MCDimuonDetected(0),
 
-fIsMidMuonAna(0)
+fIsMidMuonAna(0),
+
+  fTreeML(NULL),
+  fTrackPt(0.),
+  fTrackP(0.),
+  fTrackTheta(0.),
+  fTrackPhi(0.),
+  fTrackLength(0.),
+  fTrackBeta(0.),
+  fTrackTrackChi2perNDF(0.),
+  fTrackTrackITSNcls(0.),
+  fTrackTrackTPCNcls(0.),
+  fTrackTrackTOFNcls(0.),
+  fTrackTrackTPCChi2(0.),
+  fTrackTrackITSChi2(0.),
+  fTrackTPCCrossedRows(0.),
+  fTrackTPCFindableNcls(0.),
+  fTrackTOFBCTime(0.),
+  fTrackTOFKinkIndex(0.),
+  fTrackDCAxy(0.),
+  fTrackDCAz(0.),
+  fTrackTPCsigmaKaon(0.),
+  fTrackTOFsigmaKaon(0.),
+  fTrackTPCsigmaPion(0.),
+  fTrackTOFsigmaPion(0.),
+  fTrackTPCsigmaProton(0.),
+  fTrackTOFsigmaProton(0.),
+  fTrackTPCsigmaElectron(0.),
+  fTrackTOFsigmaElectron(0.),
+  fTrackTPCsigmaMuon(0.),
+  fTrackTOFsigmaMuon(0.),
+  fTrackGlobal(0),
+  fTrackGlobalNoDCA(0),
+  fTrackPdgCode(0)
+
+
 {
 
 }
@@ -262,7 +297,41 @@ MCMomEta(0),
 MCMomPdgCode(0.),
 MCDimuonDetected(0),
 
-fIsMidMuonAna(0)
+  fIsMidMuonAna(0),
+
+  fTreeML(NULL),
+  fTrackPt(0.),
+  fTrackP(0.),
+  fTrackTheta(0.),
+  fTrackPhi(0.),
+  fTrackLength(0.),
+  fTrackBeta(0.),
+  fTrackTrackChi2perNDF(0.),
+  fTrackTrackITSNcls(0.),
+  fTrackTrackTPCNcls(0.),
+  fTrackTrackTOFNcls(0.),
+  fTrackTrackTPCChi2(0.),
+  fTrackTrackITSChi2(0.),
+  fTrackTPCCrossedRows(0.),
+  fTrackTPCFindableNcls(0.),
+  fTrackTOFBCTime(0.),
+  fTrackTOFKinkIndex(0.),
+  fTrackDCAxy(0.),
+  fTrackDCAz(0.),
+  fTrackTPCsigmaKaon(0.),
+  fTrackTOFsigmaKaon(0.),
+  fTrackTPCsigmaPion(0.),
+  fTrackTOFsigmaPion(0.),
+  fTrackTPCsigmaProton(0.),
+  fTrackTOFsigmaProton(0.),
+  fTrackTPCsigmaElectron(0.),
+  fTrackTOFsigmaElectron(0.),
+  fTrackTPCsigmaMuon(0.),
+  fTrackTOFsigmaMuon(0.),
+  fTrackGlobal(0),
+  fTrackGlobalNoDCA(0),
+  fTrackPdgCode(0)
+
 {
   double fCentBins[] = {-1,10,20,30,40,50,60,70,80,90,101};
   double fVtxBins[] = {-50,-10.5,-6,-2,0,2,6,10.5,50};
@@ -501,6 +570,41 @@ fIsMidMuonAna(0)
     fOutputList->Add(fHistTrackChiSquare);
     fOutputList->Add(fHistTriggerChiSquare);
 
+    fTreeML = new TTree("fTreeML","Tree for machine leraning for PID");
+    fTreeML->Branch("fTrackPt", &fTrackPt, "fTrackPt/F");
+    fTreeML->Branch("fTrackP", &fTrackP, "fTrackP/F");
+    fTreeML->Branch("fTrackTheta", &fTrackTheta, "fTrackTheta/F");
+    fTreeML->Branch("fTrackPhi", &fTrackPhi, "fTrackPhi/F");
+    fTreeML->Branch("fTrackLength", &fTrackLength, "fTrackLength/F");
+    fTreeML->Branch("fTrackBeta", &fTrackBeta, "fTrackBeta/F");
+    fTreeML->Branch("fTrackTrackChi2perNDF", &fTrackTrackChi2perNDF, "fTrackTrackChi2perNDF/F");
+    fTreeML->Branch("fTrackTrackITSNcls", &fTrackTrackITSNcls, "fTrackTrackITSNcls/F");
+    fTreeML->Branch("fTrackTrackTPCNcls", &fTrackTrackTPCNcls, "fTrackTrackTPCNcls/F");
+    fTreeML->Branch("fTrackTrackTOFNcls", &fTrackTrackTOFNcls, "fTrackTrackTOFNcls/F");
+    fTreeML->Branch("fTrackTrackTPCChi2", &fTrackTrackTPCChi2, "fTrackTrackTPCChi2/F");
+    fTreeML->Branch("fTrackTrackITSChi2", &fTrackTrackITSChi2, "fTrackTrackITSChi2/F");
+    fTreeML->Branch("fTrackTPCCrossedRows", &fTrackTPCCrossedRows, "fTrackTPCCrossedRows/F");
+    fTreeML->Branch("fTrackTPCFindableNcls", &fTrackTPCFindableNcls, "fTrackTPCFindableNcls/F");
+    fTreeML->Branch("fTrackTOFBCTime", &fTrackTOFBCTime, "fTrackTOFBCTime/F");
+    fTreeML->Branch("fTrackTOFKinkIndex", &fTrackTOFKinkIndex, "fTrackTOFKinkIndex/F");
+    fTreeML->Branch("fTrackDCAxy", &fTrackDCAxy, "fTrackDCAxy/F");
+    fTreeML->Branch("fTrackDCAz", &fTrackDCAz, "fTrackDCAz/F");
+    fTreeML->Branch("fTrackTPCsigmaPion", &fTrackTPCsigmaPion, "fTrackTPCsigmaPion/F");
+    fTreeML->Branch("fTrackTOFsigmaPion", &fTrackTOFsigmaPion, "fTrackTOFsigmaPion/F");
+    fTreeML->Branch("fTrackTPCsigmaKaon", &fTrackTPCsigmaKaon, "fTrackTPCsigmaKaon/F");
+    fTreeML->Branch("fTrackTOFsigmaKaon", &fTrackTOFsigmaKaon, "fTrackTOFsigmaKaon/F");
+    fTreeML->Branch("fTrackTPCsigmaProton", &fTrackTPCsigmaProton, "fTrackTPCsigmaProton/F");
+    fTreeML->Branch("fTrackTOFsigmaProton", &fTrackTOFsigmaProton, "fTrackTOFsigmaProton/F");
+    fTreeML->Branch("fTrackTPCsigmaElectron", &fTrackTPCsigmaElectron, "fTrackTPCsigmaElectron/F");
+    fTreeML->Branch("fTrackTOFsigmaElectron", &fTrackTOFsigmaElectron, "fTrackTOFsigmaElectron/F");
+    fTreeML->Branch("fTrackTPCsigmaMuon", &fTrackTPCsigmaMuon, "fTrackTPCsigmaMuon/F");
+    fTreeML->Branch("fTrackTOFsigmaMuon", &fTrackTOFsigmaMuon, "fTrackTOFsigmaMuon/F");    
+    fTreeML->Branch("fTrackGlobal", &fTrackGlobal, "fTrackGlobal/I");
+    fTreeML->Branch("fTrackGlobalNoDCA", &fTrackGlobalNoDCA, "fTrackGlobalNoDCA/I");
+    fTreeML->Branch("fTrackPdgCode", &fTrackPdgCode, "fTrackPdgCode/I");
+    
+    fOutputList->Add(fTreeML);
+
     PostData(1, fOutputList);
   }
 
@@ -509,13 +613,22 @@ fIsMidMuonAna(0)
   void AliAnalysisTaskAODTrackPairMC::UserExec(Option_t *)
   {
 
-    if(!fIsMC) return;
-
-    if(!Initialize()) return;
-
-    if(!fUtils->isAcceptEvent()) return;
+    if(!fIsMC) {
+      return;
+    }
+    
+    if(!Initialize()) {
+      return;
+    }
+    
+    if(!fUtils->isAcceptEvent()) {
+      return;
+    }
     
     processMC();
+    
+    MidTrackQA();
+    
 
     if ( !fIsMixingAnalysis ) {
       FwdMuonPairAnalysis();
@@ -527,8 +640,9 @@ fIsMidMuonAna(0)
   bool AliAnalysisTaskAODTrackPairMC::Initialize() {
     fEvent = dynamic_cast<AliAODEvent*>(InputEvent());
 
-    if( !fUtils->setEvent(fEvent,fInputHandler) )
-    return false;
+    if( !fUtils->setEvent(fEvent,fInputHandler) ){
+      return false;
+    }
 
     if( fRunNumber != fEvent->GetRunNumber() ){
       fRunNumber = fUtils->getRunnumber();
@@ -537,10 +651,12 @@ fIsMidMuonAna(0)
     }
 
     if(fIsMC){
-
+      
       fMCTrackArray = dynamic_cast<TClonesArray*>(fEvent->FindListObject(AliAODMCParticle::StdBranchName()));
 
-      if(!fMCTrackArray) return false;
+      if(!fMCTrackArray) {
+	return false;
+      }
 
       fUtils->setMCArray(fMCTrackArray);
 
@@ -604,6 +720,119 @@ fIsMidMuonAna(0)
     fHistTrackChiSquare->Fill(track->Pt(),AliAnalysisMuonUtility::GetChi2perNDFtracker(track));
     fHistTriggerChiSquare->Fill(track->Pt(),AliAnalysisMuonUtility::GetChi2MatchTrigger(track));
 
+
+    return true;
+  }
+
+  bool AliAnalysisTaskAODTrackPairMC::MidTrackQA(){
+    
+    TRandom1 *random = new TRandom1();
+    
+
+
+    AliAODMCParticle* particle;
+    AliAODTrack *track;
+
+    int nTrack = fEvent->GetNumberOfTracks();
+
+    for(int iTrack=0; iTrack<nTrack; ++iTrack){
+      
+      track = (AliAODTrack*)fEvent->GetTrack(iTrack);
+      
+      if (track->TestFilterBit(AliAODTrack::kTrkGlobalNoDCA) == false){
+	continue;
+      }
+
+      /*
+      if (fUtils->isAcceptMidTrackQuality(track)) {
+	continue;
+      }
+      */
+
+      float sigTOF =track->GetTOFsignal();
+      float length =track->GetIntegratedLength();
+      float beta =(sigTOF>0)?(double)length/ (2.99792457999999984e-02 * sigTOF):0;
+
+      float dca_xy=9999;
+      float dca_z=9999;
+      track->GetImpactParameters(dca_xy,dca_z);
+
+      if(fIsMC && fMCTrackArray && track->GetLabel()>0){
+	particle = (AliAODMCParticle*)fMCTrackArray->At(track->GetLabel());
+	if (particle){
+	  fTrackPdgCode = particle->GetPdgCode();
+	} else {
+	  fTrackPdgCode = 0;
+	}
+      } else{
+	fTrackPdgCode= 0;
+      }
+      
+      if ( fabs(fTrackPdgCode) == 211) {	
+	random->SetSeed(track->Pt()*1000 + track->Eta()*100 + track->Theta()*1000);	
+	if (random->Rndm()>0.001) {
+	  continue;
+	}	
+      } else if ( fabs(fTrackPdgCode) == 321) {	
+	random->SetSeed(track->Pt()*1000 + track->Eta()*100 + track->Theta()*1000);	
+	if (random->Rndm()>0.01) {
+	  continue;
+	}	
+      } else if ( fabs(fTrackPdgCode) == 2212) {	
+	random->SetSeed(track->Pt()*1000 + track->Eta()*100 + track->Theta()*1000);	
+	if (random->Rndm()>0.05) {
+	  continue;
+	}
+      }
+      
+
+      AliTOFHeader * tofHeader = (AliTOFHeader*)track->GetTOFHeader();
+      
+      fTrackPt = track->Pt();
+      fTrackP = track->P();
+      fTrackTheta = track->Theta();
+      fTrackPhi = track->Phi();
+      fTrackLength = track->GetIntegratedLength();
+      fTrackBeta = beta;
+      fTrackTrackChi2perNDF = track->Chi2perNDF();
+      fTrackTrackITSNcls = track->GetITSNcls();
+      fTrackTrackTPCNcls = track->GetTPCNcls();
+      fTrackTrackTOFNcls = tofHeader->GetNumberOfTOFclusters();
+      fTrackTrackTPCChi2 = track->GetTPCchi2();
+      fTrackTrackITSChi2 = track->GetITSchi2();
+      fTrackTPCCrossedRows = track->GetTPCCrossedRows();
+      fTrackTPCFindableNcls = track->GetTPCNclsF();
+      fTrackTOFBCTime = track->GetTOFBunchCrossing();
+      fTrackTOFKinkIndex = track->GetKinkIndex(0);
+      fTrackDCAxy = dca_xy;
+      fTrackDCAz = dca_z;
+      fTrackTPCsigmaPion = fUtils->getTPCSigma(track,AliPID::kPion);
+      fTrackTOFsigmaPion = fUtils->getTOFSigma(track,AliPID::kPion);
+      fTrackTPCsigmaKaon = fUtils->getTPCSigma(track,AliPID::kKaon);
+      fTrackTOFsigmaKaon = fUtils->getTOFSigma(track,AliPID::kKaon);
+      fTrackTPCsigmaProton = fUtils->getTPCSigma(track,AliPID::kProton);
+      fTrackTOFsigmaProton = fUtils->getTOFSigma(track,AliPID::kProton);
+      fTrackTPCsigmaElectron = fUtils->getTPCSigma(track,AliPID::kElectron);
+      fTrackTOFsigmaElectron = fUtils->getTOFSigma(track,AliPID::kElectron);
+      fTrackTPCsigmaMuon = fUtils->getTPCSigma(track,AliPID::kMuon);
+      fTrackTOFsigmaMuon = fUtils->getTOFSigma(track,AliPID::kMuon);
+      fTrackGlobal = track->TestFilterBit(AliAODTrack::kTrkGlobal) ? 1 : 0;
+      fTrackGlobalNoDCA = track->TestFilterBit(AliAODTrack::kTrkGlobalNoDCA) ? 1 : 0;
+      
+      if(fIsMC && fMCTrackArray && track->GetLabel()>0){
+	particle = (AliAODMCParticle*)fMCTrackArray->At(track->GetLabel());
+	if (particle){
+	  fTrackPdgCode = particle->GetPdgCode();
+	} else {
+	  fTrackPdgCode = 0;
+	}
+      } else{
+	fTrackPdgCode= 0;
+      }
+      fTreeML->Fill();
+    }
+    
+    delete random;
 
     return true;
   }
