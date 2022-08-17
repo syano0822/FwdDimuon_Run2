@@ -202,9 +202,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     fMinMuonSigmaTOF = min;
     fMaxMuonSigmaTOF = max;
   }
-
-  void setMidTrackKinematicRange(float minpt,float maxpt,float mineta, float maxeta)
-  {
+  void setMidTrackKinematicRange(float minpt,float maxpt,float mineta, float maxeta){
     fMinMidTrackPt = minpt;
     fMaxMidTrackPt = maxpt;
     fMinMidTrackEta = mineta;
@@ -489,6 +487,8 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   TH1D* fHistSPDTrkCorrEta05;
   TH1D* fHistSPDTrkCorrEta10;
   
+  float fMinTrackP;
+  float fMaxTrackP;
   float fMinTrackPt;
   float fMaxTrackPt;
   float fMinTrackEta;

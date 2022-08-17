@@ -61,7 +61,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() :
   fPoolMuonTrackMgr(NULL),
   fUtils(NULL),
   fIsMC(false),
-  fIsMidMuonAna(false),
+  fIsMidTrackAna(false),
   fIsMixingAnalysis(false),
   fRunNumber(-99999),
   fTrackDepth(1000),
@@ -96,42 +96,30 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() :
   fHistEventMulti(NULL),
   fHistEventVtxCont(NULL),
 
-  fTreeULSDimuon(NULL),
-  fTreeLSppDimuon(NULL),
-  fTreeLSmmDimuon(NULL),
+  fTreeULSPair(NULL),
+  fTreeLSppPair(NULL),
+  fTreeLSmmPair(NULL),
 
-  fTreeMixULSDimuon(NULL),
-  fTreeMixLSppDimuon(NULL),
-  fTreeMixLSmmDimuon(NULL),
-
-  RecDimuonPt(0.),
-  RecDimuonRap(0.),
-  RecDimuonMass(0.),
-  RecDimuonCent(0.),
-  RecDimuonDS(0.),
-
-  fTreeMidMuon(NULL),
-  fTrackPt(0.),
-  fTrackP(0.),
-  fTrackTheta(0.),
-  fTrackPhi(0.),
-  fTrackLength(0.),
-  fTrackBeta(0.),
-  fTrackTrackChi2perNDF(0.),
-  fTrackTrackITSNcls(0.),
-  fTrackTrackTPCNcls(0.),
-  fTrackTrackTOFNcls(0.),
-  fTrackTrackTPCChi2(0.),
-  fTrackTrackITSChi2(0.),
-  fTrackTPCCrossedRows(0.),
-  fTrackTPCFindableNcls(0.),
-  fTrackTOFBCTime(0.),
-  fTrackTOFKinkIndex(0.),
-  fTrackDCAxy(0.),
-  fTrackDCAz(0.),
-  fTrackTPCsigmaMuon(0.),
-  fTrackTOFsigmaMuon(0.),
-  fTrackTrueMuonLabel(false)
+  fTreeMixULSPair(NULL),
+  fTreeMixLSppPair(NULL),
+  fTreeMixLSmmPair(NULL),
+  
+  fHistTPCdEdxP(NULL),
+  fHistBetaP(NULL),
+  fHistTPCSigmaPKaon(NULL),
+  fHistTOFSigmaPKaon(NULL),
+  fHistTPCTOFSigmaKaon(NULL),
+  fHistSelTPCdEdxP(NULL),
+  fHistSelBetaP(NULL),
+  fHistSelTPCSigmaPKaon(NULL),
+  fHistSelTOFSigmaPKaon(NULL),
+  fHistSelTPCTOFSigmaKaon(NULL),
+  
+  RecPairPt(0.),
+  RecPairRap(0.),
+  RecPairMass(0.),
+  RecPairCent(0.),
+  RecPairDS(0.)
 {
 
 }
@@ -142,7 +130,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char* name) :
   fPoolMuonTrackMgr(NULL),
   fUtils(NULL),
   fIsMC(false),
-  fIsMidMuonAna(false),
+  fIsMidTrackAna(false),
   fIsMixingAnalysis(false),
   fRunNumber(-99999),
   fTrackDepth(1000),
@@ -177,42 +165,30 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char* name) :
   fHistEventMulti(NULL),
   fHistEventVtxCont(NULL),
 
-  fTreeULSDimuon(NULL),
-  fTreeLSppDimuon(NULL),
-  fTreeLSmmDimuon(NULL),
+  fTreeULSPair(NULL),
+  fTreeLSppPair(NULL),
+  fTreeLSmmPair(NULL),
 
-  fTreeMixULSDimuon(NULL),
-  fTreeMixLSppDimuon(NULL),
-  fTreeMixLSmmDimuon(NULL),
+  fTreeMixULSPair(NULL),
+  fTreeMixLSppPair(NULL),
+  fTreeMixLSmmPair(NULL),
+  
+  fHistTPCdEdxP(NULL),
+  fHistBetaP(NULL),
+  fHistTPCSigmaPKaon(NULL),
+  fHistTOFSigmaPKaon(NULL),
+  fHistTPCTOFSigmaKaon(NULL),
+  fHistSelTPCdEdxP(NULL),
+  fHistSelBetaP(NULL),
+  fHistSelTPCSigmaPKaon(NULL),
+  fHistSelTOFSigmaPKaon(NULL),
+  fHistSelTPCTOFSigmaKaon(NULL),
 
-  RecDimuonPt(0.),
-  RecDimuonRap(0.),
-  RecDimuonMass(0.),
-  RecDimuonCent(0.),
-  RecDimuonDS(0.),
-
-  fTreeMidMuon(NULL),
-  fTrackPt(0.),
-  fTrackP(0.),
-  fTrackTheta(0.),
-  fTrackPhi(0.),
-  fTrackLength(0.),
-  fTrackBeta(0.),
-  fTrackTrackChi2perNDF(0.),
-  fTrackTrackITSNcls(0.),
-  fTrackTrackTPCNcls(0.),
-  fTrackTrackTOFNcls(0.),
-  fTrackTrackTPCChi2(0.),
-  fTrackTrackITSChi2(0.),
-  fTrackTPCCrossedRows(0.),
-  fTrackTPCFindableNcls(0.),
-  fTrackTOFBCTime(0.),
-  fTrackTOFKinkIndex(0.),
-  fTrackDCAxy(0.),
-  fTrackDCAz(0.),
-  fTrackTPCsigmaMuon(0.),
-  fTrackTOFsigmaMuon(0.),
-  fTrackTrueMuonLabel(false)
+  RecPairPt(0.),
+  RecPairRap(0.),
+  RecPairMass(0.),
+  RecPairCent(0.),
+  RecPairDS(0.)
 {
 
   double fCentBins[] = {-1,9,15,21,26,34,42,51,61,99999};
@@ -261,62 +237,138 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects()
   }
 
   fOutputList->Add(fEventCounter);
-
-  if ( !fIsMixingAnalysis ){
-    fTreeULSDimuon = new TTree("fTreeULSDimuon","");
-    fTreeULSDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
-    fTreeULSDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
-    fTreeULSDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");
-    fTreeULSDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");
-    fTreeULSDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
-    fOutputList->Add(fTreeULSDimuon);
-
-    fTreeLSppDimuon = new TTree("fTreeLSppDimuon","");
-    fTreeLSppDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
-    fTreeLSppDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
-    fTreeLSppDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");
-    fTreeLSppDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");
-    fTreeLSppDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
-    fOutputList->Add(fTreeLSppDimuon);
-
-    fTreeLSmmDimuon = new TTree("fTreeLSmmDimuon","");
-    fTreeLSmmDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
-    fTreeLSmmDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
-    fTreeLSmmDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");
-    fTreeLSmmDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");
-    fTreeLSmmDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
-    fOutputList->Add(fTreeLSmmDimuon);
-  } else {
-    fTreeMixULSDimuon = new TTree("fTreeMixULSDimuon","");
-    fTreeMixULSDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
-    fTreeMixULSDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
-    fTreeMixULSDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");
-    fTreeMixULSDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");
-    fTreeMixULSDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
-    fOutputList->Add(fTreeMixULSDimuon);
-
-    fTreeMixLSppDimuon = new TTree("fTreeMixLSppDimuon","");
-    fTreeMixLSppDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
-    fTreeMixLSppDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
-    fTreeMixLSppDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");
-    fTreeMixLSppDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");
-    fTreeMixLSppDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
-    fOutputList->Add(fTreeMixLSppDimuon);
-
-    fTreeMixLSmmDimuon = new TTree("fTreeMixLSmmDimuon","");
-    fTreeMixLSmmDimuon->Branch("RecDimuonPt",&RecDimuonPt,"RecDimuonPt/F");
-    fTreeMixLSmmDimuon->Branch("RecDimuonRap",&RecDimuonRap,"RecDimuonRap/F");
-    fTreeMixLSmmDimuon->Branch("RecDimuonMass",&RecDimuonMass,"RecDimuonMass/F");
-    fTreeMixLSmmDimuon->Branch("RecDimuonCent",&RecDimuonCent,"RecDimuonCent/F");
-    fTreeMixLSmmDimuon->Branch("RecDimuonDS",&RecDimuonDS,"RecDimuonDS/F");
-    fOutputList->Add(fTreeMixLSmmDimuon);
-  }
   
-  fHistTrackPairPtBalance = new TH2F("fHistTrackPairPtBalance","",50,0,5,50,0,5);
-  fHistTrackPairLocalBoardPair = new TH2F("fHistTrackPairLocalBoardPair","",240,0,240,240,0,240);
-  fOutputList->Add(fHistTrackPairPtBalance);
-  fOutputList->Add(fHistTrackPairLocalBoardPair);
+  if (!fIsMidTrackAna) {
+    if ( !fIsMixingAnalysis ){
+      fTreeULSPair = new TTree("fTreeULSPair","");
+      fTreeULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+      fTreeULSPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
+      fTreeULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+      fTreeULSPair->Branch("RecPairCent",&RecPairCent,"RecPairCent/F");
+      fTreeULSPair->Branch("RecPairDS",&RecPairDS,"RecPairDS/F");
+      fOutputList->Add(fTreeULSPair);
+      
+      fTreeLSppPair = new TTree("fTreeLSppPair","");
+      fTreeLSppPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+      fTreeLSppPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
+      fTreeLSppPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+      fTreeLSppPair->Branch("RecPairCent",&RecPairCent,"RecPairCent/F");
+      fTreeLSppPair->Branch("RecPairDS",&RecPairDS,"RecPairDS/F");
+      fOutputList->Add(fTreeLSppPair);
+      
+      fTreeLSmmPair = new TTree("fTreeLSmmPair","");
+      fTreeLSmmPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+      fTreeLSmmPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
+      fTreeLSmmPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+      fTreeLSmmPair->Branch("RecPairCent",&RecPairCent,"RecPairCent/F");
+      fTreeLSmmPair->Branch("RecPairDS",&RecPairDS,"RecPairDS/F");
+      fOutputList->Add(fTreeLSmmPair);
+    } else {
+      fTreeMixULSPair = new TTree("fTreeMixULSPair","");
+      fTreeMixULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+      fTreeMixULSPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
+      fTreeMixULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+      fTreeMixULSPair->Branch("RecPairCent",&RecPairCent,"RecPairCent/F");
+      fTreeMixULSPair->Branch("RecPairDS",&RecPairDS,"RecPairDS/F");
+      fOutputList->Add(fTreeMixULSPair);
+      
+      fTreeMixLSppPair = new TTree("fTreeMixLSppPair","");
+      fTreeMixLSppPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+      fTreeMixLSppPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
+      fTreeMixLSppPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+      fTreeMixLSppPair->Branch("RecPairCent",&RecPairCent,"RecPairCent/F");
+      fTreeMixLSppPair->Branch("RecPairDS",&RecPairDS,"RecPairDS/F");
+      fOutputList->Add(fTreeMixLSppPair);
+      
+      fTreeMixLSmmPair = new TTree("fTreeMixLSmmPair","");
+      fTreeMixLSmmPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+      fTreeMixLSmmPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
+      fTreeMixLSmmPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+      fTreeMixLSmmPair->Branch("RecPairCent",&RecPairCent,"RecPairCent/F");
+      fTreeMixLSmmPair->Branch("RecPairDS",&RecPairDS,"RecPairDS/F");
+      fOutputList->Add(fTreeMixLSmmPair);
+    }
+    fHistTrackPairPtBalance = new TH2F("fHistTrackPairPtBalance","",50,0,5,50,0,5);
+    fHistTrackPairLocalBoardPair = new TH2F("fHistTrackPairLocalBoardPair","",240,0,240,240,0,240);
+    fOutputList->Add(fHistTrackPairPtBalance);
+    fOutputList->Add(fHistTrackPairLocalBoardPair);
+  } else {
+    fTreeULSPair = new TTree("fTreeULSPair","");
+    fTreeULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+    fTreeULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+    fOutputList->Add(fTreeULSPair);
+      
+    fTreeLSppPair = new TTree("fTreeLSppPair","");
+    fTreeLSppPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+    fTreeLSppPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+    fOutputList->Add(fTreeLSppPair);
+      
+    fTreeLSmmPair = new TTree("fTreeLSmmPair","");
+    fTreeLSmmPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+    fTreeLSmmPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+    fOutputList->Add(fTreeLSmmPair);
+  
+    double min_dEdx = 0.;
+    double max_dEdx = 300.;
+    double width_dEdx = 0.1;
 
+    double min_beta = 0.;
+    double max_beta = 1.;
+    double width_beta = 0.01;
+
+    double min_p = 0.;
+    double max_p = 5.;
+    double width_p = 0.1;
+
+    double min_sigma = -10;
+    double max_sigma = +10;
+    double width_sigma = 0.1;
+    
+    fHistTPCdEdxP = new TH2F("fHistTPCdEdxP","",
+			     (max_p-min_p)/width_p,min_p,max_p,
+			     (max_dEdx-min_dEdx)/width_dEdx,min_dEdx,max_dEdx);
+    fHistBetaP = new TH2F("fHistBetaP","",
+			  (max_p-min_p)/width_p,min_p,max_p,
+			  (max_beta-min_beta)/width_beta,min_beta,max_beta);
+    fHistTPCSigmaPKaon = new TH2F("fHistTPCSigmaPKaon","",
+				  (max_p-min_p)/width_p,min_p,max_p,
+				  (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+    fHistTOFSigmaPKaon = new TH2F("fHistTOFSigmaPKaon","",
+				  (max_p-min_p)/width_p,min_p,max_p,
+				  (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+    fHistTPCTOFSigmaKaon = new TH3F("fHistTPCTOFSigmaKaon","",
+				    (max_p-min_p)/width_p,min_p,max_p,
+				    (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma,
+				    (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+    fOutputList->Add(fHistTPCdEdxP);
+    fOutputList->Add(fHistBetaP);
+    fOutputList->Add(fHistTPCSigmaPKaon);
+    fOutputList->Add(fHistTOFSigmaPKaon);
+    fOutputList->Add(fHistTPCTOFSigmaKaon);
+
+    fHistSelTPCdEdxP = new TH2F("fHistSelTPCdEdxP","",
+			     (max_p-min_p)/width_p,min_p,max_p,
+			     (max_dEdx-min_dEdx)/width_dEdx,min_dEdx,max_dEdx);
+    fHistSelBetaP = new TH2F("fHistSelBetaP","",
+			  (max_p-min_p)/width_p,min_p,max_p,
+			  (max_beta-min_beta)/width_beta,min_beta,max_beta);
+    fHistSelTPCSigmaPKaon = new TH2F("fHistSelTPCSigmaPKaon","",
+				  (max_p-min_p)/width_p,min_p,max_p,
+				  (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+    fHistSelTOFSigmaPKaon = new TH2F("fHistSelTOFSigmaPKaon","",
+				  (max_p-min_p)/width_p,min_p,max_p,
+				  (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+    fHistSelTPCTOFSigmaKaon = new TH3F("fHistSelTPCTOFSigmaKaon","",
+				    (max_p-min_p)/width_p,min_p,max_p,
+				    (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma,
+				    (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+    fOutputList->Add(fHistSelTPCdEdxP);
+    fOutputList->Add(fHistSelBetaP);
+    fOutputList->Add(fHistSelTPCSigmaPKaon);
+    fOutputList->Add(fHistSelTOFSigmaPKaon);
+    fOutputList->Add(fHistSelTPCTOFSigmaKaon);
+  }
+    
   fHistEventVtxZ = new TH1F("fHistEventVtxZ","",60,-30,30);
   fHistEventCent = new TH1F("fHistEventCent","",100,0,100);
   fHistEventMulti = new TH1F("fHistEventMulti","",200,0,200);
@@ -326,7 +378,7 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects()
   fOutputList->Add(fHistEventMulti);
   fOutputList->Add(fHistEventVtxCont);
 
-  if (!fIsMidMuonAna){
+  if (!fIsMidTrackAna){
     fHistTrackEta = new TH2F("fHistTrackEta","",20,0,10,25,-4.5,-2.0);
     fHistTrackThetaAbs = new TH2F("fHistTrackThetaAbs","",20,0,10,60,0,15);
     fHistTrackTriggerMatch = new TH2F("fHistTrackTriggerMatch","",20,0,10,5,0,5);
@@ -339,32 +391,9 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects()
     fOutputList->Add(fHistTrackPDCA);
     fOutputList->Add(fHistTrackChiSquare);
     fOutputList->Add(fHistTriggerChiSquare);
-  }
-  
-  if (fIsMidMuonAna) {
-    fTreeMidMuon = new TTree("fTreeMidMuon","Tree for machine leraning for PID");
-    fTreeMidMuon->Branch("fTrackPt", &fTrackPt, "fTrackPt/F");
-    fTreeMidMuon->Branch("fTrackP", &fTrackP, "fTrackP/F");
-    fTreeMidMuon->Branch("fTrackTheta", &fTrackTheta, "fTrackTheta/F");
-    fTreeMidMuon->Branch("fTrackPhi", &fTrackPhi, "fTrackPhi/F");
-    fTreeMidMuon->Branch("fTrackLength", &fTrackLength, "fTrackLength/F");
-    fTreeMidMuon->Branch("fTrackBeta", &fTrackBeta, "fTrackBeta/F");
-    fTreeMidMuon->Branch("fTrackTrackChi2perNDF", &fTrackTrackChi2perNDF, "fTrackTrackChi2perNDF/F");
-    fTreeMidMuon->Branch("fTrackTrackITSNcls", &fTrackTrackITSNcls, "fTrackTrackITSNcls/F");
-    fTreeMidMuon->Branch("fTrackTrackTPCNcls", &fTrackTrackTPCNcls, "fTrackTrackTPCNcls/F");
-    fTreeMidMuon->Branch("fTrackTrackTOFNcls", &fTrackTrackTOFNcls, "fTrackTrackTOFNcls/F");
-    fTreeMidMuon->Branch("fTrackTrackTPCChi2", &fTrackTrackTPCChi2, "fTrackTrackTPCChi2/F");
-    fTreeMidMuon->Branch("fTrackTrackITSChi2", &fTrackTrackITSChi2, "fTrackTrackITSChi2/F");
-    fTreeMidMuon->Branch("fTrackTPCCrossedRows", &fTrackTPCCrossedRows, "fTrackTPCCrossedRows/F");
-    fTreeMidMuon->Branch("fTrackTPCFindableNcls", &fTrackTPCFindableNcls, "fTrackTPCFindableNcls/F");
-    fTreeMidMuon->Branch("fTrackTOFBCTime", &fTrackTOFBCTime, "fTrackTOFBCTime/F");
-    fTreeMidMuon->Branch("fTrackTOFKinkIndex", &fTrackTOFKinkIndex, "fTrackTOFKinkIndex/F");
-    fTreeMidMuon->Branch("fTrackDCAxy", &fTrackDCAxy, "fTrackDCAxy/F");
-    fTreeMidMuon->Branch("fTrackDCAz", &fTrackDCAz, "fTrackDCAz/F");
-    fTreeMidMuon->Branch("fTrackTPCsigmaMuon", &fTrackTPCsigmaMuon, "fTrackTPCsigmaMuon/F");
-    fTreeMidMuon->Branch("fTrackTOFsigmaMuon", &fTrackTOFsigmaMuon, "fTrackTOFsigmaMuon/F");
-    fTreeMidMuon->Branch("fTrackTrueMuonLabel", &fTrackTrueMuonLabel, "fTrackTrueMuonLabel/B");
-    fOutputList->Add(fTreeMidMuon);
+  } else {
+
+
   }
     
   PostData(1, fOutputList);
@@ -377,10 +406,10 @@ void AliAnalysisTaskAODTrackPair::UserExec(Option_t *)
 
   if(!Initialize()) return;
   if(!fUtils->isAcceptEvent()) return;
-
+  
   EventQA();
   
-  if(!fIsMidMuonAna) {
+  if(!fIsMidTrackAna) {
     if ( !fIsMixingAnalysis ) {
       FwdMuonPairAnalysis();
     } else {
@@ -388,7 +417,7 @@ void AliAnalysisTaskAODTrackPair::UserExec(Option_t *)
     }
   } else {
     if ( !fIsMixingAnalysis ) {
-      MidMuonPairAnalysis();      
+      MidPairAnalysis(AliPID::kKaon,AliPID::kKaon);      
     } else {
       //MidMuonPairAnalysisEveMixing();
     }
@@ -398,14 +427,23 @@ void AliAnalysisTaskAODTrackPair::UserExec(Option_t *)
 
 bool AliAnalysisTaskAODTrackPair::Initialize() {
   fEvent = dynamic_cast<AliAODEvent*>(InputEvent());
-  if( !fUtils->setEvent(fEvent,fInputHandler) )
+  
+  if( !fUtils->setEvent(fEvent,fInputHandler) ){
     return false;
-  if( fRunNumber != fEvent->GetRunNumber() ){
-    fRunNumber = fUtils->getRunnumber();
-    AliMuonTrackCuts* trackCut = fUtils->getMuonTrackCuts();
-    trackCut->SetRun(fInputHandler);
   }
-  fUtils->getTriggerInfo(fIsCINT7, fIsCMSL7, fIsCMSH7, fIsCMUL7, fIsCMLL7);
+  
+  if( fRunNumber != fEvent->GetRunNumber() ){
+    fRunNumber = fUtils->getRunnumber();    
+    if ( !fIsMidTrackAna ) {
+      AliMuonTrackCuts* trackCut = fUtils->getMuonTrackCuts();
+      trackCut->SetRun(fInputHandler);
+    }
+  }
+  
+  if ( !fIsMidTrackAna ) {
+    fUtils->getTriggerInfo(fIsCINT7, fIsCMSL7, fIsCMSH7, fIsCMUL7, fIsCMLL7);
+  }
+  
   return true;
 }
 
@@ -503,21 +541,21 @@ bool AliAnalysisTaskAODTrackPair::FwdMuonPairAnalysisEveMixing(){
 
 	  if(!fUtils->isAcceptFwdDimuon(dimuon)) continue;
 
-	  RecDimuonPt = dimuon->Pt();
-	  RecDimuonRap = fabs(dimuon->Y());
-	  RecDimuonMass = dimuon->M();
-	  //RecDimuonCent = fUtils->getCentClass();
-	  RecDimuonCent = fUtils->getNCorrSPDTrkInfo(1);
-	  RecDimuonDS = fUtils->getDS();
+	  RecPairPt = dimuon->Pt();
+	  RecPairRap = fabs(dimuon->Y());
+	  RecPairMass = dimuon->M();
+	  //RecPairCent = fUtils->getCentClass();
+	  RecPairCent = fUtils->getNCorrSPDTrkInfo(1);
+	  RecPairDS = fUtils->getDS();
 
 	  string fFiredTrigName = string(fEvent->GetFiredTriggerClasses());
-
+	  
 	  if(dimuon->Charge() == 0) {
-	    fTreeMixULSDimuon->Fill();
+	    fTreeMixULSPair->Fill();
 	  } else if(dimuon->Charge() > 0) {
-	    fTreeMixLSppDimuon->Fill();
+	    fTreeMixLSppPair->Fill();
 	  } else {
-	    fTreeMixLSmmDimuon->Fill();
+	    fTreeMixLSmmPair->Fill();
 	  }
 
 	  delete track2;
@@ -592,19 +630,19 @@ bool AliAnalysisTaskAODTrackPair::FwdMuonPairAnalysis()
 
       FwdMuonPairQA(dimuon);
       
-      RecDimuonPt = dimuon->Pt();
-      RecDimuonRap = fabs(dimuon->Y());
-      RecDimuonMass = dimuon->M();
-      //RecDimuonCent = fUtils->getCentClass();
-      RecDimuonCent = fUtils->getNCorrSPDTrkInfo(1);
-      RecDimuonDS = fUtils->getDS();
+      RecPairPt = dimuon->Pt();
+      RecPairRap = fabs(dimuon->Y());
+      RecPairMass = dimuon->M();
+      //RecPairCent = fUtils->getCentClass();
+      RecPairCent = fUtils->getNCorrSPDTrkInfo(1);
+      RecPairDS = fUtils->getDS();
 
       if(dimuon->Charge() == 0) {
-	fTreeULSDimuon->Fill();
+	fTreeULSPair->Fill();
       } else if(dimuon->Charge() > 0) {
-	fTreeLSppDimuon->Fill();
+	fTreeLSppPair->Fill();
       } else {
-	fTreeLSmmDimuon->Fill();
+	fTreeLSmmPair->Fill();
       }
 
       delete dimuon;
@@ -614,18 +652,44 @@ bool AliAnalysisTaskAODTrackPair::FwdMuonPairAnalysis()
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MidMuonTrackQA(AliAODTrack* track){  
-
+bool AliAnalysisTaskAODTrackPair::MidTrackPIDChecker(AliAODTrack* track, bool isSel){
+  
+  float p = track->P();
   float sigTOF =track->GetTOFsignal();
   float length =track->GetIntegratedLength();
-  float beta =(sigTOF>0) ? (double)length/ (2.99792457999999984e-02 * sigTOF) : 0;
+  float beta =(sigTOF>0) ? (double)length/ (2.99792457999999984e-02 * sigTOF) : -999;  
+  float dEdx = track->GetTPCsignal();
+  
+  if (isSel) {
+    fHistSelTPCdEdxP->Fill(p,dEdx);
+    fHistSelTPCSigmaPKaon->Fill(p,fUtils->getTPCSigma(track,AliPID::kKaon)); 
+    if (beta>0.) {
+      fHistSelBetaP->Fill(p,beta);
+      fHistSelTOFSigmaPKaon->Fill(p,fUtils->getTOFSigma(track,AliPID::kKaon));
+      fHistSelTPCTOFSigmaKaon->Fill(p,fUtils->getTPCSigma(track,AliPID::kKaon),fUtils->getTOFSigma(track,AliPID::kKaon));
+    }
+  } else {
+    fHistTPCdEdxP->Fill(p,dEdx);
+    fHistTPCSigmaPKaon->Fill(p,fUtils->getTPCSigma(track,AliPID::kKaon)); 
+    if (beta>0.) {      
+      fHistBetaP->Fill(p,beta);
+      fHistTOFSigmaPKaon->Fill(p,fUtils->getTOFSigma(track,AliPID::kKaon));
+      fHistTPCTOFSigmaKaon->Fill(p,fUtils->getTPCSigma(track,AliPID::kKaon),fUtils->getTOFSigma(track,AliPID::kKaon));
+    }
+  }
 
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPair::MidTrackQA(AliAODTrack* track){  
+  
+ 
   float dca_xy=9999;
   float dca_z=9999;
   track->GetImpactParameters(dca_xy,dca_z);
     
   AliTOFHeader * tofHeader = (AliTOFHeader*)track->GetTOFHeader();
-
+  /*
   fTrackPt = track->Pt();
   fTrackP = track->P();
   fTrackTheta = track->Theta();
@@ -646,11 +710,7 @@ bool AliAnalysisTaskAODTrackPair::MidMuonTrackQA(AliAODTrack* track){
   fTrackDCAz = dca_z;
   fTrackTPCsigmaMuon = fUtils->getTPCSigma(track,AliPID::kMuon);
   fTrackTOFsigmaMuon = fUtils->getTOFSigma(track,AliPID::kMuon);
-  
-  fTrackTrueMuonLabel = false;
-  
-  fTreeMidMuon->Fill();
-  
+  */
   return true;
 }
 
@@ -658,15 +718,16 @@ bool AliAnalysisTaskAODTrackPair::MidMuonPairQA(AliAODDimuon* dimuon){
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MidMuonPairAnalysis()
+bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2)
 {
-  cout<<"Processing mid-rapidity muon analysis"<<endl;
+  //cout<<"Processing mid-rapidity muon analysis"<<endl;
+  
   Int_t nTrack = fEvent->GetNumberOfTracks();
-
+  
   AliAODTrack* track1;
   AliAODTrack* track2;
 
-  AliAODDimuon* dimuon;
+  TLorentzVector lv1, lv2, lv12;
 
   for(Int_t iTrack1=0; iTrack1<nTrack; ++iTrack1){
 
@@ -675,53 +736,77 @@ bool AliAnalysisTaskAODTrackPair::MidMuonPairAnalysis()
     if(!fUtils->isAcceptMidTrackQuality(track1)){
       continue;
     }
-    
-    MidMuonTrackQA(track1);
-
     if(!fUtils->isAcceptTrackKinematics(track1)){
       continue;
     }
-    if(!fUtils->isAcceptMidMuonTrack(track1)){
+    
+    MidTrackPIDChecker(track1,false);
+
+    if(!fUtils->isAcceptMidPid(track1,pid1)){
       continue;
     }
 
+    MidTrackPIDChecker(track1,true);
+    
     for(Int_t iTrack2=iTrack1+1; iTrack2<nTrack; ++iTrack2){
 
       track2 = (AliAODTrack*)fEvent->GetTrack(iTrack2);
-
+      
+      if(!fUtils->isAcceptMidTrackQuality(track2)){
+	continue;
+      }
       if(!fUtils->isAcceptTrackKinematics(track2)){
 	continue;
       }
-      if(!fUtils->isAcceptMidMuonTrack(track2)) {
+      if(!fUtils->isAcceptMidPid(track2,pid2)){
 	continue;
       }
       
-      dimuon = new AliAODDimuon();
-      dimuon->SetMuons(track1,track2);
-      
-      if(!fUtils->isAcceptMidDimuon(dimuon)){
-	continue;
-      }
-      
-      MidMuonPairQA(dimuon);
-      
-      double fill[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fUtils->getCentClass()};
-      
-      RecDimuonPt = dimuon->Pt();
-      RecDimuonRap = fabs(dimuon->Y());
-      RecDimuonMass = dimuon->M();
-      RecDimuonCent = fUtils->getCentClass();
-      RecDimuonDS = 1.;
+      float mass1 = 0;
+      float mass2 = 0;
 
-      if(dimuon->Charge() == 0) {
-	fTreeULSDimuon->Fill();
-      } else if(dimuon->Charge() > 0) {
-	fTreeLSppDimuon->Fill();
+      if (pid1 == AliPID::kElectron) {
+	mass1 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
+      } else if (pid1 == AliPID::kPion) {
+	mass1 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+      } else if (pid1 == AliPID::kKaon) {
+	mass1 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
+      } else if (pid1 == AliPID::kProton) {
+	mass1 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
+      } else if (pid1 == AliPID::kMuon) {
+	mass1 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
       } else {
-	fTreeLSmmDimuon->Fill();
+	continue;
       }
 
-      delete dimuon;
+      if (pid2 == AliPID::kElectron) {
+	mass2 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
+      } else if (pid1 == AliPID::kPion) {
+	mass2 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+      } else if (pid1 == AliPID::kKaon) {
+	mass2 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
+      } else if (pid1 == AliPID::kProton) {
+	mass2 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
+      } else if (pid1 == AliPID::kMuon) {
+	mass2 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
+      } else {
+	continue;
+      }
+
+      lv1.SetPtEtaPhiM(track1->Pt(),track1->Eta(),track1->Phi(),mass1);
+      lv2.SetPtEtaPhiM(track2->Pt(),track2->Eta(),track2->Phi(),mass2);
+      lv12 = lv1 + lv2;
+
+      RecPairPt = lv12.Pt();
+      RecPairMass = lv12.M();
+
+      if(track1->Charge() + track2->Charge() == 0) {
+	fTreeULSPair->Fill();
+      } else if(track1->Charge() + track2->Charge() > 0) {
+	fTreeLSppPair->Fill();
+      } else {
+	fTreeLSmmPair->Fill();
+      }
 
     }//end of loop track2
   }//end of loop track1
@@ -772,18 +857,18 @@ bool AliAnalysisTaskAODTrackPair::MidMuonPairAnalysisEveMixing(){
 
 	  double fill[]={dimuon->M(),fabs(dimuon->Y()),dimuon->Pt(),fUtils->getCentClass()};
 
-	  RecDimuonPt = dimuon->Pt();
-	  RecDimuonRap = fabs(dimuon->Y());
-	  RecDimuonMass = dimuon->M();
-	  RecDimuonCent = fUtils->getCentClass();
-	  RecDimuonDS = fUtils->getDS();
+	  RecPairPt = dimuon->Pt();
+	  RecPairRap = fabs(dimuon->Y());
+	  RecPairMass = dimuon->M();
+	  RecPairCent = fUtils->getCentClass();
+	  RecPairDS = fUtils->getDS();
 	  
 	  if(dimuon->Charge() == 0) {
-	    fTreeMixULSDimuon->Fill();
+	    fTreeMixULSPair->Fill();
 	  } else if(dimuon->Charge() > 0) {
-	    fTreeMixLSppDimuon->Fill();
+	    fTreeMixLSppPair->Fill();
 	  } else {
-	    fTreeMixLSmmDimuon->Fill();
+	    fTreeMixLSmmPair->Fill();
 	  }
 
 	  delete track2;

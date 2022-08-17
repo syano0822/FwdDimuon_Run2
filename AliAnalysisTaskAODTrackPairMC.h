@@ -21,7 +21,7 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
     fIsMC = isMC;
   }
   void setMidMuonAna(bool isMidMuon){
-    fIsMidMuonAna = isMidMuon;
+    fIsMidTrackAna = isMidMuon;
   }
   void setMixingAnalysis(bool isMix)
   {
@@ -74,15 +74,17 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   bool FwdMuonPairAnalysisEveMixing();
   bool FwdMuonTrackQA(AliAODTrack* track);
   bool MidTrackQA();
+  bool FwdTrackQA();
   bool FillingRecMuonTree(AliAODTrack* track);
   bool EventQA();
   bool isPrimaryMuonTrack(AliAODMCParticle *particle1);
   bool processMC();
 
-  AliAODEvent    *fEvent;
+  AliAODEvent *fEvent;
   AliEventPoolManager *fPoolMuonTrackMgr;
   AliAnalysisTaskAODTrackPairUtils* fUtils;
-  TClonesArray   *fMCTrackArray;
+  TClonesArray *fMCTrackArray;
+  TRandom1 *fRandom;
 
   bool fIsMC;
   bool fIsMixingAnalysis;
@@ -125,14 +127,18 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   TH1F* fHistEventMulti;
   TH1F* fHistEventVtxCont;
 
-  TTree *fTreeML;
+  TTree *fTreeTrack;
+  TTree *fTreeTrackLight;
   float fTrackPt;
   float fTrackP;
   float fTrackTheta;
+  float fTrackEta;
   float fTrackPhi;
   float fTrackLength;
   float fTrackBeta;
+  float fTrackdEdx;
   float fTrackTrackChi2perNDF;
+  float fTrackTrigChi2perNDF;
   float fTrackTrackITSNcls;
   float fTrackTrackTPCNcls;
   float fTrackTrackTOFNcls;
@@ -154,9 +160,13 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   float fTrackTOFsigmaElectron;
   float fTrackTPCsigmaMuon;
   float fTrackTOFsigmaMuon;
-  int fTrackGlobal;
-  int fTrackGlobalNoDCA;
-  int fTrackTPConly;
+  float fTrackThetaAbs;
+  bool fTrackGlobal;
+  bool fTrackGlobalNoDCA;
+  bool fTrackTPConly;
+  bool fTrackGoodFwdQuarity;
+  int fTrackMCType;
+  int fTrackTrigMatch;  
   int fTrackPdgCode;
   int fTrackMotherPdgCode;
 
@@ -224,7 +234,7 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   int MCMomDalitz;
   int MCDimuonDetected;
 
-  bool fIsMidMuonAna;
+  bool fIsMidTrackAna;
   
   ClassDef(AliAnalysisTaskAODTrackPairMC, 1); // example of analysis
 };

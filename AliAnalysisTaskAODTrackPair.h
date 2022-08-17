@@ -20,9 +20,9 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   void setMC(bool isMC){
     fIsMC = isMC;
   }
-
+  
   void setMidMuonAna(bool isMidMuon){
-    fIsMidMuonAna = isMidMuon;
+    fIsMidTrackAna = isMidMuon;
   }  
   void setMixingAnalysis(bool isMix)
   {
@@ -77,9 +77,10 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   bool FwdMuonTrackQA(AliAODTrack* track);
   bool FwdMuonPairQA(AliAODDimuon* dimuon);
   
-  bool MidMuonTrackQA(AliAODTrack* track);
+  bool MidTrackQA(AliAODTrack* track);
+  bool MidTrackPIDChecker(AliAODTrack* track, bool isSel);
   bool MidMuonPairQA(AliAODDimuon* dimuon);
-  bool MidMuonPairAnalysis();
+  bool MidPairAnalysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2);
   bool MidMuonPairAnalysisEveMixing();
   
   AliAODEvent    *fEvent;
@@ -87,7 +88,7 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   AliAnalysisTaskAODTrackPairUtils* fUtils;
 
   bool fIsMC;
-  bool fIsMidMuonAna;
+  bool fIsMidTrackAna;
   bool fIsMixingAnalysis;
 
   int fRunNumber;
@@ -131,43 +132,59 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   TH1F* fHistEventMulti;
   TH1F* fHistEventVtxCont;
 
-  TTree* fTreeULSDimuon;
-  TTree* fTreeLSppDimuon;
-  TTree* fTreeLSmmDimuon;
+  TTree* fTreeULSPair;
+  TTree* fTreeLSppPair;
+  TTree* fTreeLSmmPair;
 
-  TTree* fTreeMixULSDimuon;
-  TTree* fTreeMixLSppDimuon;
-  TTree* fTreeMixLSmmDimuon;
+  TTree* fTreeMixULSPair;
+  TTree* fTreeMixLSppPair;
+  TTree* fTreeMixLSmmPair;
 
-  float RecDimuonPt;
-  float RecDimuonRap;
-  float RecDimuonMass;
-  float RecDimuonCent;
-  float RecDimuonDS;
-
-  TTree *fTreeMidMuon;
+  float RecPairPt;
+  float RecPairRap;
+  float RecPairMass;
+  float RecPairCent;
+  float RecPairDS;
+  
+  TH2F* fHistTPCdEdxP;
+  TH2F* fHistBetaP;    
+  TH2F* fHistTPCSigmaPKaon;
+  TH2F* fHistTOFSigmaPKaon;
+  TH3F* fHistTPCTOFSigmaKaon;
+  TH2F* fHistSelTPCdEdxP;
+  TH2F* fHistSelBetaP;      
+  TH2F* fHistSelTPCSigmaPKaon;
+  TH2F* fHistSelTOFSigmaPKaon;
+  TH3F* fHistSelTPCTOFSigmaKaon;
+  
+  /*
+  TTree *fTreeTrack;
+  TTree *fTreeTrackLight;
   float fTrackPt;
   float fTrackP;
   float fTrackTheta;
+  float fTrackEta;
   float fTrackPhi;
-  float fTrackLength;
   float fTrackBeta;
-  float fTrackTrackChi2perNDF;
-  float fTrackTrackITSNcls;
-  float fTrackTrackTPCNcls;
-  float fTrackTrackTOFNcls;
-  float fTrackTrackTPCChi2;
-  float fTrackTrackITSChi2;
-  float fTrackTPCCrossedRows;
-  float fTrackTPCFindableNcls;
-  float fTrackTOFBCTime;
-  float fTrackTOFKinkIndex;
   float fTrackDCAxy;
   float fTrackDCAz;
+  float fTrackTPCsigmaPion;
+  float fTrackTOFsigmaPion;
+  float fTrackTPCsigmaKaon;
+  float fTrackTOFsigmaKaon;
+  float fTrackTPCsigmaProton;
+  float fTrackTOFsigmaProton;
+  float fTrackTPCsigmaElectron;
+  float fTrackTOFsigmaElectron;
   float fTrackTPCsigmaMuon;
   float fTrackTOFsigmaMuon;
-  bool fTrackTrueMuonLabel;
-
+  float fTrackThetaAbs;
+  bool fTrackGlobal;
+  bool fTrackGlobalNoDCA;
+  bool fTrackTPConly;
+  bool fTrackGoodFwdQuarity;
+  int fTrackTrigMatch;  
+  */
   ClassDef(AliAnalysisTaskAODTrackPair, 1); // example of analysis
 };
 

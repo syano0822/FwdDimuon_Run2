@@ -263,16 +263,24 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
   } else if(type == "LHC19h6a"){
     plugin->SetGridDataDir("/alice/sim/2020/LHC19h6a");
     plugin->SetDataPattern("/AOD243/ AliAOD.root");
-  } else if(type == "data"){
-    
+  } else if(type == "data"){    
+    if (runPeriod.find("LHC17q") != std::string::npos) {
+      plugin->SetGridDataDir("/alice/data/2017/LHC17q");
+      if(runPeriod.find("woSDD") != std::string::npos ){
+	plugin->SetDataPattern("/pass1_CENT_woSDD/AOD234/ AliAOD.root");
+      }
+      else{
+	plugin->SetDataPattern("/pass1_FAST/AOD234/ AliAOD.root");
+      }
+    }
+
     plugin->SetRunPrefix("000");    
   }
   
-  if(runPeriod.find("LHC17q") != std::string::npos){//p-p 5 TeV
-    //plugin->SetNrunsPerMaster(4);
+  if(runPeriod.find("LHC17q") != std::string::npos){//p-p 5 TeV    
     plugin->AddRunNumber(282365);
     plugin->AddRunNumber(282366);
-    plugin->AddRunNumber(282367);
+    plugin->AddRunNumber(282367);  
   }
   
   if(runPeriod.find("LHC17p_FAST") != std::string::npos){//p-p 5 TeV
