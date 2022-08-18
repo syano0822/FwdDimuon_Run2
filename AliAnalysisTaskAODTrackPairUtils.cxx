@@ -52,6 +52,13 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fPass("pass1"),
   fMultiMethod("SPDtracklet"),
 
+  fMinV0Alpha(-0.84),
+  fMaxV0Alpha(0.84),
+
+  fArmenterosBandWidth(0.05),
+  fArmenterosPCM(0.207),
+  fArmenterosR0(0.85),
+
   fHistDsCINT7(NULL),
   fHistDsCMSL7(NULL),
   fHistDsCMLL7(NULL),
@@ -121,10 +128,10 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fMinTrackEta(-0.8),
   fMaxTrackEta(+0.8),
   
-  fMinPionSigmaTPC(-2.0),
-  fMaxPionSigmaTPC(2.0),
-  fMinPionSigmaTOF(-2.0),
-  fMaxPionSigmaTOF(2.0),
+  fMinPionSigmaTPC(-3.0),
+  fMaxPionSigmaTPC(3.0),
+  fMinPionSigmaTOF(-3.0),
+  fMaxPionSigmaTOF(3.0),
 
   fMinKaonSigmaTPC(-2.0),
   fMaxKaonSigmaTPC(2.0),
@@ -157,6 +164,24 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   time_t t;
   time(&t);  
   fRandom->SetSeed(t);
+  
+  double epsilon = 0.0001;
+  
+  fMinArmenterosLine = new TF1("fMinArmenterosLine",
+			       "[0]*pow(1-pow(x/[1],2),1./2.)*sqrt(1.-[2])",
+			       -1*fArmenterosR0+epsilon,fArmenterosR0-epsilon);
+  fMinArmenterosLine->SetParameters(fArmenterosPCM,
+				    fArmenterosR0,
+				    fArmenterosBandWidth);
+  fMaxArmenterosLine = new TF1("fMaxArmenterosLine",
+			       "[0]*pow(1-pow(x/[1],2),1./2.)*sqrt(1.+[2])",
+			       -1*fArmenterosR0+epsilon,fArmenterosR0-epsilon);
+  fMaxArmenterosLine->SetParameters(fArmenterosPCM,
+				    fArmenterosR0,
+				    fArmenterosBandWidth);
+
+
+
 }
 
 AliAnalysisTaskAODTrackPairUtils::~AliAnalysisTaskAODTrackPairUtils()
@@ -435,6 +460,8 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidTrackQuality(AliAODTrack* trac
   return track->TestFilterBit(AliAODTrack::kTrkGlobal) ? true : false;
 }
 
+
+
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(AliAODTrack* track, AliPID::EParticleType pid){
    
   float minSigmaRangeTPC=0;
@@ -507,9 +534,100 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(AliAODTrack* track, AliPID
 	return false;
       }
     }
+  } else if (pid == AliPID::kPion) {
+    if ( track->Pt()<0.8 ) {
+      if (hasTOF) {
+	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
+	  return true;
+	} else{
+	  return false;
+	}
+      } else {
+	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC ) {
+	  return true;
+	} else{
+	  return false;
+	}
+      }
+    } else {
+      if (hasTOF) {
+	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
+	  return true;
+	} else{
+	  return false;
+	}
+      } else {
+	return false;
+      }
+    }    
   }
+
   return true;
 }
+
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0s(AliAODv0* v0,
+						     AliPID::EParticleType pid1,
+						     AliPID::EParticleType pid2,
+						     int charge){
+ 
+  if ( v0->GetNProngs() != 2 || v0->Charge() != charge ) {
+    return false;
+  }
+  
+  AliAODTrack *pTrack=(AliAODTrack *)v0->GetDaughter(0);
+  AliAODTrack *nTrack=(AliAODTrack *)v0->GetDaughter(1);
+
+  if (!pTrack || !nTrack) {
+    return false;
+  }
+  
+  if ( !isAcceptV0TrackQuality(pTrack) || !isAcceptV0TrackQuality(nTrack) ) {
+    return false;
+  }
+  
+  if ( !isAcceptMidPid(pTrack,pid1) || !isAcceptMidPid(nTrack,pid2)) {
+    return false;
+  }
+  
+  float rap = v0->RapK0Short();  
+  
+  if ( fMinPairRapCut > rap || fMaxPairRapCut < rap) {
+    return false;
+  }
+    
+
+  /*
+  if ( alpha<fMinV0Alpha || fMaxV0Alpha>alpha) {
+    return false;
+  }
+  */
+
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptArmenterosK0s(AliAODv0* v0){
+  
+  float alpha = v0->Alpha();  
+
+  if (alpha < fMinV0Alpha || alpha > fMaxV0Alpha) {
+    return false;
+  }
+
+  float arm_pt = v0->PtArmV0();  
+  double min_arm_pt = fMinArmenterosLine->Eval(alpha);
+  double max_arm_pt = fMaxArmenterosLine->Eval(alpha);
+  
+  if( min_arm_pt>arm_pt || arm_pt>max_arm_pt){
+    return false;
+  }
+
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(AliAODTrack* track){
+  return track->TestFilterBit(AliAODTrack::kTrkGlobalNoDCA) ? true : false;
+}
+
 
 bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODTrack* track1,AliAODTrack* track2)
 {

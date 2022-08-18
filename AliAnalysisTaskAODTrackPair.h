@@ -81,6 +81,7 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   bool MidTrackPIDChecker(AliAODTrack* track, bool isSel);
   bool MidMuonPairQA(AliAODDimuon* dimuon);
   bool MidPairAnalysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2);
+  bool MidV0Analysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2);
   bool MidMuonPairAnalysisEveMixing();
   
   AliAODEvent    *fEvent;
@@ -135,6 +136,10 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   TTree* fTreeULSPair;
   TTree* fTreeLSppPair;
   TTree* fTreeLSmmPair;
+  
+  TTree* fTreeULSPair_ProngV0;
+  TTree* fTreeLSppPair_ProngV0;
+  TTree* fTreeLSmmPair_ProngV0;
 
   TTree* fTreeMixULSPair;
   TTree* fTreeMixLSppPair;
@@ -143,6 +148,8 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   float RecPairPt;
   float RecPairRap;
   float RecPairMass;
+  float RecPairArmenterosArmPt;
+  float RecPairArmenterosAlpha;
   float RecPairCent;
   float RecPairDS;
   
@@ -157,34 +164,9 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   TH2F* fHistSelTOFSigmaPKaon;
   TH3F* fHistSelTPCTOFSigmaKaon;
   
-  /*
-  TTree *fTreeTrack;
-  TTree *fTreeTrackLight;
-  float fTrackPt;
-  float fTrackP;
-  float fTrackTheta;
-  float fTrackEta;
-  float fTrackPhi;
-  float fTrackBeta;
-  float fTrackDCAxy;
-  float fTrackDCAz;
-  float fTrackTPCsigmaPion;
-  float fTrackTOFsigmaPion;
-  float fTrackTPCsigmaKaon;
-  float fTrackTOFsigmaKaon;
-  float fTrackTPCsigmaProton;
-  float fTrackTOFsigmaProton;
-  float fTrackTPCsigmaElectron;
-  float fTrackTOFsigmaElectron;
-  float fTrackTPCsigmaMuon;
-  float fTrackTOFsigmaMuon;
-  float fTrackThetaAbs;
-  bool fTrackGlobal;
-  bool fTrackGlobalNoDCA;
-  bool fTrackTPConly;
-  bool fTrackGoodFwdQuarity;
-  int fTrackTrigMatch;  
-  */
+  TH2F* fHistArmenteros;
+  TH2F* fHistSelArmenteros;
+
   ClassDef(AliAnalysisTaskAODTrackPair, 1); // example of analysis
 };
 

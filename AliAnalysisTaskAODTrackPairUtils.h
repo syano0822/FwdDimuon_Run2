@@ -35,6 +35,13 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   bool isAcceptMidTrackQuality(AliAODTrack* track);
   bool isAcceptMidPid(AliAODTrack* track,AliPID::EParticleType pid);
   
+  bool isAcceptedK0s(AliAODv0 *v0,
+		     AliPID::EParticleType pid1,
+		     AliPID::EParticleType pid2,
+		     int charge);
+  bool isAcceptV0TrackQuality(AliAODTrack* track);
+  bool isAcceptArmenterosK0s(AliAODv0* v0);
+
   bool isSameMotherPair(AliAODTrack* track1,AliAODTrack* track2);
   bool isSameMotherPair(AliAODMCParticle *part1, AliAODMCParticle *part2);
   bool isCharmQuarkOrigin(AliAODMCParticle* particle);
@@ -58,7 +65,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     v0c = fNChV0C;
     return true;
   }
-
+  
   int getNTrueChTrkInfo(int spec)
   {
     if (spec == 0) {
@@ -209,6 +216,18 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     fMaxMidTrackEta = maxeta;
   }
   
+  void setArmenterosLimit(float pcm, float r0, float width){
+    fArmenterosBandWidth = width;
+    fArmenterosPCM = pcm;
+    fArmenterosR0 = r0;
+  }
+
+  void setV0CutParams(float min, float max){
+    fMinV0Alpha = min;
+    fMaxV0Alpha = max;
+  }
+
+
   //////////////////////////////////////////////////////////////////////////////////////////////
   //Set analysis object
   //////////////////////////////////////////////////////////////////////////////////////////////
@@ -399,6 +418,14 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   std::string fPeriod;
   std::string fCollSystem;
   std::string fPass;
+
+  TF1* fMinArmenterosLine;
+  TF1* fMaxArmenterosLine;
+  float fArmenterosBandWidth;
+  float fArmenterosPCM;
+  float fArmenterosR0;
+  float fMinV0Alpha;
+  float fMaxV0Alpha;
 
   bool fIsMC;
   bool fIsEvtSelect;
