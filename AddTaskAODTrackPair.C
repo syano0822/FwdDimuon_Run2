@@ -3,8 +3,16 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
 						 float min_vtxz =-10,
 						 float max_vtxz = 10,
 						 int min_vtx_cont = 1,
-						 float min_pair_rap = -4.0,
-						 float max_pair_rap = -2.5,
+						 float min_pair_rap = -0.5,
+						 float max_pair_rap = 0.5,
+						 float min_track_eta = -0.8,
+						 float max_track_eta = 0.8,
+						 float alpha = 0.2,
+						 float pangle = 0.998,
+						 float v0Dca = 0.1, 
+						 float trackDca = 1.0,
+						 float min_dlength = 5.0,
+						 float max_dlength = 100.,
 						 string period = "LHC18c",
 						 string multi_method="SPDTracklets",
 						 bool onPURej = true,
@@ -49,6 +57,7 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   utils->setSPDTrkCorrHist(input2,period);
   utils->setVertexCut(min_vtxz,max_vtxz,min_vtx_cont);
   utils->setPairRapidityCut(min_pair_rap,max_pair_rap);
+  utils->setV0SelectCuts(alpha,pangle,v0Dca,trackDca,min_dlength,max_dlength);
   utils->setPileupRejectionCut(onPURej);
   utils->setLocalBoardCut(onLBcut);
   utils->setMultiEstimateMethod(multi_method);
@@ -57,9 +66,7 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   utils->setMidMuonAna(isMidMuonAnalysis);  
   utils->setPeriod(period);
   if (isMidMuonAnalysis) {
-    utils->setMuonSelectSigmaTPC(-1.,+1.);
-    utils->setMuonSelectSigmaTOF(-1.,+1.);
-    utils->setMidTrackKinematicRange(0.05,0.45,-0.8,+0.8);
+    utils->setMidTrackKinematicRange(0.05,999,min_track_eta,max_track_eta);
   }
 
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
@@ -94,6 +101,14 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   cout<<"min_vtx_cont="<<  min_vtx_cont <<endl;
   cout<<"min_pair_rap="<< min_pair_rap <<endl;
   cout<<"max_pair_rap="<< max_pair_rap <<endl;
+  cout<<"min_track_eta"<< min_track_eta <<endl;
+  cout<<"max_track_eta"<< max_track_eta <<endl;
+  cout<<"alpha"<< alpha <<endl;
+  cout<<"pangle"<< pangle <<endl;
+  cout<<"v0Dca"<< v0Dca <<endl;
+  cout<<"trackDca"<< trackDca <<endl;
+  cout<<"min_dlength"<< min_dlength <<endl;
+  cout<<"max_dlength"<< max_dlength <<endl;
   cout<<"period="<< period <<endl;
   cout<<"multi_method="<< multi_method <<endl;
   cout<<"onPURej="<< onPURej <<endl;

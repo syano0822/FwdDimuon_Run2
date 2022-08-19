@@ -83,8 +83,16 @@ void runAnalysisMidMuon(string runPeriod = "LHC16k",
   float min_vtxz =-10;
   float max_vtxz = 10;
   int min_vtx_cont = 1;
-  float min_pair_rap = -1;
-  float max_pair_rap = 1;
+  float min_pair_rap = -0.5;
+  float max_pair_rap = 0.5;
+  float min_track_eta = -0.8;
+  float max_track_eta = 0.8;
+  float alpha = 0.2;
+  float pangle = 0.998;
+  float v0Dca = 0.1; 
+  float trackDca = 1.0;
+  float min_dlength = 5.0;
+  float max_dlength = 100.;
   string period = runPeriod;
   string multi_method="SPDTracklets";
   bool onPURej = true;
@@ -95,13 +103,14 @@ void runAnalysisMidMuon(string runPeriod = "LHC16k",
   bool onMuMatchLptCut = true;
   bool onMuMatchHptCut = false;
   bool onMuChi2Cut = true;
-  bool onMuPdcaCut = false;
+  bool onMuPdcaCut = true;
   bool isSelectEvt = isEventSelection;
   int paircuttype = 0;
-  float min_pairtrackptcut = 0.0;  
+  double min_pairtrackptcut = 0.0;
   bool onMixingAnalysis = isMix;
   bool isMidMuonAnalysis = true;
 
+  
 
 #if !defined (__CINT__) || defined (__CLING__)
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
@@ -109,13 +118,21 @@ void runAnalysisMidMuon(string runPeriod = "LHC16k",
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPair.cxx++g");
   AliAnalysisTaskAODTrackPair *task
     = reinterpret_cast<AliAnalysisTaskAODTrackPair*>
-    (gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d)",
+    (gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d)",
 				     offlineTriggerMask,
 				     min_vtxz,
 				     max_vtxz,
 				     min_vtx_cont,
 				     min_pair_rap,
 				     max_pair_rap,
+				     min_track_eta,
+				     max_track_eta,
+				     alpha,
+				     pangle,
+				     v0Dca,
+				     trackDca,
+				     min_dlength,
+				     max_dlength,
 				     period.c_str(),
 				     multi_method.c_str(),
 				     onPURej,
@@ -223,7 +240,7 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
   
   plugin->SetGridOutputDir("output");
 
-  plugin->SetSplitMaxInputFileNumber(40);    
+  plugin->SetSplitMaxInputFileNumber(20);    
   //plugin->SetNrunsPerMaster();
   
   //LHC17q, 

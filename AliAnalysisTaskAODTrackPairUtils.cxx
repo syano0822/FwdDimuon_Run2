@@ -54,10 +54,19 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
 
   fMinV0Alpha(-0.84),
   fMaxV0Alpha(0.84),
+  fMinK0sMassRange(0.48),
+  fMaxK0sMassRange(0.52),
 
   fArmenterosBandWidth(0.05),
   fArmenterosPCM(0.207),
   fArmenterosR0(0.85),
+  
+  fArmenterosAlphaCutParamForPtArm(0.2),
+  fMinCosPointingAngleCut(0.998),
+  fMinV0DCA(0.1),
+  fMaxTrackDCASigma(1.5),
+  fMinDecayLength(5.0),
+  fMaxDecayLength(100.),
 
   fHistDsCINT7(NULL),
   fHistDsCMSL7(NULL),
@@ -66,6 +75,8 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fHistSPDTrkCorrEta05(NULL),
   fHistSPDTrkCorrEta10(NULL),
   
+  fVtxX(0),
+  fVtxY(0),
   fVtxZ(0),
   fCent(0),
   fPsi(0),
@@ -158,6 +169,8 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fMinMidTrackEta(-0.8),
   fMaxMidTrackEta(+0.8),
 
+  fMinTrackTPCNClusts(70),
+
   fIsMidMuonAna(false)
 {
   fRandom = new TRandom1();
@@ -197,6 +210,8 @@ void AliAnalysisTaskAODTrackPairUtils::setInit()
   fEvent=NULL;
   fMultSelection=NULL;
 
+  fVtxX=-999;
+  fVtxY=-999;
   fVtxZ=-999;
   fCent=-999;
   fPsi=-999;
@@ -594,19 +609,44 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0s(AliAODv0* v0,
   if ( fMinPairRapCut > rap || fMaxPairRapCut < rap) {
     return false;
   }
-    
-
-  /*
-  if ( alpha<fMinV0Alpha || fMaxV0Alpha>alpha) {
+  
+  double vtx[] = {fVtxX,fVtxY,fVtxZ};
+  
+  if ( fMinCosPointingAngleCut > v0->CosPointingAngle(vtx) ) {
     return false;
   }
-  */
+  
+  if ( fMinV0DCA > v0->DcaV0ToPrimVertex() ) {
+    return false;
+  }
+  
+  if ( fMaxTrackDCASigma < v0->DcaV0Daughters() ) {
+    return false;
+  }
+  
+  float length = v0->DecayLengthV0(vtx);
 
+  if ( fMinDecayLength>length || fMaxDecayLength<length ) {
+    return false;
+  }
+  
   return true;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptArmenterosK0s(AliAODv0* v0){
+
+  float alpha = fabs(v0->Alpha());
+  float pt_arm = v0->PtArmV0();
   
+  if (pt_arm < fArmenterosAlphaCutParamForPtArm * alpha) {
+    return false;
+  }
+  
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptArmenterosK0s_Tight(AliAODv0* v0){
+
   float alpha = v0->Alpha();  
 
   if (alpha < fMinV0Alpha || alpha > fMaxV0Alpha) {
@@ -625,7 +665,17 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptArmenterosK0s(AliAODv0* v0){
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(AliAODTrack* track){
-  return track->TestFilterBit(AliAODTrack::kTrkGlobalNoDCA) ? true : false;
+  if (fMinMidTrackPt>track->Pt() || fMaxMidTrackPt<track->Pt()) {
+    return false;
+  }  
+  if (fMinMidTrackEta>track->Eta() || fMaxMidTrackPt<track->Eta()) {
+    return false;
+  }    
+  if (fMinTrackTPCNClusts > track->GetTPCNcls()) {
+    return false;
+  }
+
+  return true;
 }
 
 
@@ -898,6 +948,8 @@ bool AliAnalysisTaskAODTrackPairUtils::setVtxZCentPsi()
 
   if(!vtx) return false;
 
+  fVtxX = vtx->GetX();
+  fVtxY = vtx->GetY();
   fVtxZ = vtx->GetZ();
   fCent = fMultSelection->GetMultiplicityPercentile(fMultiMethod,false);
   fPsi  = 0;

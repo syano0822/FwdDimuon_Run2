@@ -41,6 +41,15 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
 		     int charge);
   bool isAcceptV0TrackQuality(AliAODTrack* track);
   bool isAcceptArmenterosK0s(AliAODv0* v0);
+  bool isAcceptArmenterosK0s_Tight(AliAODv0* v0);
+
+  bool isAcceptK0sCandidateMassRange(float mass) {
+    if (fMinK0sMassRange>mass || mass>fMaxK0sMassRange) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   bool isSameMotherPair(AliAODTrack* track1,AliAODTrack* track2);
   bool isSameMotherPair(AliAODMCParticle *part1, AliAODMCParticle *part2);
@@ -214,19 +223,30 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     fMaxMidTrackPt = maxpt;
     fMinMidTrackEta = mineta;
     fMaxMidTrackEta = maxeta;
-  }
-  
+  }  
   void setArmenterosLimit(float pcm, float r0, float width){
     fArmenterosBandWidth = width;
     fArmenterosPCM = pcm;
     fArmenterosR0 = r0;
+  }  
+  void setV0SelectCuts(float alpha, float pangle, float v0Dca, float trackDca,
+			float min_dlength, float max_dlength) {
+    fArmenterosAlphaCutParamForPtArm = alpha;
+    fMinCosPointingAngleCut = pangle;
+    fMinV0DCA = v0Dca;
+    fMaxTrackDCASigma = trackDca;
+    fMinDecayLength = min_dlength;
+    fMaxDecayLength = max_dlength;    
   }
 
   void setV0CutParams(float min, float max){
     fMinV0Alpha = min;
     fMaxV0Alpha = max;
   }
-
+  void setK0sCandidateMassRange(float min, float max){
+    fMinK0sMassRange = min;
+    fMaxK0sMassRange = max;
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////
   //Set analysis object
@@ -405,7 +425,6 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   bool setSPDClust();
   bool setVZERO();
 
-
   AliAODEvent* fEvent;
   AliMultSelection* fMultSelection;  
   AliMuonTrackCuts* fMuonTrackCuts;
@@ -424,8 +443,16 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   float fArmenterosBandWidth;
   float fArmenterosPCM;
   float fArmenterosR0;
+  float fArmenterosAlphaCutParamForPtArm;
+  float fMinCosPointingAngleCut;
+  float fMinV0DCA;
+  float fMaxTrackDCASigma;
+  float fMinDecayLength;
+  float fMaxDecayLength;
   float fMinV0Alpha;
   float fMaxV0Alpha;
+  float fMinK0sMassRange;
+  float fMaxK0sMassRange;
 
   bool fIsMC;
   bool fIsEvtSelect;
@@ -456,6 +483,8 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   TH1F* fHistDsCINT7;
   TH1F* fHistDsCMLL7;
 
+  double fVtxX;
+  double fVtxY;
   double fVtxZ;
   double fCent;
   double fPsi;
@@ -553,7 +582,9 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   
   bool fIsMidMuonAna;
 
+  int fMinTrackTPCNClusts;
   
+
   ClassDef(AliAnalysisTaskAODTrackPairUtils, 1); // example of analysis
 };
 

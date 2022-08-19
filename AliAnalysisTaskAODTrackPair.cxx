@@ -315,7 +315,7 @@
      fTreeULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
      fTreeULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
      fOutputList->Add(fTreeULSPair);
-
+     
      fTreeLSppPair = new TTree("fTreeLSppPair","");
      fTreeLSppPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
      fTreeLSppPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
@@ -325,26 +325,31 @@
      fTreeLSmmPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
      fTreeLSmmPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
      fOutputList->Add(fTreeLSmmPair);
+
+     fTreeMixULSPair = new TTree("fTreeMixULSPair","");
+     fTreeMixULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+     fTreeMixULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+     //fOutputList->Add(fTreeMixULSPair);
      
      fTreeULSPair_ProngV0 = new TTree("fTreeULSPair_ProngV0","");
      fTreeULSPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
      fTreeULSPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-     fTreeULSPair_ProngV0->Branch("RecPairArmenterosArmPt",&RecPairArmenterosArmPt,"RecPairArmenterosArmPt/F");
-     fTreeULSPair_ProngV0->Branch("RecPairArmenterosAlpha",&RecPairArmenterosAlpha,"RecPairArmenterosAlpha/F");
+     //fTreeULSPair_ProngV0->Branch("RecPairArmenterosArmPt",&RecPairArmenterosArmPt,"RecPairArmenterosArmPt/F");
+     //fTreeULSPair_ProngV0->Branch("RecPairArmenterosAlpha",&RecPairArmenterosAlpha,"RecPairArmenterosAlpha/F");
      fOutputList->Add(fTreeULSPair_ProngV0);
      
      fTreeLSppPair_ProngV0 = new TTree("fTreeLSppPair_ProngV0","");
      fTreeLSppPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
      fTreeLSppPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-     fTreeLSppPair_ProngV0->Branch("RecPairArmenterosArmPt",&RecPairArmenterosArmPt,"RecPairArmenterosArmPt/F");
-     fTreeLSppPair_ProngV0->Branch("RecPairArmenterosAlpha",&RecPairArmenterosAlpha,"RecPairArmenterosAlpha/F");
+     //fTreeLSppPair_ProngV0->Branch("RecPairArmenterosArmPt",&RecPairArmenterosArmPt,"RecPairArmenterosArmPt/F");
+     //fTreeLSppPair_ProngV0->Branch("RecPairArmenterosAlpha",&RecPairArmenterosAlpha,"RecPairArmenterosAlpha/F");
      fOutputList->Add(fTreeLSppPair_ProngV0);
 
      fTreeLSmmPair_ProngV0 = new TTree("fTreeLSmmPair_ProngV0","");
      fTreeLSmmPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
      fTreeLSmmPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-     fTreeLSmmPair_ProngV0->Branch("RecPairArmenterosArmPt",&RecPairArmenterosArmPt,"RecPairArmenterosArmPt/F");
-     fTreeLSmmPair_ProngV0->Branch("RecPairArmenterosAlpha",&RecPairArmenterosAlpha,"RecPairArmenterosAlpha/F");
+     //fTreeLSmmPair_ProngV0->Branch("RecPairArmenterosArmPt",&RecPairArmenterosArmPt,"RecPairArmenterosArmPt/F");
+     //fTreeLSmmPair_ProngV0->Branch("RecPairArmenterosAlpha",&RecPairArmenterosAlpha,"RecPairArmenterosAlpha/F");
      fOutputList->Add(fTreeLSmmPair_ProngV0);
 
      double min_dEdx = 0.;
@@ -438,7 +443,6 @@
      fOutputList->Add(fHistTriggerChiSquare);
    } else {
 
-
    }
    
    PostData(1, fOutputList);
@@ -463,6 +467,7 @@
    } else {
      if ( !fIsMixingAnalysis ) {
        MidV0Analysis(AliPID::kPion,AliPID::kPion);      
+       //MidV0AnalysisEventMixing(AliPID::kPion,AliPID::kPion);      
        //MidPairAnalysis(AliPID::kKaon,AliPID::kKaon);      
      } else {
        //MidMuonPairAnalysisEveMixing();
@@ -785,28 +790,41 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
     RecPairArmenterosArmPt = v0_1->PtArmV0();
     RecPairArmenterosAlpha = v0_1->AlphaV0();
     
-    fTreeULSPair_ProngV0->Fill();
-    fHistArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
-
-    if (fUtils->isAcceptArmenterosK0s(v0_1)) {
-      fHistSelArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());          
+    if (0.4>RecPairMass || RecPairMass>0.6) {
+      continue;
     }
+
+    fHistArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
     
-    if ( !fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) || !fUtils->isAcceptArmenterosK0s(v0_1) ) {
+    if ( !fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) || 
+	 !fUtils->isAcceptArmenterosK0s(v0_1) ) {
       continue;
     }
     
-    for (int iV0_2=iV0_1+1; iV0_2<nV0; ++iV0_2) {
+    fHistSelArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
+    fTreeULSPair_ProngV0->Fill();
 
-      v0_2 = (AliAODv0*)fEvent->GetV0(iV0_2);
+    if (!fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short())) {
+      continue;
+    }
+
+    for (int iV0_2=iV0_1+1; iV0_2<nV0; ++iV0_2) {
       
-      if ( !fUtils->isAcceptedK0s(v0_2,pid1,pid2,0) || !fUtils->isAcceptArmenterosK0s(v0_2) ) {
+      v0_2 = (AliAODv0*)fEvent->GetV0(iV0_2);
+
+      if (!fUtils->isAcceptK0sCandidateMassRange(v0_2->MassK0Short())) {
 	continue;
       }
       
-      lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),v0_1->MassK0Short());
-      lv2.SetPtEtaPhiM(v0_2->Pt(),v0_2->Eta(),v0_2->Phi(),v0_2->MassK0Short());
+      if ( !fUtils->isAcceptedK0s(v0_2,pid1,pid2,0) || 
+	   !fUtils->isAcceptArmenterosK0s(v0_2) ) {
+	continue;
+      }
       
+      lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),
+		       TDatabasePDG::Instance()->GetParticle(310)->Mass());
+      lv2.SetPtEtaPhiM(v0_2->Pt(),v0_2->Eta(),v0_2->Phi(),
+		       TDatabasePDG::Instance()->GetParticle(310)->Mass());     
       lv12 = lv1 + lv2;
 
       RecPairPt = lv12.Pt();
@@ -817,6 +835,79 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
 
   }
 }
+
+bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(AliPID::EParticleType pid1, AliPID::EParticleType pid2){
+  
+  TObjArray* fTrackArray = new TObjArray();
+  fTrackArray -> SetOwner();
+  
+  float poolCent=0.;
+  float poolVtxZ=0.;
+  float poolPsi=0.;
+
+  if(onEvtMixingPoolVtxZ){
+    poolVtxZ=fUtils->getVtxZ();
+  }
+  if(onEvtMixingPoolCent){
+    poolCent=fUtils->getNCorrSPDTrkInfo(1);
+  }
+  if(onEvtMixingPoolPsi){
+    poolPsi=fUtils->getPsi();
+  }
+
+  AliEventPool* pool = (AliEventPool*)fPoolMuonTrackMgr -> GetEventPool(poolCent,poolVtxZ,poolPsi);
+
+  Int_t nV0 = fEvent->GetNumberOfV0s();
+
+  AliAODv0* v0_1;
+  AliAODv0* v0_2;
+  
+  TLorentzVector lv1, lv2, lv12;
+  
+  for (int iV0_1=0; iV0_1<nV0; ++iV0_1) {
+    
+    v0_1 = (AliAODv0*)fEvent->GetV0(iV0_1);
+    
+    if ( !fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) || !fUtils->isAcceptArmenterosK0s(v0_1) ) {
+      continue;
+    }    
+    if (pool->IsReady()){
+      
+      for (Int_t iMixEvt=0; iMixEvt<pool->GetCurrentNEvents(); iMixEvt++){
+	
+	TObjArray* poolTracks = (TObjArray*)pool->GetEvent(iMixEvt);
+	
+	for (int iV0_2=0; iV0_2<poolTracks->GetEntriesFast(); ++iV0_2) {
+	  
+	  v0_2 = (AliAODv0*)poolTracks->At(iV0_2);
+	  
+	  lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),v0_1->MassK0Short());
+	  lv2.SetPtEtaPhiM(v0_2->Pt(),v0_2->Eta(),v0_2->Phi(),v0_2->MassK0Short());
+      
+	  lv12 = lv1 + lv2;
+
+	  RecPairPt = lv12.Pt();
+	  RecPairMass = lv12.M();
+	  
+	  fTreeMixULSPair->Fill();	  	  
+	}
+	
+      }
+    }
+    if ( fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) && fUtils->isAcceptArmenterosK0s(v0_1) ) {
+      fTrackArray->Add(v0_1);
+    }
+  }
+
+  TObjArray* fTrackArrayClone = (TObjArray*)fTrackArray->Clone();
+  fTrackArrayClone->SetOwner();
+  if(fTrackArrayClone->GetEntriesFast()>0){
+    pool->UpdatePool(fTrackArrayClone);
+  }
+
+  return true;
+ }
+
 
 bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2)
 {
