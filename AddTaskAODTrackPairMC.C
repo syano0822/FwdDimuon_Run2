@@ -48,6 +48,7 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(uint offlineTriggerMask = A
   utils->setSPDTrkCorrHist(input2,period);
   utils->setVertexCut(min_vtxz,max_vtxz,min_vtx_cont);
   utils->setPairRapidityCut(min_pair_rap,max_pair_rap);
+  utils->setV0SelectCuts(alpha,pangle,v0Dca,trackDca,min_dlength,max_dlength);
   utils->setPileupRejectionCut(onPURej);
   utils->setLocalBoardCut(onLBcut);
   utils->setMultiEstimateMethod(multi_method);
@@ -56,9 +57,7 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(uint offlineTriggerMask = A
   utils->setMidMuonAna(isMidMuonAnalysis);  
   utils->setPeriod(period);
   if (isMidMuonAnalysis) {
-    utils->setMuonSelectSigmaTPC(-1.,+1.);
-    utils->setMuonSelectSigmaTOF(-1.,+1.);
-    utils->setMidTrackKinematicRange(0.05,0.45,-0.8,+0.8);
+    utils->setMidTrackKinematicRange(0.05,999,min_track_eta,max_track_eta);
   }
 
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
@@ -93,6 +92,14 @@ AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(uint offlineTriggerMask = A
   cout<<"min_vtx_cont="<<  min_vtx_cont <<endl;
   cout<<"min_pair_rap="<< min_pair_rap <<endl;
   cout<<"max_pair_rap="<< max_pair_rap <<endl;
+  cout<<"min_track_eta="<< min_track_eta <<endl;
+  cout<<"max_track_eta="<< max_track_eta <<endl;
+  cout<<"alpha="<< alpha <<endl;
+  cout<<"pangle="<< pangle <<endl;
+  cout<<"v0Dca="<< v0Dca <<endl;
+  cout<<"trackDca="<< trackDca <<endl;
+  cout<<"min_dlength="<< min_dlength <<endl;
+  cout<<"max_dlength="<< max_dlength <<endl;
   cout<<"period="<< period <<endl;
   cout<<"multi_method="<< multi_method <<endl;
   cout<<"onPURej="<< onPURej <<endl;

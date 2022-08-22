@@ -311,26 +311,27 @@
      fOutputList->Add(fHistTrackPairPtBalance);
      fOutputList->Add(fHistTrackPairLocalBoardPair);
    } else {
-     fTreeULSPair = new TTree("fTreeULSPair","");
-     fTreeULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-     fTreeULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-     fOutputList->Add(fTreeULSPair);
-     
-     fTreeLSppPair = new TTree("fTreeLSppPair","");
-     fTreeLSppPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-     fTreeLSppPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-     fOutputList->Add(fTreeLSppPair);
-
-     fTreeLSmmPair = new TTree("fTreeLSmmPair","");
-     fTreeLSmmPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-     fTreeLSmmPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-     fOutputList->Add(fTreeLSmmPair);
-
-     fTreeMixULSPair = new TTree("fTreeMixULSPair","");
-     fTreeMixULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-     fTreeMixULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-     //fOutputList->Add(fTreeMixULSPair);
-     
+     if (!fIsMixingAnalysis){
+       fTreeULSPair = new TTree("fTreeULSPair","");
+       fTreeULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+       fTreeULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+       fOutputList->Add(fTreeULSPair);
+       
+       fTreeLSppPair = new TTree("fTreeLSppPair","");
+       fTreeLSppPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+       fTreeLSppPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+       fOutputList->Add(fTreeLSppPair);
+       
+       fTreeLSmmPair = new TTree("fTreeLSmmPair","");
+       fTreeLSmmPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+       fTreeLSmmPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+       fOutputList->Add(fTreeLSmmPair);
+     } else {
+       fTreeMixULSPair = new TTree("fTreeMixULSPair","");
+       fTreeMixULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+       fTreeMixULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+       fOutputList->Add(fTreeMixULSPair);
+     }
      fTreeULSPair_ProngV0 = new TTree("fTreeULSPair_ProngV0","");
      fTreeULSPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
      fTreeULSPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
@@ -467,10 +468,9 @@
    } else {
      if ( !fIsMixingAnalysis ) {
        MidV0Analysis(AliPID::kPion,AliPID::kPion);      
-       //MidV0AnalysisEventMixing(AliPID::kPion,AliPID::kPion);      
-       //MidPairAnalysis(AliPID::kKaon,AliPID::kKaon);      
+       //MidPairAnalysis(AliPID::kKaon,AliPID::kKaon);
      } else {
-       //MidMuonPairAnalysisEveMixing();
+       MidV0AnalysisEventMixing(AliPID::kPion,AliPID::kPion);      
      }
    }
 
@@ -867,10 +867,16 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(AliPID::EParticleType
   for (int iV0_1=0; iV0_1<nV0; ++iV0_1) {
     
     v0_1 = (AliAODv0*)fEvent->GetV0(iV0_1);
-    
-    if ( !fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) || !fUtils->isAcceptArmenterosK0s(v0_1) ) {
+
+    if ( !fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) || 
+	 !fUtils->isAcceptArmenterosK0s(v0_1) ) {
       continue;
-    }    
+    }
+
+    if (!fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short())) {
+      continue;
+    }
+
     if (pool->IsReady()){
       
       for (Int_t iMixEvt=0; iMixEvt<pool->GetCurrentNEvents(); iMixEvt++){
@@ -881,9 +887,10 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(AliPID::EParticleType
 	  
 	  v0_2 = (AliAODv0*)poolTracks->At(iV0_2);
 	  
-	  lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),v0_1->MassK0Short());
-	  lv2.SetPtEtaPhiM(v0_2->Pt(),v0_2->Eta(),v0_2->Phi(),v0_2->MassK0Short());
-      
+	  lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),
+			   TDatabasePDG::Instance()->GetParticle(310)->Mass());
+	  lv2.SetPtEtaPhiM(v0_2->Pt(),v0_2->Eta(),v0_2->Phi(),
+			   TDatabasePDG::Instance()->GetParticle(310)->Mass());      
 	  lv12 = lv1 + lv2;
 
 	  RecPairPt = lv12.Pt();
@@ -894,7 +901,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(AliPID::EParticleType
 	
       }
     }
-    if ( fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) && fUtils->isAcceptArmenterosK0s(v0_1) ) {
+    if ( fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) && fUtils->isAcceptArmenterosK0s(v0_1) && fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short()) ) {
       fTrackArray->Add(v0_1);
     }
   }

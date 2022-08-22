@@ -164,8 +164,8 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fMinMuonSigmaTOF(-2.0),
   fMaxMuonSigmaTOF(2.0),
   
-  fMinMidTrackPt(0.05),
-  fMaxMidTrackPt(2.0),
+  fMinMidTrackPt(0.3),
+  fMaxMidTrackPt(3.0),
   fMinMidTrackEta(-0.8),
   fMaxMidTrackEta(+0.8),
 
@@ -550,7 +550,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(AliAODTrack* track, AliPID
       }
     }
   } else if (pid == AliPID::kPion) {
-    if ( track->Pt()<0.8 ) {
+    if ( track->Pt()<0.65 ) {
       if (hasTOF) {
 	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
 	  return true;
