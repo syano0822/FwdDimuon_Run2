@@ -85,7 +85,7 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   bool FwdMuonPairQA(AliAODDimuon* dimuon);
   
   bool MidTrackQA(AliAODTrack* track);
-  bool MidTrackPIDChecker(AliAODTrack* track, bool isSel);
+  bool MidTrackPIDChecker(AliAODTrack* track, AliPID::EParticleType pid, bool isSel);
   bool MidMuonPairQA(AliAODDimuon* dimuon);
   bool MidPairAnalysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2);
   

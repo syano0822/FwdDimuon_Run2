@@ -385,7 +385,7 @@
      double width_dEdx = 0.1;
 
      double min_beta = 0.;
-     double max_beta = 1.;
+     double max_beta = 1.2;
      double width_beta = 0.01;
 
      double min_p = 0.;
@@ -742,7 +742,7 @@
    return true;
  }
 
- bool AliAnalysisTaskAODTrackPair::MidTrackPIDChecker(AliAODTrack* track, bool isSel){
+bool AliAnalysisTaskAODTrackPair::MidTrackPIDChecker(AliAODTrack* track, AliPID::EParticleType pid, bool isSel){
 
    float p = track->P();
    float sigTOF =track->GetTOFsignal();
@@ -752,21 +752,21 @@
 
    if (isSel) {
      fHistSelTPCdEdxP->Fill(p,dEdx);
-     fHistSelTPCSigmaPKaon->Fill(p,fUtils->getTPCSigma(track,AliPID::kKaon)); 
+     fHistSelTPCSigmaPKaon->Fill(p,fUtils->getTPCSigma(track,pid)); 
      if (beta>0.) {
        fHistSelBetaP->Fill(p,beta);
-       fHistSelTOFSigmaPKaon->Fill(p,fUtils->getTOFSigma(track,AliPID::kKaon));
-       fHistSelTPCTOFSigmaKaon->Fill(p,fUtils->getTPCSigma(track,AliPID::kKaon),fUtils->getTOFSigma(track,AliPID::kKaon));
-         }
-  } else {
-    fHistTPCdEdxP->Fill(p,dEdx);
-    fHistTPCSigmaPKaon->Fill(p,fUtils->getTPCSigma(track,AliPID::kKaon)); 
-    if (beta>0.) {      
-      fHistBetaP->Fill(p,beta);
-      fHistTOFSigmaPKaon->Fill(p,fUtils->getTOFSigma(track,AliPID::kKaon));
-      fHistTPCTOFSigmaKaon->Fill(p,fUtils->getTPCSigma(track,AliPID::kKaon),fUtils->getTOFSigma(track,AliPID::kKaon));
-    }
-  }
+       fHistSelTOFSigmaPKaon->Fill(p,fUtils->getTOFSigma(track,pid));
+       fHistSelTPCTOFSigmaKaon->Fill(p,fUtils->getTPCSigma(track,pid),fUtils->getTOFSigma(track,pid));
+     }
+   } else {
+     fHistTPCdEdxP->Fill(p,dEdx);
+     fHistTPCSigmaPKaon->Fill(p,fUtils->getTPCSigma(track,pid)); 
+     if (beta>0.) {      
+       fHistBetaP->Fill(p,beta);
+       fHistTOFSigmaPKaon->Fill(p,fUtils->getTOFSigma(track,pid));
+       fHistTPCTOFSigmaKaon->Fill(p,fUtils->getTPCSigma(track,pid),fUtils->getTOFSigma(track,pid));
+     }
+   }
 
   return true;
 }
@@ -843,15 +843,20 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
     if ( !fUtils->isAcceptArmenterosK0s(v0_1) ) {
       continue;
     }
+    
+    MidTrackPIDChecker(pTrack,AliPID::kPion,false);
+    MidTrackPIDChecker(nTrack,AliPID::kPion,false);
 
     fTreeULSPair_ProngV0->Fill();
+    fHistSelArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
 
     if (!fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short())) {
       continue;
     }
+                
+    MidTrackPIDChecker(pTrack,AliPID::kPion,true);
+    MidTrackPIDChecker(nTrack,AliPID::kPion,true);
 
-    fHistSelArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
-            
     for (int iV0_2=iV0_1+1; iV0_2<nV0; ++iV0_2) {
       
       v0_2 = (AliAODv0*)fEvent->GetV0(iV0_2);
@@ -989,13 +994,13 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1, Al
       continue;
     }
     
-    MidTrackPIDChecker(track1,false);
+    MidTrackPIDChecker(track1,AliPID::kKaon,false);
 
     if(!fUtils->isAcceptMidPid(track1,pid1)){
       continue;
     }
 
-    MidTrackPIDChecker(track1,true);
+    MidTrackPIDChecker(track1,AliPID::kKaon,true);
     
     float mass1=0;
     
