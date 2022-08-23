@@ -62,6 +62,8 @@
    fUtils(NULL),
    fIsMC(false),
    fIsMidTrackAna(false),
+   fIsK0sAna(false),
+   fIsKaonTrackAna(false),
    fIsMixingAnalysis(false),
    fRunNumber(-99999),
    fTrackDepth(1000),
@@ -100,6 +102,10 @@
    fTreeLSppPair(NULL),
    fTreeLSmmPair(NULL),
 
+   fTreeULSPair_TightCut(NULL),
+   fTreeLSppPair_TightCut(NULL),
+   fTreeLSmmPair_TightCut(NULL),
+
    fTreeULSPair_ProngV0(NULL),
    fTreeLSppPair_ProngV0(NULL),
    fTreeLSmmPair_ProngV0(NULL),
@@ -107,6 +113,8 @@
    fTreeMixULSPair(NULL),
    fTreeMixLSppPair(NULL),
    fTreeMixLSmmPair(NULL),
+
+   fHistMassK0s1K0s2(NULL),
 
    fHistTPCdEdxP(NULL),
    fHistBetaP(NULL),
@@ -140,6 +148,8 @@
    fUtils(NULL),
    fIsMC(false),
    fIsMidTrackAna(false),
+   fIsK0sAna(false),
+   fIsKaonTrackAna(false),
    fIsMixingAnalysis(false),
    fRunNumber(-99999),
    fTrackDepth(1000),
@@ -178,6 +188,10 @@
    fTreeLSppPair(NULL),
    fTreeLSmmPair(NULL),
 
+   fTreeULSPair_TightCut(NULL),
+   fTreeLSppPair_TightCut(NULL),
+   fTreeLSmmPair_TightCut(NULL),
+   
    fTreeULSPair_ProngV0(NULL),
    fTreeLSppPair_ProngV0(NULL),
    fTreeLSmmPair_ProngV0(NULL),
@@ -185,6 +199,8 @@
    fTreeMixULSPair(NULL),
    fTreeMixLSppPair(NULL),
    fTreeMixLSmmPair(NULL),
+
+   fHistMassK0s1K0s2(NULL),
 
    fHistTPCdEdxP(NULL),
    fHistBetaP(NULL),
@@ -332,26 +348,33 @@
        fTreeMixULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
        fOutputList->Add(fTreeMixULSPair);
      }
-     fTreeULSPair_ProngV0 = new TTree("fTreeULSPair_ProngV0","");
-     fTreeULSPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-     fTreeULSPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-     //fTreeULSPair_ProngV0->Branch("RecPairArmenterosArmPt",&RecPairArmenterosArmPt,"RecPairArmenterosArmPt/F");
-     //fTreeULSPair_ProngV0->Branch("RecPairArmenterosAlpha",&RecPairArmenterosAlpha,"RecPairArmenterosAlpha/F");
-     fOutputList->Add(fTreeULSPair_ProngV0);
      
-     fTreeLSppPair_ProngV0 = new TTree("fTreeLSppPair_ProngV0","");
-     fTreeLSppPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-     fTreeLSppPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-     //fTreeLSppPair_ProngV0->Branch("RecPairArmenterosArmPt",&RecPairArmenterosArmPt,"RecPairArmenterosArmPt/F");
-     //fTreeLSppPair_ProngV0->Branch("RecPairArmenterosAlpha",&RecPairArmenterosAlpha,"RecPairArmenterosAlpha/F");
-     fOutputList->Add(fTreeLSppPair_ProngV0);
+     if (fIsK0sAna){
+       fTreeULSPair_ProngV0 = new TTree("fTreeULSPair_ProngV0","");
+       fTreeULSPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+       fTreeULSPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");     
+       fOutputList->Add(fTreeULSPair_ProngV0);
+     
+       fHistMassK0s1K0s2 = new TH2F("fHistMassK0s1K0s2","",200,0.4,0.6,200,0.4,0.6);
+       fOutputList->Add(fHistMassK0s1K0s2);
+     }
 
-     fTreeLSmmPair_ProngV0 = new TTree("fTreeLSmmPair_ProngV0","");
-     fTreeLSmmPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-     fTreeLSmmPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-     //fTreeLSmmPair_ProngV0->Branch("RecPairArmenterosArmPt",&RecPairArmenterosArmPt,"RecPairArmenterosArmPt/F");
-     //fTreeLSmmPair_ProngV0->Branch("RecPairArmenterosAlpha",&RecPairArmenterosAlpha,"RecPairArmenterosAlpha/F");
-     fOutputList->Add(fTreeLSmmPair_ProngV0);
+     if (fIsKaonTrackAna) {
+       fTreeULSPair_TightCut = new TTree("fTreeULSPair_TightCut","");
+       fTreeULSPair_TightCut->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+       fTreeULSPair_TightCut->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");     
+       fOutputList->Add(fTreeULSPair_TightCut);
+
+       fTreeLSppPair_TightCut = new TTree("fTreeLSppPair_TightCut","");
+       fTreeLSppPair_TightCut->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+       fTreeLSppPair_TightCut->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");     
+       fOutputList->Add(fTreeLSppPair_TightCut);
+
+       fTreeLSmmPair_TightCut = new TTree("fTreeLSmmPair_TightCut","");
+       fTreeLSmmPair_TightCut->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
+       fTreeLSmmPair_TightCut->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");     
+       fOutputList->Add(fTreeLSmmPair_TightCut);
+     }
 
      double min_dEdx = 0.;
      double max_dEdx = 300.;
@@ -467,10 +490,22 @@
      }
    } else {
      if ( !fIsMixingAnalysis ) {
-       MidV0Analysis(AliPID::kPion,AliPID::kPion);      
-       //MidPairAnalysis(AliPID::kKaon,AliPID::kKaon);
+       if (fIsK0sAna) {
+	 MidV0Analysis(AliPID::kPion,AliPID::kPion);      
+       } else if (fIsKaonTrackAna) {
+	 MidPairAnalysis(AliPID::kKaon,AliPID::kKaon);
+       } else {
+	 cout<<"Mid rapidity analysis but not added K0s or Kaon track analysis"<<endl;
+       }
      } else {
-       MidV0AnalysisEventMixing(AliPID::kPion,AliPID::kPion);      
+       if (fIsK0sAna) {
+	 MidV0AnalysisEventMixing(AliPID::kPion,AliPID::kPion);
+       } else if (fIsKaonTrackAna) {
+	 
+       } else {
+	 cout<<"Mid rapidity analysis but not added K0s or Kaon track analysis"<<endl;
+       }
+       
      }
    }
 
@@ -771,7 +806,7 @@ bool AliAnalysisTaskAODTrackPair::MidMuonPairQA(AliAODDimuon* dimuon){
 
 bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2)
 {
-
+  
   Int_t nV0 = fEvent->GetNumberOfV0s();
 
   AliAODv0* v0_1;
@@ -783,31 +818,35 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
     
     v0_1 = (AliAODv0*)fEvent->GetV0(iV0_1);
     
-    fHistArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
-   
     RecPairPt = v0_1->Pt();
     RecPairMass = v0_1->MassK0Short();
     RecPairArmenterosArmPt = v0_1->PtArmV0();
     RecPairArmenterosAlpha = v0_1->AlphaV0();
-    
+
     if (0.4>RecPairMass || RecPairMass>0.6) {
       continue;
     }
-
+    
+    AliAODTrack *pTrack=(AliAODTrack *)v0_1->GetDaughter(0);
+    AliAODTrack *nTrack=(AliAODTrack *)v0_1->GetDaughter(1);
+    
     fHistArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
     
-    if ( !fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) || 
-	 !fUtils->isAcceptArmenterosK0s(v0_1) ) {
+    if ( !fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) ) {
+      continue;
+    }    
+    if ( !fUtils->isAcceptArmenterosK0s(v0_1) ) {
       continue;
     }
-    
-    fHistSelArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
+
     fTreeULSPair_ProngV0->Fill();
 
     if (!fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short())) {
       continue;
     }
 
+    fHistSelArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
+            
     for (int iV0_2=iV0_1+1; iV0_2<nV0; ++iV0_2) {
       
       v0_2 = (AliAODv0*)fEvent->GetV0(iV0_2);
@@ -815,11 +854,15 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
       if (!fUtils->isAcceptK0sCandidateMassRange(v0_2->MassK0Short())) {
 	continue;
       }
-      
-      if ( !fUtils->isAcceptedK0s(v0_2,pid1,pid2,0) || 
-	   !fUtils->isAcceptArmenterosK0s(v0_2) ) {
+
+      if ( !fUtils->isAcceptedK0s(v0_2,pid1,pid2,0) ) {
 	continue;
       }
+      if ( !fUtils->isAcceptArmenterosK0s(v0_2) ) {
+	continue;
+      }
+      
+      fHistMassK0s1K0s2->Fill(v0_1->MassK0Short(),v0_2->MassK0Short());
       
       lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),
 		       TDatabasePDG::Instance()->GetParticle(310)->Mass());
@@ -918,8 +961,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(AliPID::EParticleType
 
 bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2)
 {
-  //cout<<"Processing mid-rapidity muon analysis"<<endl;
-  
   Int_t nTrack = fEvent->GetNumberOfTracks();
   
   AliAODTrack* track1;
@@ -998,12 +1039,10 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1, Al
   }//end of loop track1
 
   for(Int_t iTrack1=0; iTrack1<nTrack; ++iTrack1){
-        
-
+    
     lv1 = tracks[iTrack1];
 
     for(Int_t iTrack2=iTrack1+1; iTrack2<nTrack; ++iTrack2){
-
 
       lv2 = tracks[iTrack2];
 
@@ -1019,20 +1058,20 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1, Al
       } else {
 	fTreeLSmmPair->Fill();
       }
-
+      
       if ( skip_tracks_ids[iTrack1] && skip_tracks_ids[iTrack2] ) {
 	continue;
       }
-
+      
       if(charges[iTrack1] + charges[iTrack2] == 0) {
-	fTreeULSPair_ProngV0->Fill();
+	fTreeULSPair_TightCut->Fill();
       } else if(charges[iTrack1] + charges[iTrack2] > 0) {
-	fTreeLSppPair_ProngV0->Fill();
+	fTreeLSppPair_TightCut->Fill();
       } else {
-	fTreeLSmmPair_ProngV0->Fill();
+	fTreeLSmmPair_TightCut->Fill();
       }
 
-
+      
     }//end of loop track2
   }//end of loop track1
 

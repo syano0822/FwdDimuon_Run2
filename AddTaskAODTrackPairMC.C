@@ -1,4 +1,4 @@
-AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(uint offlineTriggerMask = AliVEvent::kAny,
+AliAnalysisTaskAODTrackPairMC* AddTaskAODTrackPairMC(uint offlineTriggerMask = AliVEvent::kINT7,
 						     float min_vtxz =-10,
 						     float max_vtxz = 10,
 						     int min_vtx_cont = 1,

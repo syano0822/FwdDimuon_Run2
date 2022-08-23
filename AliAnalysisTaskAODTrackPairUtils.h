@@ -44,7 +44,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   bool isAcceptArmenterosK0s_Tight(AliAODv0* v0);
 
   bool isAcceptK0sCandidateMassRange(float mass) {
-    if (fMinK0sMassRange>mass || mass>fMaxK0sMassRange) {
+    if (fMinK0sMassRange<mass && mass<fMaxK0sMassRange) {
       return true;
     } else {
       return false;
@@ -128,8 +128,8 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     return fIs2BodyProd;
   }
 
-  void setMidMuonAna(bool isMidMuon){
-    fIsMidMuonAna = isMidMuon;
+  void setMidTrackAna(bool isMidTrack){
+    fIsMidTrackAna = isMidTrack;
   }
   //////////////////////////////////////////////////////////////////////////////////////////////
   //Set analysis cut flags
@@ -169,6 +169,16 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
       std::cout<<"You set type = "<<type<<"  but it should be between 0 - 2"<<std::endl;
     }
   }
+  
+  void setTrackKinematicCut(float min_pt, float max_pt, float min_eta, float max_eta, float min_p, float max_p){
+    fMinTrackP = min_p;
+    fMaxTrackP = max_p;
+    fMinTrackPt = min_pt;
+    fMaxTrackPt = max_pt;
+    fMinTrackEta = min_eta;
+    fMaxTrackEta = max_eta;
+  }
+
   void setPileupRejectionCut(bool flag)
   {
     fIsPUcut = flag;
@@ -219,10 +229,10 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     fMaxMuonSigmaTOF = max;
   }
   void setMidTrackKinematicRange(float minpt,float maxpt,float mineta, float maxeta){
-    fMinMidTrackPt = minpt;
-    fMaxMidTrackPt = maxpt;
-    fMinMidTrackEta = mineta;
-    fMaxMidTrackEta = maxeta;
+    //fMinMidTrackPt = minpt;
+    //fMaxMidTrackPt = maxpt;
+    //fMinMidTrackEta = mineta;
+    //fMaxMidTrackEta = maxeta;
   }  
   void setArmenterosLimit(float pcm, float r0, float width){
     fArmenterosBandWidth = width;
@@ -443,17 +453,24 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   float fArmenterosBandWidth;
   float fArmenterosPCM;
   float fArmenterosR0;
-  float fArmenterosAlphaCutParamForPtArm;
+  float fArmenterosAlphaCutParamForPtArm;  
   float fMinCosPointingAngleCut;
   float fMinV0DCA;
   float fMaxTrackDCASigma;
+  float fMinTrackDCA;
   float fMinDecayLength;
   float fMaxDecayLength;
+  float fMaxPropLifeTime;
+  float fMinDecayRadius;
+  float fMinCrossRowsFindableRatio;
   float fMinV0Alpha;
   float fMaxV0Alpha;
   float fMinK0sMassRange;
   float fMaxK0sMassRange;
-
+  float fLambdaMassPdg;
+  float fK0sMassPdg;
+  float fMinRejectMassWidthLambda;
+  float fMaxRejectMassWidthLambda;
   bool fIsMC;
   bool fIsEvtSelect;
 
@@ -549,11 +566,6 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   float fMaxTrackPt;
   float fMinTrackEta;
   float fMaxTrackEta;
-  
-  float fMinMidTrackPt;
-  float fMaxMidTrackPt;
-  float fMinMidTrackEta;
-  float fMaxMidTrackEta;
 
   float fMinPionSigmaTPC;
   float fMaxPionSigmaTPC;
@@ -580,7 +592,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   float fMinMuonSigmaTOF;
   float fMaxMuonSigmaTOF;
   
-  bool fIsMidMuonAna;
+  bool fIsMidTrackAna;
 
   int fMinTrackTPCNClusts;
   

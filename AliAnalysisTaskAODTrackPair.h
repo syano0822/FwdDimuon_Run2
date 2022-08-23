@@ -21,9 +21,16 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
     fIsMC = isMC;
   }
   
-  void setMidMuonAna(bool isMidMuon){
-    fIsMidTrackAna = isMidMuon;
+  void setMidTrackAna(bool isMidTrack){
+    fIsMidTrackAna = isMidTrack;
   }  
+  void setK0sAna(bool isK0s) {
+    fIsK0sAna = isK0s;
+  }
+  void setKaonTrackAna(bool isKaon) {
+    fIsKaonTrackAna = isKaon;
+  }
+  
   void setMixingAnalysis(bool isMix)
   {
     fIsMixingAnalysis = isMix;
@@ -93,6 +100,8 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
 
   bool fIsMC;
   bool fIsMidTrackAna;
+  bool fIsK0sAna;
+  bool fIsKaonTrackAna;
   bool fIsMixingAnalysis;
 
   int fRunNumber;
@@ -144,10 +153,16 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   TTree* fTreeLSppPair_ProngV0;
   TTree* fTreeLSmmPair_ProngV0;
 
+  TTree* fTreeULSPair_TightCut;
+  TTree* fTreeLSppPair_TightCut;
+  TTree* fTreeLSmmPair_TightCut;
+
   TTree* fTreeMixULSPair;
   TTree* fTreeMixLSppPair;
   TTree* fTreeMixLSmmPair;
 
+  TH2F* fHistMassK0s1K0s2;
+  
   float RecPairPt;
   float RecPairRap;
   float RecPairMass;

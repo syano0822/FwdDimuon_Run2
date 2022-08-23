@@ -54,8 +54,8 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
 
   fMinV0Alpha(-0.84),
   fMaxV0Alpha(0.84),
-  fMinK0sMassRange(0.48),
-  fMaxK0sMassRange(0.52),
+  fMinK0sMassRange(0.486),
+  fMaxK0sMassRange(0.510),
 
   fArmenterosBandWidth(0.05),
   fArmenterosPCM(0.207),
@@ -67,7 +67,16 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fMaxTrackDCASigma(1.5),
   fMinDecayLength(5.0),
   fMaxDecayLength(100.),
+  fMaxPropLifeTime(20.),
+  fMinDecayRadius(0.5),
+  fMinCrossRowsFindableRatio(0.8),
+  fMinTrackDCA(0.06),
 
+  fLambdaMassPdg(1.115683),
+  fK0sMassPdg(0.497611),
+  fMinRejectMassWidthLambda(0.01),
+  fMaxRejectMassWidthLambda(0.01),
+  
   fHistDsCINT7(NULL),
   fHistDsCMSL7(NULL),
   fHistDsCMLL7(NULL),
@@ -139,11 +148,11 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fMinTrackEta(-0.8),
   fMaxTrackEta(+0.8),
   
-  fMinPionSigmaTPC(-3.0),
-  fMaxPionSigmaTPC(3.0),
-  fMinPionSigmaTOF(-3.0),
-  fMaxPionSigmaTOF(3.0),
-
+  fMinPionSigmaTPC(-5.0),
+  fMaxPionSigmaTPC(5.0),
+  fMinPionSigmaTOF(-5.0),
+  fMaxPionSigmaTOF(5.0),
+  
   fMinKaonSigmaTPC(-2.0),
   fMaxKaonSigmaTPC(2.0),
   fMinKaonSigmaTOF(-2.0),
@@ -163,15 +172,10 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fMaxMuonSigmaTPC(2.0),
   fMinMuonSigmaTOF(-2.0),
   fMaxMuonSigmaTOF(2.0),
-  
-  fMinMidTrackPt(0.3),
-  fMaxMidTrackPt(3.0),
-  fMinMidTrackEta(-0.8),
-  fMaxMidTrackEta(+0.8),
 
   fMinTrackTPCNClusts(70),
 
-  fIsMidMuonAna(false)
+  fIsMidTrackAna(false)
 {
   fRandom = new TRandom1();
   time_t t;
@@ -283,7 +287,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent* event, AliVEventHan
     return false;
   }
   
-  if(fIsMidMuonAna && !fPIDResponse){
+  if(fIsMidTrackAna && !fPIDResponse){
     fPIDResponse=fInputHandler->GetPIDResponse();
     if(!fPIDResponse) {
       return false;
@@ -306,15 +310,15 @@ bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent* event, AliVEventHan
     return false;
   }
   
-  if(!fIsMidMuonAna && !setRunnumberIndex()){
+  if(!fIsMidTrackAna && !setRunnumberIndex()){
     return false;
   }
   
-  if(!fIsMidMuonAna && !setPeriodInfo()){
+  if(!fIsMidTrackAna && !setPeriodInfo()){
     return false;
   }
   
-  if(!fIsMidMuonAna && !setTriggerInfo()){
+  if(!fIsMidTrackAna && !setTriggerInfo()){
     return false;
   }
   
@@ -322,7 +326,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent* event, AliVEventHan
     return false;
   }
   
-  if(!fIsMidMuonAna && !setDownScaleFactor()){
+  if(!fIsMidTrackAna && !setDownScaleFactor()){
     return false;
   }
   
@@ -374,7 +378,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptEvent()
      fMultSelection->GetMultiplicityPercentile(fMultiMethod,false)>100.){
     return false;
   }  
-  if(!fIsMidMuonAna){
+  if(!fIsMidTrackAna){
     if(fDSfactor < 0.000000000001) {
       return false;
     }
@@ -460,6 +464,9 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptTrackKinematics(AliAODTrack* trac
   if(track->Eta()<fMinTrackEta || fMaxTrackEta<track->Eta()) {
     return false;  
   }  
+  if(track->Pt()<fMinTrackPt || fMaxTrackPt<track->Pt()){
+    return false;
+  }
   return true;
 }
 
@@ -551,6 +558,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(AliAODTrack* track, AliPID
     }
   } else if (pid == AliPID::kPion) {
     if ( track->Pt()<0.65 ) {
+
       if (hasTOF) {
 	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
 	  return true;
@@ -564,7 +572,22 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(AliAODTrack* track, AliPID
 	  return false;
 	}
       }
+
     } else {
+      if (hasTOF) {
+	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
+	  return true;
+	} else{
+	  return false;
+	}
+      } else {
+	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC ) {
+	  return true;
+	} else{
+	  return false;
+	}
+      }
+      /*
       if (hasTOF) {
 	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
 	  return true;
@@ -574,7 +597,8 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(AliAODTrack* track, AliPID
       } else {
 	return false;
       }
-    }    
+      */
+    }   
   }
 
   return true;
@@ -584,22 +608,23 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0s(AliAODv0* v0,
 						     AliPID::EParticleType pid1,
 						     AliPID::EParticleType pid2,
 						     int charge){
- 
-  if ( v0->GetNProngs() != 2 || v0->Charge() != charge ) {
+  
+  if ( v0->GetNProngs() != 2 || v0->GetOnFlyStatus() == 1 || v0->Charge() != charge ) {
     return false;
   }
   
   AliAODTrack *pTrack=(AliAODTrack *)v0->GetDaughter(0);
   AliAODTrack *nTrack=(AliAODTrack *)v0->GetDaughter(1);
-
+    
   if (!pTrack || !nTrack) {
     return false;
   }
-  
-  if ( !isAcceptV0TrackQuality(pTrack) || !isAcceptV0TrackQuality(nTrack) ) {
+  if ( !isAcceptTrackKinematics(pTrack) || !isAcceptTrackKinematics(nTrack) ){
     return false;
   }
-  
+  if ( !isAcceptV0TrackQuality(pTrack) || !isAcceptV0TrackQuality(nTrack) ) {
+    return false;
+  }  
   if ( !isAcceptMidPid(pTrack,pid1) || !isAcceptMidPid(nTrack,pid2)) {
     return false;
   }
@@ -619,17 +644,56 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0s(AliAODv0* v0,
   if ( fMinV0DCA > v0->DcaV0ToPrimVertex() ) {
     return false;
   }
-  
+      
   if ( fMaxTrackDCASigma < v0->DcaV0Daughters() ) {
     return false;
   }
   
+  if ( fMinDecayRadius > v0->RadiusV0() ) {
+    return false;
+  }
+
   float length = v0->DecayLengthV0(vtx);
 
   if ( fMinDecayLength>length || fMaxDecayLength<length ) {
     return false;
   }
   
+  float proper_life_time = fK0sMassPdg*length/v0->P();
+
+  if ( proper_life_time > fMaxPropLifeTime ) {
+    return false;
+  }
+
+  TLorentzVector lv1,lv2,lv12;
+    
+  if ( pTrack->P() > nTrack->P() ) {
+    lv1.SetPtEtaPhiM(pTrack->P(),pTrack->Eta(),pTrack->Phi(),TDatabasePDG::Instance()->GetParticle(2212)->Mass());
+    lv2.SetPtEtaPhiM(nTrack->P(),nTrack->Eta(),nTrack->Phi(),TDatabasePDG::Instance()->GetParticle(211)->Mass());
+  } else {
+    lv1.SetPtEtaPhiM(pTrack->P(),pTrack->Eta(),pTrack->Phi(),TDatabasePDG::Instance()->GetParticle(211)->Mass());
+    lv2.SetPtEtaPhiM(nTrack->P(),nTrack->Eta(),nTrack->Phi(),TDatabasePDG::Instance()->GetParticle(2212)->Mass());
+  }
+  
+  lv12 = lv1 + lv2;
+  
+  if (fLambdaMassPdg - fMinRejectMassWidthLambda<lv12.M() && lv12.M()<fLambdaMassPdg + fMaxRejectMassWidthLambda) {
+    return false;
+  }
+  
+  lv1.SetPtEtaPhiM(pTrack->P(),pTrack->Eta(),pTrack->Phi(),TDatabasePDG::Instance()->GetParticle(11)->Mass());
+  lv2.SetPtEtaPhiM(nTrack->P(),nTrack->Eta(),nTrack->Phi(),TDatabasePDG::Instance()->GetParticle(11)->Mass());
+
+  lv12 = lv1 + lv2;
+
+  if (lv12.M() < 0.05) {
+    return false;
+  }
+  
+  if (v0->Pt() < 0.2) {
+    return false;
+  }
+
   return true;
 }
 
@@ -665,16 +729,25 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptArmenterosK0s_Tight(AliAODv0* v0)
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(AliAODTrack* track){
-  if (fMinMidTrackPt>track->Pt() || fMaxMidTrackPt<track->Pt()) {
-    return false;
-  }  
-  if (fMinMidTrackEta>track->Eta() || fMaxMidTrackPt<track->Eta()) {
-    return false;
-  }    
+  
   if (fMinTrackTPCNClusts > track->GetTPCNcls()) {
     return false;
   }
-
+  if ( track->GetKinkIndex(0) != 0) {
+    return false;
+  }
+  if ( fMinCrossRowsFindableRatio > track->GetTPCNclsF()/track->GetTPCCrossedRows() ) {
+    return false;
+  }
+  
+  float dca_xy=9999;
+  float dca_z=9999;
+  track->GetImpactParameters(dca_xy,dca_z);
+  
+  if ( fMinTrackDCA > fabs(dca_xy) ) {
+    return false;
+  }
+  
   return true;
 }
 
@@ -1046,7 +1119,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setTriggerInfo()
     } else {
       fIsCMSL7 = false;
     }
-    if(!fIsMidMuonAna){
+    if(!fIsMidTrackAna){
       if(fInputHandler->IsEventSelected() & AliVEvent::kINT7inMUON){
 	fIsCINT7 = true;
       } else {

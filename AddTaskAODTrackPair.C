@@ -1,12 +1,10 @@
 
-AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = AliVEvent::kAny,
+AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = AliVEvent::kINT7,
 						 float min_vtxz =-10,
 						 float max_vtxz = 10,
 						 int min_vtx_cont = 1,
 						 float min_pair_rap = -0.5,
 						 float max_pair_rap = 0.5,
-						 float min_track_eta = -0.8,
-						 float max_track_eta = 0.8,
 						 float alpha = 0.2,
 						 float pangle = 0.998,
 						 float v0Dca = 0.1, 
@@ -29,7 +27,15 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
 						 int paircuttype=1,
 						 double min_pairtrackptcut=0.5,
 						 bool onMixingAnalysis=false,
-						 bool isMidMuonAnalysis=false
+						 bool isMidTrackAnalysis=false,
+						 bool isKaonAnalysis=false,
+						 bool isK0sAnalysis=true,
+						 float min_track_pt=0.0,
+						 float max_track_pt=999.,
+						 float min_track_eta=-0.8,
+						 float max_track_eta= 0.8,
+						 float min_track_p=0.3,
+						 float max_track_p=2.5
 						 )
 
 {
@@ -63,11 +69,9 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   utils->setMultiEstimateMethod(multi_method);
   utils->setMuonTrackCut(fMuonTrackCuts);
   utils->setPairKinematicCut(paircuttype,min_pairtrackptcut);
-  utils->setMidMuonAna(isMidMuonAnalysis);  
+  utils->setMidTrackAna(isMidTrackAnalysis);  
   utils->setPeriod(period);
-  if (isMidMuonAnalysis) {
-    utils->setMidTrackKinematicRange(0.05,999,min_track_eta,max_track_eta);
-  }
+  utils->setTrackKinematicCut(min_track_pt,max_track_pt,min_track_eta,max_track_eta,min_track_p,max_track_p);
 
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
@@ -93,7 +97,9 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   task->setEvtMixingPoolPsi(true);
   task->setMixingAnalysis(onMixingAnalysis);
   task->setMC(isMC);
-  task->setMidMuonAna(isMidMuonAnalysis);
+  task->setMidTrackAna(isMidTrackAnalysis);
+  task->setKaonTrackAna(isKaonAnalysis);
+  task->setK0sAna(isK0sAnalysis);
   mgr->AddTask(task);
   
   cout<<"min_vtxz="<< min_vtxz <<endl;
@@ -101,8 +107,6 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   cout<<"min_vtx_cont="<<  min_vtx_cont <<endl;
   cout<<"min_pair_rap="<< min_pair_rap <<endl;
   cout<<"max_pair_rap="<< max_pair_rap <<endl;
-  cout<<"min_track_eta="<< min_track_eta <<endl;
-  cout<<"max_track_eta="<< max_track_eta <<endl;
   cout<<"alpha="<< alpha <<endl;
   cout<<"pangle="<< pangle <<endl;
   cout<<"v0Dca="<< v0Dca <<endl;
@@ -125,8 +129,16 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   cout<<"paircuttype="<< paircuttype <<endl;
   cout<<"min_pairtrackptcut="<< min_pairtrackptcut <<endl;
   cout<<"onMixingAnalysis="<< onMixingAnalysis <<endl;
-  cout<<"isMidMuonAnalysis="<< isMidMuonAnalysis <<endl;
-  
+  cout<<"isMidTrackAnalysis="<< isMidTrackAnalysis <<endl;
+  cout<<"isKaonAnalysis="<< isKaonAnalysis <<endl;
+  cout<<"isK0sAnalysis="<< isK0sAnalysis <<endl;
+  cout<<"min_track_pt="<< min_track_pt <<endl;
+  cout<<"max_track_pt="<< max_track_pt <<endl;
+  cout<<"min_track_eta="<< min_track_eta <<endl;
+  cout<<"max_track_eta="<< max_track_eta <<endl;
+  cout<<"min_track_p="<< min_track_p <<endl;
+  cout<<"max_track_p="<< max_track_p <<endl;
+
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");
   

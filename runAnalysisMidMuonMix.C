@@ -4,12 +4,12 @@
 
 AliAnalysisGrid* CreateAlienHandler(string period, string run_mode, Bool_t isJDL, string type,bool onMixingAnalysis);
 
-void runAnalysisMidMuon(string runPeriod = "LHC16k",
+void runAnalysisMidMuonMix(string runPeriod = "LHC16k",
 			string run_mode  = "test",
 			Bool_t isJDL      = true,
 			string type      = "data",
 			Bool_t  local     = false,
-			bool isMix        = false)
+			bool isMix        = true)
 {
   // since we will compile a class, tell root where to look for headers  
 #if !defined (__CINT__) || defined (__CLING__)
@@ -85,6 +85,8 @@ void runAnalysisMidMuon(string runPeriod = "LHC16k",
   int min_vtx_cont = 1;
   float min_pair_rap = -0.5;
   float max_pair_rap = 0.5;
+  float min_track_eta = -0.8;
+  float max_track_eta = 0.8;
   float alpha = 0.2;
   float pangle = 0.998;
   float v0Dca = 0.1; 
@@ -107,14 +109,8 @@ void runAnalysisMidMuon(string runPeriod = "LHC16k",
   double min_pairtrackptcut = 0.0;
   bool onMixingAnalysis = isMix;
   bool isMidMuonAnalysis = true;
-  bool isKaonAnalysis = false;
-  bool isK0sAnalysis = true;  
-  float min_track_pt = 0.0;
-  float max_track_pt = 999.;
-  float min_track_eta = -0.8;
-  float max_track_eta =  0.8;
-  float min_track_p = 0.2;
-  float max_track_p = 2.0;
+
+  
 
 #if !defined (__CINT__) || defined (__CLING__)
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
@@ -122,13 +118,15 @@ void runAnalysisMidMuon(string runPeriod = "LHC16k",
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPair.cxx++g");
   AliAnalysisTaskAODTrackPair *task
     = reinterpret_cast<AliAnalysisTaskAODTrackPair*>
-    (gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f)",
+    (gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d)",
 				     offlineTriggerMask,
 				     min_vtxz,
 				     max_vtxz,
 				     min_vtx_cont,
 				     min_pair_rap,
 				     max_pair_rap,
+				     min_track_eta,
+				     max_track_eta,
 				     alpha,
 				     pangle,
 				     v0Dca,
@@ -151,15 +149,7 @@ void runAnalysisMidMuon(string runPeriod = "LHC16k",
 				     paircuttype,
 				     min_pairtrackptcut,
 				     onMixingAnalysis,
-				     isMidMuonAnalysis,
-				     isKaonAnalysis,
-				     isK0sAnalysis,
-				     min_track_pt,
-				     max_track_pt,
-				     min_track_eta,
-				     max_track_eta,
-				     min_track_p,
-				     max_track_p
+				     isMidMuonAnalysis
 				     )));
 #else
   gROOT->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
@@ -243,17 +233,16 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
   plugin->SetDefaultOutputs(kTRUE);
   
   if (onMixingAnalysis) {    
-    plugin->SetGridWorkingDir(Form("GlueBall/AOD/%s/TrackPairMix/%s",runPeriod.c_str(),type.c_str()));
+    plugin->SetGridWorkingDir(Form("PWGLF/AOD/%s/LowMassDimuonMixMC/%s",runPeriod.c_str(),type.c_str()));
   } else {
-    plugin->SetGridWorkingDir(Form("GlueBall/AOD/%s/TrackPair/%s",runPeriod.c_str(),type.c_str()));
+    plugin->SetGridWorkingDir(Form("PWGLF/AOD/%s/LowMassDimuonMC/%s",runPeriod.c_str(),type.c_str()));
   }
   
   plugin->SetGridOutputDir("output");
 
-  plugin->SetSplitMaxInputFileNumber(15);    
-  //plugin->SetSplitMaxInputFileNumber(5);
-  //plugin->SetSplitMaxInputFileNumber(45);
-  plugin->SetNrunsPerMaster();
+  //plugin->SetSplitMaxInputFileNumber(15);    
+  plugin->SetSplitMaxInputFileNumber(45);
+  //plugin->SetNrunsPerMaster();
   
   //LHC17q, 
   if(type == "data"){
@@ -270,20 +259,6 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
 	plugin->SetDataPattern("/pass2_CENT_woSDD/AOD/ AliAOD.root");
       } else if(runPeriod.find("FAST") != std::string::npos){
 	plugin->SetDataPattern("/pass2_FAST/AOD/ AliAOD.root");
-      }
-    } else if (runPeriod.find("LHC16q") != std::string::npos) {
-      plugin->SetGridDataDir("/alice/data/2016/LHC16q");
-      if(runPeriod.find("woSDD") != std::string::npos){
-	plugin->SetDataPattern("/pass2_CENT_woSDD/AOD244/ AliAOD.root");
-      } else if(runPeriod.find("FAST") != std::string::npos){
-	plugin->SetDataPattern("/pass2_FAST/AOD244/ AliAOD.root");
-      }
-    } else if (runPeriod.find("LHC16t") != std::string::npos) {
-      plugin->SetGridDataDir("/alice/data/2016/LHC16t");
-      if(runPeriod.find("woSDD") != std::string::npos){
-	plugin->SetDataPattern("/pass2_CENT_woSDD/AOD244/ AliAOD.root");
-      } else if(runPeriod.find("FAST") != std::string::npos){
-	plugin->SetDataPattern("/pass2_FAST/AOD244/ AliAOD.root");
       }
     }
     plugin->SetRunPrefix("000");    
@@ -323,14 +298,12 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
 
   if(runPeriod.find("LHC16q") != std::string::npos){//p-Pb 5 TeV
     plugin->SetNrunsPerMaster(4);
-    plugin->AddRunNumber(265309); plugin->AddRunNumber(265332); plugin->AddRunNumber(265334); plugin->AddRunNumber(265336); 
-    plugin->AddRunNumber(265338); plugin->AddRunNumber(265339); plugin->AddRunNumber(265342); plugin->AddRunNumber(265343); 
-    plugin->AddRunNumber(265344); plugin->AddRunNumber(265377); plugin->AddRunNumber(265378); plugin->AddRunNumber(265381);
-    plugin->AddRunNumber(265383); plugin->AddRunNumber(265384); plugin->AddRunNumber(265385); plugin->AddRunNumber(265387);
-    plugin->AddRunNumber(265388); plugin->AddRunNumber(265419); plugin->AddRunNumber(265420); plugin->AddRunNumber(265421);
-    plugin->AddRunNumber(265422); plugin->AddRunNumber(265424); plugin->AddRunNumber(265425); plugin->AddRunNumber(265426);
-    plugin->AddRunNumber(265427); plugin->AddRunNumber(265435); plugin->AddRunNumber(265499); plugin->AddRunNumber(265500);
-    plugin->AddRunNumber(265501); plugin->AddRunNumber(265521); plugin->AddRunNumber(265525);
+    plugin->AddRunNumber(265525); plugin->AddRunNumber(265521); plugin->AddRunNumber(265501); plugin->AddRunNumber(265500); plugin->AddRunNumber(265499); plugin->AddRunNumber(265435);
+    plugin->AddRunNumber(265427); plugin->AddRunNumber(265426); plugin->AddRunNumber(265425); plugin->AddRunNumber(265424); plugin->AddRunNumber(265422); plugin->AddRunNumber(265421);
+    plugin->AddRunNumber(265420); plugin->AddRunNumber(265419); plugin->AddRunNumber(265388); plugin->AddRunNumber(265387); plugin->AddRunNumber(265385); plugin->AddRunNumber(265384);
+    plugin->AddRunNumber(265383); plugin->AddRunNumber(265381); plugin->AddRunNumber(265378); plugin->AddRunNumber(265377); plugin->AddRunNumber(265344); plugin->AddRunNumber(265343);
+    plugin->AddRunNumber(265342); plugin->AddRunNumber(265339); plugin->AddRunNumber(265338); plugin->AddRunNumber(265336); plugin->AddRunNumber(265334); plugin->AddRunNumber(265332);
+    plugin->AddRunNumber(265309);
   }
 
   if(runPeriod.find("LHC16t") != std::string::npos){//p-Pb 5 TeV
