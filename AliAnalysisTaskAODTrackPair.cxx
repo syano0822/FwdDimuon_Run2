@@ -331,16 +331,19 @@
        fTreeULSPair = new TTree("fTreeULSPair","");
        fTreeULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
        fTreeULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+       fTreeULSPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
        fOutputList->Add(fTreeULSPair);
        
        fTreeLSppPair = new TTree("fTreeLSppPair","");
        fTreeLSppPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
        fTreeLSppPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+       fTreeLSppPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
        fOutputList->Add(fTreeLSppPair);
        
        fTreeLSmmPair = new TTree("fTreeLSmmPair","");
        fTreeLSmmPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
        fTreeLSmmPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+       fTreeLSmmPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
        fOutputList->Add(fTreeLSmmPair);
      } else {
        fTreeMixULSPair = new TTree("fTreeMixULSPair","");
@@ -352,7 +355,8 @@
      if (fIsK0sAna){
        fTreeULSPair_ProngV0 = new TTree("fTreeULSPair_ProngV0","");
        fTreeULSPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-       fTreeULSPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");     
+       fTreeULSPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
+       fTreeULSPair_ProngV0->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");     
        fOutputList->Add(fTreeULSPair_ProngV0);
      
        fHistMassK0s1K0s2 = new TH2F("fHistMassK0s1K0s2","",200,0.4,0.6,200,0.4,0.6);
@@ -820,6 +824,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
     
     RecPairPt = v0_1->Pt();
     RecPairMass = v0_1->MassK0Short();
+    RecPairRap = v0_1->RapK0Short();
     RecPairArmenterosArmPt = v0_1->PtArmV0();
     RecPairArmenterosAlpha = v0_1->AlphaV0();
 
@@ -872,6 +877,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
 
       RecPairPt = lv12.Pt();
       RecPairMass = lv12.M();
+      RecPairRap = lv12.Rapidity();
       
       fTreeULSPair->Fill();
     }
