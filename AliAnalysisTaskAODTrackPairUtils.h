@@ -178,6 +178,16 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     fMinTrackEta = min_eta;
     fMaxTrackEta = max_eta;
   }
+  
+  void setTrackQualities(float findable, string dcaxy, float dcaz, float chi2tpc, float chi2its, int nclusttpc, int nclustits){
+    fMinCrossRowsFindableRatio = findable;
+    fMaxTrackDCAxyName = dcaxy;
+    fMaxTrackDCAz = dcaz;
+    fMaxReducedChi2TPC = chi2tpc;
+    fMaxReducedChi2ITS = chi2its;
+    fMinTrackTPCNClusts = nclusttpc;
+    fMinTrackSPDNClusts = nclustits;
+  }
 
   void setPileupRejectionCut(bool flag)
   {
@@ -447,7 +457,8 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   std::string fPeriod;
   std::string fCollSystem;
   std::string fPass;
-
+  
+  TF1* fFuncMaxDCAxy;
   TF1* fMinArmenterosLine;
   TF1* fMaxArmenterosLine;
   float fArmenterosBandWidth;
@@ -457,12 +468,10 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   float fMinCosPointingAngleCut;
   float fMinV0DCA;
   float fMaxTrackDCASigma;
-  float fMinTrackDCA;
   float fMinDecayLength;
   float fMaxDecayLength;
   float fMaxPropLifeTime;
   float fMinDecayRadius;
-  float fMinCrossRowsFindableRatio;
   float fMinV0Alpha;
   float fMaxV0Alpha;
   float fMinK0sMassRange;
@@ -471,6 +480,15 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   float fK0sMassPdg;
   float fMinRejectMassWidthLambda;
   float fMaxRejectMassWidthLambda;
+
+  float fMinCrossRowsFindableRatio;
+  string fMaxTrackDCAxyName;
+  float fMaxTrackDCAz;
+  float fMaxReducedChi2TPC;
+  float fMaxReducedChi2ITS;
+  int fMinTrackTPCNClusts;
+  int fMinTrackSPDNClusts;
+  
   bool fIsMC;
   bool fIsEvtSelect;
 
@@ -594,7 +612,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   
   bool fIsMidTrackAna;
 
-  int fMinTrackTPCNClusts;
+  
   
 
   ClassDef(AliAnalysisTaskAODTrackPairUtils, 1); // example of analysis

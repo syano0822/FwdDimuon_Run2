@@ -70,8 +70,9 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fMaxPropLifeTime(20.),
   fMinDecayRadius(0.5),
   fMinCrossRowsFindableRatio(0.8),
-  fMinTrackDCA(0.06),
-
+  fMaxTrackDCAxyName("0.0105 + 0.035/pow(x,1.1)"),
+  fMaxTrackDCAz(2.0),
+  
   fLambdaMassPdg(1.115683),
   fK0sMassPdg(0.497611),
   fMinRejectMassWidthLambda(0.01),
@@ -174,6 +175,9 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fMaxMuonSigmaTOF(2.0),
 
   fMinTrackTPCNClusts(70),
+  fMinTrackSPDNClusts(1),
+  fMaxReducedChi2TPC(4.),
+  fMaxReducedChi2ITS(36.),
 
   fIsMidTrackAna(false)
 {
@@ -197,8 +201,8 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
 				    fArmenterosR0,
 				    fArmenterosBandWidth);
 
-
-
+  fFuncMaxDCAxy = new TF1("fFuncMaxDCAxy",fMaxTrackDCAxyName.c_str(),0,100);
+  
 }
 
 AliAnalysisTaskAODTrackPairUtils::~AliAnalysisTaskAODTrackPairUtils()
@@ -479,7 +483,45 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidMuonTrack(AliAODTrack* track){
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidTrackQuality(AliAODTrack* track){    
-  return track->TestFilterBit(AliAODTrack::kTrkGlobal) ? true : false;
+  //return track->TestFilterBit(AliAODTrack::kTrkGlobal) ? true : false;
+  if ( fMinTrackTPCNClusts > track->GetTPCNcls() ) {
+    return false;
+  }  
+  int nSPD=0;
+  if ( track->HasPointOnITSLayer(0) ) {
+    ++nSPD;
+  }
+  if ( track->HasPointOnITSLayer(1) ) {
+    ++nSPD;
+  }
+  if ( fMinTrackSPDNClusts > nSPD ) {
+    return false;
+  }
+  if ( track->GetKinkIndex(0) != 0 ) {
+    return false;
+  }
+  if ( fMinCrossRowsFindableRatio > track->GetTPCNclsF()/track->GetTPCCrossedRows() ) {
+    return false;
+  }
+  if ( fMaxReducedChi2TPC < track->GetTPCchi2()/track->GetTPCNcls() ) {
+    return false;
+  }
+  if ( fMaxReducedChi2ITS < track->GetITSchi2()/track->GetITSNcls() ) {
+    return false;
+  }
+  
+  float dca_xy=9999;
+  float dca_z=9999;
+  track->GetImpactParameters(dca_xy,dca_z);
+  
+  if (fMaxTrackDCAz < dca_z) {
+    return false;
+  }    
+  if ( fFuncMaxDCAxy->Eval(track->Pt()) < fabs(dca_xy) ) {
+    return false;
+  }
+  
+  return true;
 }
 
 
@@ -531,7 +573,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(AliAODTrack* track, AliPID
   float fSigmaTPCTOF = sqrt(fSigmaTPC*fSigmaTPC + fSigmaTOF*fSigmaTOF);
   
   if (pid == AliPID::kKaon) {
-    if ( track->Pt()<0.55 ) {
+    if ( track->Pt()<0.6 ) {
       if (hasTOF) {
 	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
 	  return true;
@@ -714,11 +756,11 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(AliAODTrack* track
   float dca_xy=9999;
   float dca_z=9999;
   track->GetImpactParameters(dca_xy,dca_z);
-  
-  if ( fMinTrackDCA > fabs(dca_xy) ) {
+  /*
+  if ( fMaxTrackDCAxy > fabs(dca_xy) ) {
     return false;
   }
-  
+  */
   return true;
 }
 

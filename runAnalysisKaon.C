@@ -113,20 +113,27 @@ void runAnalysisKaon(string runPeriod = "LHC16k",
   float max_track_pt = 999.;
   float min_track_eta = -0.8;
   float max_track_eta =  0.8;
-  float min_track_p = 0.2;
-  float max_track_p = 2.5;
+  float min_track_p = 0.15;
+  float max_track_p = 2.50;
   float min_pion_sigma_tpc = -5;
   float max_pion_sigma_tpc =  5;
   float min_pion_sigma_tof = -5;
   float max_pion_sigma_tof =  5;
-  float min_kaon_sigma_tpc = -2;
-  float max_kaon_sigma_tpc =  2;
-  float min_kaon_sigma_tof = -2;
-  float max_kaon_sigma_tof =  2;
+  float min_kaon_sigma_tpc = -3;
+  float max_kaon_sigma_tpc =  3;
+  float min_kaon_sigma_tof = -3;
+  float max_kaon_sigma_tof =  3;
   float min_proton_sigma_tpc = -2;
   float max_proton_sigma_tpc =  2;
   float min_proton_sigma_tof = -2;
   float max_proton_sigma_tof =  2;
+  float findable = 0.8;
+  string dcaxy = "0.0105 + 0.035/pow(x,1.1)";
+  float dcaz = 2.0;
+  float chi2tpc = 4.;
+  float chi2its = 36.;
+  int nclusttpc = 70;
+  int nclustits = 1;
   
 #if !defined (__CINT__) || defined (__CLING__)
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
@@ -134,7 +141,7 @@ void runAnalysisKaon(string runPeriod = "LHC16k",
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPair.cxx++g");
   AliAnalysisTaskAODTrackPair *task
     = reinterpret_cast<AliAnalysisTaskAODTrackPair*>
-    (gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)",
+    (gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,\"%s\",%f,%f,%f,%d,%d)",
 				     offlineTriggerMask,
 				     min_vtxz,
 				     max_vtxz,
@@ -183,8 +190,15 @@ void runAnalysisKaon(string runPeriod = "LHC16k",
 				     min_proton_sigma_tpc,
 				     max_proton_sigma_tpc,
 				     min_proton_sigma_tof,
-				     max_proton_sigma_tof				     
-				     )));
+				     max_proton_sigma_tof,
+				     findable,
+				     dcaxy.c_str(),
+				     dcaz,
+				     chi2tpc,
+				     chi2its,
+				     nclusttpc,
+				     nclustits
+				     ))); 
 #else
   gROOT->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
   gROOT->LoadMacro("AliAnalysisTaskAODEventStudy.cxx++g");
@@ -267,9 +281,9 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
   plugin->SetDefaultOutputs(kTRUE);
   
   if (onMixingAnalysis) {    
-    plugin->SetGridWorkingDir(Form("GlueBall_KK_20220824/AOD/%s/TrackPairMix/%s",runPeriod.c_str(),type.c_str()));
+    plugin->SetGridWorkingDir(Form("GlueBall_KK_20220824_2/AOD/%s/TrackPairMix/%s",runPeriod.c_str(),type.c_str()));
   } else {
-    plugin->SetGridWorkingDir(Form("GlueBall_KK_20220824/AOD/%s/TrackPair/%s",runPeriod.c_str(),type.c_str()));
+    plugin->SetGridWorkingDir(Form("GlueBall_KK_20220824_2/AOD/%s/TrackPair/%s",runPeriod.c_str(),type.c_str()));
   }
   
   plugin->SetGridOutputDir("output");

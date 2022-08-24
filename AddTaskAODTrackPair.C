@@ -47,7 +47,14 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
 						 float min_proton_sigma_tpc = -2,
 						 float max_proton_sigma_tpc =  2,
 						 float min_proton_sigma_tof = -2,
-						 float max_proton_sigma_tof =  2
+						 float max_proton_sigma_tof =  2,
+						 float findable = 0.8,
+						 string dcaxy = "0.0105+0.035/pow(x,1.1)",
+						 float dcaz = 2.0,
+						 float chi2tpc = 4.,
+						 float chi2its = 36.,
+						 int nclusttpc = 70,
+						 int nclustits = 1
 						 )
 
 {
@@ -90,6 +97,7 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   utils->setPionSelectSigmaTOF(min_pion_sigma_tof,max_pion_sigma_tof);
   utils->setKaonSelectSigmaTOF(min_kaon_sigma_tof,max_kaon_sigma_tof);
   utils->setProtonSelectSigmaTOF(min_proton_sigma_tof,max_proton_sigma_tof);
+  utils->setTrackQualities(findable,dcaxy,dcaz,chi2tpc,chi2its,nclusttpc,nclustits);
 
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
@@ -168,7 +176,13 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   cout<<"max_proton_sigma_tpc="<<max_proton_sigma_tpc<<endl;
   cout<<"min_proton_sigma_tpc="<<min_proton_sigma_tof<<endl;
   cout<<"max_proton_sigma_tpc="<<max_proton_sigma_tof<<endl;
-
+  cout<<"findable="<<findable<<endl;
+  cout<<"dcaxy="<<dcaxy<<endl;
+  cout<<"dcaz="<<dcaz<<endl;
+  cout<<"chi2tpc="<<chi2tpc<<endl;
+  cout<<"chi2its="<<chi2its<<endl;
+  cout<<"nclusttpc="<<nclusttpc<<endl;
+  cout<<"nclustits="<<nclustits<<endl;
 
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");
