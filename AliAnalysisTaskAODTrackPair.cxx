@@ -864,7 +864,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
       if (!fUtils->isAcceptK0sCandidateMassRange(v0_2->MassK0Short())) {
 	continue;
       }
-
       if ( !fUtils->isAcceptedK0s(v0_2,pid1,pid2,0) ) {
 	continue;
       }
@@ -922,11 +921,19 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(AliPID::EParticleType
     
     v0_1 = (AliAODv0*)fEvent->GetV0(iV0_1);
 
-    if ( !fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) || 
-	 !fUtils->isAcceptArmenterosK0s(v0_1) ) {
+    RecPairPt = v0_1->Pt();
+    RecPairMass = v0_1->MassK0Short();
+    RecPairRap = v0_1->RapK0Short();
+    
+    if (0.4>RecPairMass || RecPairMass>0.6) {
+      continue;
+    }    
+    if ( !fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) ) {
+      continue;
+    }    
+    if ( !fUtils->isAcceptArmenterosK0s(v0_1) ) {
       continue;
     }
-
     if (!fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short())) {
       continue;
     }
@@ -939,25 +946,25 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(AliPID::EParticleType
 	
 	for (int iV0_2=0; iV0_2<poolTracks->GetEntriesFast(); ++iV0_2) {
 	  
-	  v0_2 = (AliAODv0*)poolTracks->At(iV0_2);
-	  
+	  v0_2 = (AliAODv0*)poolTracks->At(iV0_2)
+
 	  lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),
 			   TDatabasePDG::Instance()->GetParticle(310)->Mass());
 	  lv2.SetPtEtaPhiM(v0_2->Pt(),v0_2->Eta(),v0_2->Phi(),
-			   TDatabasePDG::Instance()->GetParticle(310)->Mass());      
+			   TDatabasePDG::Instance()->GetParticle(310)->Mass());     
 	  lv12 = lv1 + lv2;
 
 	  RecPairPt = lv12.Pt();
 	  RecPairMass = lv12.M();
-	  
+	  RecPairRap = lv12.Rapidity();
+
 	  fTreeMixULSPair->Fill();	  	  
 	}
 	
       }
     }
-    if ( fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) && fUtils->isAcceptArmenterosK0s(v0_1) && fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short()) ) {
-      fTrackArray->Add(v0_1);
-    }
+    
+    fTrackArray->Add(v0_1);    
   }
 
   TObjArray* fTrackArrayClone = (TObjArray*)fTrackArray->Clone();
@@ -995,7 +1002,7 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1, Al
     }
     
     MidTrackPIDChecker(track1,AliPID::kKaon,false);
-
+    
     if(!fUtils->isAcceptMidPid(track1,pid1)){
       continue;
     }

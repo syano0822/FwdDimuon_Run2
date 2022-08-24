@@ -4,12 +4,12 @@
 
 AliAnalysisGrid* CreateAlienHandler(string period, string run_mode, Bool_t isJDL, string type,bool onMixingAnalysis);
 
-void runAnalysisK0s(string runPeriod = "LHC16k",
-		    string run_mode  = "test",
-		    Bool_t isJDL      = true,
-		    string type      = "data",
-		    Bool_t  local     = false,
-		    bool isMix        = false)
+void runAnalysisKaon(string runPeriod = "LHC16k",
+		     string run_mode  = "test",
+		     Bool_t isJDL      = true,
+		     string type      = "data",
+		     Bool_t  local     = false,
+		     bool isMix        = false)
 {
   // since we will compile a class, tell root where to look for headers  
 #if !defined (__CINT__) || defined (__CLING__)
@@ -107,14 +107,14 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
   double min_pairtrackptcut = 0.0;
   bool onMixingAnalysis = isMix;
   bool isMidMuonAnalysis = true;
-  bool isKaonAnalysis = false;
-  bool isK0sAnalysis = true;  
+  bool isKaonAnalysis = true;
+  bool isK0sAnalysis = false;  
   float min_track_pt = 0.0;
   float max_track_pt = 999.;
   float min_track_eta = -0.8;
   float max_track_eta =  0.8;
   float min_track_p = 0.2;
-  float max_track_p = 999.;
+  float max_track_p = 2.5;
   float min_pion_sigma_tpc = -5;
   float max_pion_sigma_tpc =  5;
   float min_pion_sigma_tof = -5;
@@ -267,9 +267,9 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
   plugin->SetDefaultOutputs(kTRUE);
   
   if (onMixingAnalysis) {    
-    plugin->SetGridWorkingDir(Form("GlueBall_K0sK0s/AOD/%s/TrackPairMix/%s",runPeriod.c_str(),type.c_str()));
+    plugin->SetGridWorkingDir(Form("GlueBall_KK/AOD/%s/TrackPairMix/%s",runPeriod.c_str(),type.c_str()));
   } else {
-    plugin->SetGridWorkingDir(Form("GlueBall_K0sK0s/AOD/%s/TrackPair/%s",runPeriod.c_str(),type.c_str()));
+    plugin->SetGridWorkingDir(Form("GlueBall_KK/AOD/%s/TrackPair/%s",runPeriod.c_str(),type.c_str()));
   }
   
   plugin->SetGridOutputDir("output");

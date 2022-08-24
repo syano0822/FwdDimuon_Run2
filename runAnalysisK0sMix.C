@@ -4,12 +4,12 @@
 
 AliAnalysisGrid* CreateAlienHandler(string period, string run_mode, Bool_t isJDL, string type,bool onMixingAnalysis);
 
-void runAnalysisK0s(string runPeriod = "LHC16k",
-		    string run_mode  = "test",
-		    Bool_t isJDL      = true,
-		    string type      = "data",
-		    Bool_t  local     = false,
-		    bool isMix        = false)
+void runAnalysisK0sMix(string runPeriod = "LHC16k",
+		       string run_mode  = "test",
+		       Bool_t isJDL      = true,
+		       string type      = "data",
+		       Bool_t  local     = false,
+		       bool isMix        = true)
 {
   // since we will compile a class, tell root where to look for headers  
 #if !defined (__CINT__) || defined (__CLING__)
