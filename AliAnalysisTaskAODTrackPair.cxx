@@ -350,8 +350,7 @@
        fTreeMixULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
        fTreeMixULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
        fOutputList->Add(fTreeMixULSPair);
-     }
-     
+     }    
      if (fIsK0sAna){
        fTreeULSPair_ProngV0 = new TTree("fTreeULSPair_ProngV0","");
        fTreeULSPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
@@ -361,14 +360,18 @@
      
        fHistMassK0s1K0s2 = new TH2F("fHistMassK0s1K0s2","",200,0.4,0.6,200,0.4,0.6);
        fOutputList->Add(fHistMassK0s1K0s2);
+       
+       fHistArmenteros = new TH2F("fHistArmenteros","",200,-3,3,400,0,0.4);
+       fHistSelArmenteros = new TH2F("fHistSelArmenteros","",200,-3,3,400,0,0.4);
+       fOutputList->Add(fHistArmenteros);
+       fOutputList->Add(fHistSelArmenteros);
      }
-
      if (fIsKaonTrackAna) {
        fTreeULSPair_TightCut = new TTree("fTreeULSPair_TightCut","");
        fTreeULSPair_TightCut->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
        fTreeULSPair_TightCut->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");     
        fOutputList->Add(fTreeULSPair_TightCut);
-
+       
        fTreeLSppPair_TightCut = new TTree("fTreeLSppPair_TightCut","");
        fTreeLSppPair_TightCut->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
        fTreeLSppPair_TightCut->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");     
@@ -416,8 +419,8 @@
      fOutputList->Add(fHistBetaP);
      fOutputList->Add(fHistTPCSigmaPKaon);
      fOutputList->Add(fHistTOFSigmaPKaon);
-     fOutputList->Add(fHistTPCTOFSigmaKaon);
-
+     //fOutputList->Add(fHistTPCTOFSigmaKaon);
+     
      fHistSelTPCdEdxP = new TH2F("fHistSelTPCdEdxP","",
 			      (max_p-min_p)/width_p,min_p,max_p,
 			      (max_dEdx-min_dEdx)/width_dEdx,min_dEdx,max_dEdx);
@@ -438,15 +441,9 @@
      fOutputList->Add(fHistSelBetaP);
      fOutputList->Add(fHistSelTPCSigmaPKaon);
      fOutputList->Add(fHistSelTOFSigmaPKaon);
-     fOutputList->Add(fHistSelTPCTOFSigmaKaon);
-
-     fHistArmenteros = new TH2F("fHistArmenteros","",200,-3,3,400,0,0.4);
-     fHistSelArmenteros = new TH2F("fHistSelArmenteros","",200,-3,3,400,0,0.4);
-
-     fOutputList->Add(fHistArmenteros);
-     fOutputList->Add(fHistSelArmenteros);
+     //fOutputList->Add(fHistSelTPCTOFSigmaKaon);
    }
-
+   
    fHistEventVtxZ = new TH1F("fHistEventVtxZ","",60,-30,30);
    fHistEventCent = new TH1F("fHistEventCent","",100,0,100);
    fHistEventMulti = new TH1F("fHistEventMulti","",200,0,200);
@@ -455,7 +452,7 @@
    fOutputList->Add(fHistEventCent);
    fOutputList->Add(fHistEventMulti);
    fOutputList->Add(fHistEventVtxCont);
-
+   
    if (!fIsMidTrackAna){
      fHistTrackEta = new TH2F("fHistTrackEta","",20,0,10,25,-4.5,-2.0);
      fHistTrackThetaAbs = new TH2F("fHistTrackThetaAbs","",20,0,10,60,0,15);
@@ -934,6 +931,9 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(AliPID::EParticleType
     if ( !fUtils->isAcceptArmenterosK0s(v0_1) ) {
       continue;
     }
+
+    fTreeULSPair_ProngV0->Fill();
+
     if (!fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short())) {
       continue;
     }
@@ -946,7 +946,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(AliPID::EParticleType
 	
 	for (int iV0_2=0; iV0_2<poolTracks->GetEntriesFast(); ++iV0_2) {
 	  
-	  v0_2 = (AliAODv0*)poolTracks->At(iV0_2)
+	  v0_2 = (AliAODv0*)poolTracks->At(iV0_2);
 
 	  lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),
 			   TDatabasePDG::Instance()->GetParticle(310)->Mass());

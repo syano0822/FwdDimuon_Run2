@@ -557,48 +557,19 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(AliAODTrack* track, AliPID
       }
     }
   } else if (pid == AliPID::kPion) {
-    if ( track->Pt()<0.65 ) {
-
-      if (hasTOF) {
-	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
-	  return true;
-	} else{
-	  return false;
-	}
-      } else {
-	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC ) {
-	  return true;
-	} else{
-	  return false;
-	}
-      }
-
-    } else {
-      if (hasTOF) {
-	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
-	  return true;
-	} else{
-	  return false;
-	}
-      } else {
-	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC ) {
-	  return true;
-	} else{
-	  return false;
-	}
-      }
-      /*
-      if (hasTOF) {
-	if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
-	  return true;
-	} else{
-	  return false;
-	}
-      } else {
+    if (hasTOF) {
+      if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC && minSigmaRangeTOF<fSigmaTOF && fSigmaTOF<maxSigmaRangeTOF ) {
+	return true;
+      } else{
 	return false;
       }
-      */
-    }   
+    } else {
+      if( minSigmaRangeTPC<fSigmaTPC && fSigmaTPC<maxSigmaRangeTPC ) {
+	return true;
+      } else{
+	return false;
+      }
+    }
   }
 
   return true;

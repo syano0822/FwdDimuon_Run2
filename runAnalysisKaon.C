@@ -267,16 +267,16 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
   plugin->SetDefaultOutputs(kTRUE);
   
   if (onMixingAnalysis) {    
-    plugin->SetGridWorkingDir(Form("GlueBall_KK/AOD/%s/TrackPairMix/%s",runPeriod.c_str(),type.c_str()));
+    plugin->SetGridWorkingDir(Form("GlueBall_KK_20220824/AOD/%s/TrackPairMix/%s",runPeriod.c_str(),type.c_str()));
   } else {
-    plugin->SetGridWorkingDir(Form("GlueBall_KK/AOD/%s/TrackPair/%s",runPeriod.c_str(),type.c_str()));
+    plugin->SetGridWorkingDir(Form("GlueBall_KK_20220824/AOD/%s/TrackPair/%s",runPeriod.c_str(),type.c_str()));
   }
   
   plugin->SetGridOutputDir("output");
 
-  //plugin->SetSplitMaxInputFileNumber(15);    
+  plugin->SetSplitMaxInputFileNumber(15);    
   //plugin->SetSplitMaxInputFileNumber(5);
-  plugin->SetSplitMaxInputFileNumber(45);
+  //plugin->SetSplitMaxInputFileNumber(45);
   plugin->SetNrunsPerMaster();
   
   //LHC17q, 
