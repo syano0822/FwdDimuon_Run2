@@ -288,9 +288,9 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
   
   plugin->SetGridOutputDir("output");
 
-  plugin->SetSplitMaxInputFileNumber(15);    
+  //plugin->SetSplitMaxInputFileNumber(15);    
   //plugin->SetSplitMaxInputFileNumber(5);
-  //plugin->SetSplitMaxInputFileNumber(45);
+  plugin->SetSplitMaxInputFileNumber(45);
   plugin->SetNrunsPerMaster();
   
   //LHC17q, 

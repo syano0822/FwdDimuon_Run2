@@ -33,8 +33,8 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   bool isAcceptMidDimuon(AliAODDimuon* dimuon);
 
   bool isAcceptMidTrackQuality(AliAODTrack* track);
-  bool isAcceptMidPid(AliAODTrack* track,AliPID::EParticleType pid);
-  
+  bool isAcceptMidPid(AliAODTrack* track,AliPID::EParticleType pid);  
+  bool isAcceptV0Kinematics(AliAODv0 *v0);
   bool isAcceptedK0s(AliAODv0 *v0,
 		     AliPID::EParticleType pid1,
 		     AliPID::EParticleType pid2,
@@ -255,8 +255,8 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     fMinCosPointingAngleCut = pangle;
     fMinV0DCA = v0Dca;
     fMaxTrackDCASigma = trackDca;
-    fMinDecayLength = min_dlength;
-    fMaxDecayLength = max_dlength;    
+    fMinV0DecayLength = min_dlength;
+    fMaxV0DecayLength = max_dlength;    
   }
 
   void setV0CutParams(float min, float max){
@@ -298,13 +298,20 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   //////////////////////////////////////////////////////////////////////////////////////////////
   //Get the analysis variables
   //////////////////////////////////////////////////////////////////////////////////////////////
-
+  
   double getTrueVtxZ(){
     return fTrueVtx[2];
   }
-
+  double getVtxX()
+  {    
+    return fVtxX;
+  }
+  double getVtxY()
+  {    
+    return fVtxY;
+  }  
   double getVtxZ()
-  {
+  {    
     return fVtxZ;
   }
   double getCentClass(int spec)
@@ -431,7 +438,10 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   const int fPdgCodeEtaPrime = 331;
   const int fPdgCodeK0star = 313;
   const int fPdgCodePhi = 333;
-   
+
+  const float fPdgLambdaMass = 1.115683;
+  const float fPdgK0sMass = 0.497611;
+
   //private:
   
   void setInit();
@@ -468,21 +478,22 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   float fMinCosPointingAngleCut;
   float fMinV0DCA;
   float fMaxTrackDCASigma;
-  float fMinDecayLength;
-  float fMaxDecayLength;
-  float fMaxPropLifeTime;
-  float fMinDecayRadius;
+  float fMinV0DecayLength;
+  float fMaxV0DecayLength;
+  float fMaxV0PropLifeTime;
+  float fMinV0DecayRadius;
   float fMinV0Alpha;
   float fMaxV0Alpha;
   float fMinK0sMassRange;
   float fMaxK0sMassRange;
-  float fLambdaMassPdg;
-  float fK0sMassPdg;
+  //float fLambdaMassPdg;
+  //float fK0sMassPdg;
   float fMinRejectMassWidthLambda;
   float fMaxRejectMassWidthLambda;
 
   float fMinCrossRowsFindableRatio;
   string fMaxTrackDCAxyName;
+  float fMaxTrackDCAxy;
   float fMaxTrackDCAz;
   float fMaxReducedChi2TPC;
   float fMaxReducedChi2ITS;
@@ -505,7 +516,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   bool fIsPairPtCutForOneTrack;
   bool fIsPairPtCutForBothTracks;
   double fMinPairPtCut;
-
+  
   bool fIsPUcut;  
   bool fIsLBCut;
 

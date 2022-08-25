@@ -87,6 +87,8 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   bool MidTrackQA(AliAODTrack* track);
   bool MidTrackPIDChecker(AliAODTrack* track, AliPID::EParticleType pid, bool isSel);
   bool MidTrackQualityChecker(AliAODTrack* track);
+  bool MidV0Checker(AliAODv0* v0, bool isSel);
+
   bool MidMuonPairQA(AliAODDimuon* dimuon);
   bool MidPairAnalysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2);
   
@@ -190,13 +192,13 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   
   TH2F* fHistTPCdEdxP;
   TH2F* fHistBetaP;    
-  TH2F* fHistTPCSigmaPKaon;
-  TH2F* fHistTOFSigmaPKaon;
+  TH2F* fHistTPCSigmaKaon;
+  TH2F* fHistTOFSigmaKaon;
   TH3F* fHistTPCTOFSigmaKaon;
   TH2F* fHistSelTPCdEdxP;
   TH2F* fHistSelBetaP;      
-  TH2F* fHistSelTPCSigmaPKaon;
-  TH2F* fHistSelTOFSigmaPKaon;
+  TH2F* fHistSelTPCSigmaKaon;
+  TH2F* fHistSelTOFSigmaKaon;
   TH3F* fHistSelTPCTOFSigmaKaon;
   
   TH1F* fHistTrackP;
@@ -211,7 +213,19 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   TH2F* fHistDCAxyPt;
 
   TH2F* fHistArmenteros;
-  TH2F* fHistSelArmenteros;
+  TH2F* fHistSelArmenteros; 
+  TH2F* fHistV0MassDecayLength;
+  TH2F* fHistV0MassPointingAngle;
+  TH2F* fHistV0MassV0DCA;
+  TH2F* fHistV0MassV0TrackDCA;
+  TH2F* fHistV0MassV0DecayRadius;
+  TH2F* fHistV0MassV0PropLifeTime;
+  TH2F* fHistSelV0MassDecayLength;
+  TH2F* fHistSelV0MassPointingAngle;
+  TH2F* fHistSelV0MassV0DCA;
+  TH2F* fHistSelV0MassV0TrackDCA;
+  TH2F* fHistSelV0MassV0DecayRadius;
+  TH2F* fHistSelV0MassV0PropLifeTime;
 
   ClassDef(AliAnalysisTaskAODTrackPair, 1); // example of analysis
 };

@@ -133,13 +133,13 @@
 
    fHistTPCdEdxP(NULL),
    fHistBetaP(NULL),
-   fHistTPCSigmaPKaon(NULL),
-   fHistTOFSigmaPKaon(NULL),
+   fHistTPCSigmaKaon(NULL),
+   fHistTOFSigmaKaon(NULL),
    fHistTPCTOFSigmaKaon(NULL),
    fHistSelTPCdEdxP(NULL),
    fHistSelBetaP(NULL),
-   fHistSelTPCSigmaPKaon(NULL),
-   fHistSelTOFSigmaPKaon(NULL),
+   fHistSelTPCSigmaKaon(NULL),
+   fHistSelTOFSigmaKaon(NULL),
    fHistSelTPCTOFSigmaKaon(NULL),
    
    fHistTrackP(NULL),
@@ -153,8 +153,20 @@
    fHistDCAz(NULL),
    fHistDCAxyPt(NULL),
 
-   fHistArmenteros(NULL),
+   fHistArmenteros(NULL),   
+   fHistV0MassDecayLength(NULL),
+   fHistV0MassPointingAngle(NULL),
+   fHistV0MassV0DCA(NULL),
+   fHistV0MassV0TrackDCA(NULL),
+   fHistV0MassV0DecayRadius(NULL),
+   fHistV0MassV0PropLifeTime(NULL),
    fHistSelArmenteros(NULL),
+   fHistSelV0MassDecayLength(NULL),
+   fHistSelV0MassPointingAngle(NULL),
+   fHistSelV0MassV0DCA(NULL),
+   fHistSelV0MassV0TrackDCA(NULL),
+   fHistSelV0MassV0DecayRadius(NULL),
+   fHistSelV0MassV0PropLifeTime(NULL),
 
    RecPairPt(0.),
    RecPairRap(0.),
@@ -245,13 +257,13 @@
 
    fHistTPCdEdxP(NULL),
    fHistBetaP(NULL),
-   fHistTPCSigmaPKaon(NULL),
-   fHistTOFSigmaPKaon(NULL),
+   fHistTPCSigmaKaon(NULL),
+   fHistTOFSigmaKaon(NULL),
    fHistTPCTOFSigmaKaon(NULL),
    fHistSelTPCdEdxP(NULL),
    fHistSelBetaP(NULL),
-   fHistSelTPCSigmaPKaon(NULL),
-   fHistSelTOFSigmaPKaon(NULL),
+   fHistSelTPCSigmaKaon(NULL),
+   fHistSelTOFSigmaKaon(NULL),
    fHistSelTPCTOFSigmaKaon(NULL),
 
    fHistTrackP(NULL),
@@ -266,7 +278,19 @@
    fHistDCAxyPt(NULL),
 
    fHistArmenteros(NULL),
+   fHistV0MassDecayLength(NULL),
+   fHistV0MassPointingAngle(NULL),
+   fHistV0MassV0DCA(NULL),
+   fHistV0MassV0TrackDCA(NULL),
+   fHistV0MassV0DecayRadius(NULL),
+   fHistV0MassV0PropLifeTime(NULL),
    fHistSelArmenteros(NULL),
+   fHistSelV0MassDecayLength(NULL),
+   fHistSelV0MassPointingAngle(NULL),
+   fHistSelV0MassV0DCA(NULL),
+   fHistSelV0MassV0TrackDCA(NULL),
+   fHistSelV0MassV0DecayRadius(NULL),
+   fHistSelV0MassV0PropLifeTime(NULL),
 
    RecPairPt(0.),
    RecPairRap(0.),
@@ -414,52 +438,54 @@
        fHistLSmmPairMassPt = new TH2F("fHistLSmmPairMassPt","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
        fOutputList->Add(fHistLSmmPairMassPt);
      } else {
-       /*
-       fTreeMixULSPair = new TTree("fTreeMixULSPair","");
-       fTreeMixULSPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-       fTreeMixULSPair->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-       fOutputList->Add(fTreeMixULSPair);
-       */
        fHistMixULSPairMassPt = new TH2F("fHistMixULSPairMassPt","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
        fOutputList->Add(fHistMixULSPairMassPt);
      }    
      
      if (fIsK0sAna){
-       /*
-       fTreeULSPair_ProngV0 = new TTree("fTreeULSPair_ProngV0","");
-       fTreeULSPair_ProngV0->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-       fTreeULSPair_ProngV0->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");
-       fTreeULSPair_ProngV0->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");     
-       fOutputList->Add(fTreeULSPair_ProngV0);
-       */
+
+       min_mass = 0.0;
+       max_mass = 3.0;
+       width_mass = 0.001;
+
        fHistULSPairMassPt_ProngV0 = new TH2F("fHistULSPairMassPt_ProngV0","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
        fOutputList->Add(fHistULSPairMassPt_ProngV0);
        
        fHistMassK0s1K0s2 = new TH2F("fHistMassK0s1K0s2","",200,0.4,0.6,200,0.4,0.6);
        fOutputList->Add(fHistMassK0s1K0s2);       
        fHistArmenteros = new TH2F("fHistArmenteros","",200,-3,3,400,0,0.4);
-       fHistSelArmenteros = new TH2F("fHistSelArmenteros","",200,-3,3,400,0,0.4);
        fOutputList->Add(fHistArmenteros);
+       fHistSelArmenteros = new TH2F("fHistSelArmenteros","",200,-3,3,400,0,0.4);       
        fOutputList->Add(fHistSelArmenteros);
+       
+       fHistV0MassDecayLength = new TH2F("fHistV0MassDecayLength","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0.,200.);
+       fHistV0MassPointingAngle = new TH2F("fHistV0MassPointingAngle","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0.9,1.0);
+       fHistV0MassV0DCA = new TH2F("fHistV0MassV0DCA","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0.,200.);
+       fHistV0MassV0TrackDCA = new TH2F("fHistV0MassV0TrackDCA","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0,100);
+       fHistV0MassV0DecayRadius = new TH2F("fHistV0MassV0DecayRadius","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0.,200.);
+       fHistV0MassV0PropLifeTime = new TH2F("fHistV0MassV0PropLifeTime","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0,200.);
+       fOutputList->Add(fHistV0MassDecayLength);
+       fOutputList->Add(fHistV0MassPointingAngle);
+       fOutputList->Add(fHistV0MassV0DCA);
+       fOutputList->Add(fHistV0MassV0TrackDCA);
+       fOutputList->Add(fHistV0MassV0DecayRadius);
+       fOutputList->Add(fHistV0MassV0PropLifeTime);
+       
+       fHistSelV0MassDecayLength = new TH2F("fHistSelV0MassDecayLength","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0.,200.);
+       fHistSelV0MassPointingAngle = new TH2F("fHistSelV0MassPointingAngle","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0.9,1.0);
+       fHistSelV0MassV0DCA = new TH2F("fHistSelV0MassV0DCA","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0.,200.);
+       fHistSelV0MassV0TrackDCA = new TH2F("fHistSelV0MassV0TrackDCA","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0,100);
+       fHistSelV0MassV0DecayRadius = new TH2F("fHistSelV0MassV0DecayRadius","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0.,200.);
+       fHistSelV0MassV0PropLifeTime = new TH2F("fHistSelV0MassV0PropLifeTime","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,1000,0,200.);
+       fOutputList->Add(fHistSelV0MassDecayLength);
+       fOutputList->Add(fHistSelV0MassPointingAngle);
+       fOutputList->Add(fHistSelV0MassV0DCA);
+       fOutputList->Add(fHistSelV0MassV0TrackDCA);
+       fOutputList->Add(fHistSelV0MassV0DecayRadius);
+       fOutputList->Add(fHistSelV0MassV0PropLifeTime);
      }
      
      if (fIsKaonTrackAna) {
-       /*
-       fTreeULSPair_TightCut = new TTree("fTreeULSPair_TightCut","");
-       fTreeULSPair_TightCut->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-       fTreeULSPair_TightCut->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");     
-       fOutputList->Add(fTreeULSPair_TightCut);
-       
-       fTreeLSppPair_TightCut = new TTree("fTreeLSppPair_TightCut","");
-       fTreeLSppPair_TightCut->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-       fTreeLSppPair_TightCut->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");     
-       fOutputList->Add(fTreeLSppPair_TightCut);
-
-       fTreeLSmmPair_TightCut = new TTree("fTreeLSmmPair_TightCut","");
-       fTreeLSmmPair_TightCut->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
-       fTreeLSmmPair_TightCut->Branch("RecPairMass",&RecPairMass,"RecPairMass/F");     
-       fOutputList->Add(fTreeLSmmPair_TightCut);
-       */
        fHistULSPairMassPt_TightCut = new TH2F("fHistULSPairMassPt_TightCut","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
        fOutputList->Add(fHistULSPairMassPt_TightCut);
        fHistLSppPairMassPt_TightCut = new TH2F("fHistLSppPairMassPt_TightCut","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
@@ -512,10 +538,10 @@
      fHistBetaP = new TH2F("fHistBetaP","",
 			   (max_p-min_p)/width_p,min_p,max_p,
 			   (max_beta-min_beta)/width_beta,min_beta,max_beta);
-     fHistTPCSigmaPKaon = new TH2F("fHistTPCSigmaPKaon","",
+     fHistTPCSigmaKaon = new TH2F("fHistTPCSigmaKaon","",
 				   (max_p-min_p)/width_p,min_p,max_p,
 				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
-     fHistTOFSigmaPKaon = new TH2F("fHistTOFSigmaPKaon","",
+     fHistTOFSigmaKaon = new TH2F("fHistTOFSigmaKaon","",
 				   (max_p-min_p)/width_p,min_p,max_p,
 				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistTPCTOFSigmaKaon = new TH3F("fHistTPCTOFSigmaKaon","",
@@ -524,8 +550,8 @@
 				     (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fOutputList->Add(fHistTPCdEdxP);
      fOutputList->Add(fHistBetaP);
-     fOutputList->Add(fHistTPCSigmaPKaon);
-     fOutputList->Add(fHistTOFSigmaPKaon);
+     fOutputList->Add(fHistTPCSigmaKaon);
+     fOutputList->Add(fHistTOFSigmaKaon);
      //fOutputList->Add(fHistTPCTOFSigmaKaon);
      
      fHistSelTPCdEdxP = new TH2F("fHistSelTPCdEdxP","",
@@ -534,10 +560,10 @@
      fHistSelBetaP = new TH2F("fHistSelBetaP","",
 			   (max_p-min_p)/width_p,min_p,max_p,
 			   (max_beta-min_beta)/width_beta,min_beta,max_beta);
-     fHistSelTPCSigmaPKaon = new TH2F("fHistSelTPCSigmaPKaon","",
+     fHistSelTPCSigmaKaon = new TH2F("fHistSelTPCSigmaKaon","",
 				   (max_p-min_p)/width_p,min_p,max_p,
 				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
-     fHistSelTOFSigmaPKaon = new TH2F("fHistSelTOFSigmaPKaon","",
+     fHistSelTOFSigmaKaon = new TH2F("fHistSelTOFSigmaKaon","",
 				   (max_p-min_p)/width_p,min_p,max_p,
 				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistSelTPCTOFSigmaKaon = new TH3F("fHistSelTPCTOFSigmaKaon","",
@@ -546,8 +572,8 @@
 				     (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fOutputList->Add(fHistSelTPCdEdxP);
      fOutputList->Add(fHistSelBetaP);
-     fOutputList->Add(fHistSelTPCSigmaPKaon);
-     fOutputList->Add(fHistSelTOFSigmaPKaon);
+     fOutputList->Add(fHistSelTPCSigmaKaon);
+     fOutputList->Add(fHistSelTOFSigmaKaon);
      //fOutputList->Add(fHistSelTPCTOFSigmaKaon);
    }
    
@@ -607,7 +633,7 @@
        if (fIsK0sAna) {
 	 MidV0AnalysisEventMixing(AliPID::kPion,AliPID::kPion);
        } else if (fIsKaonTrackAna) {
-	 
+	 //dummy
        } else {
 	 cout<<"Mid rapidity analysis but not added K0s or Kaon track analysis"<<endl;
        }
@@ -856,7 +882,11 @@ bool AliAnalysisTaskAODTrackPair::MidTrackQualityChecker(AliAODTrack* track){
   fHistSPDNClusts->Fill(nSPD);
   fHistTPCCrossRowsFindableRatio->Fill(track->GetTPCNclsF()/track->GetTPCCrossedRows());
   fHistReducedChi2TPC->Fill(track->GetTPCchi2()/track->GetTPCNcls());
-  fHistReducedChi2ITS->Fill(track->GetITSchi2()/track->GetITSNcls());
+  
+  if (track->GetITSNcls()>0) {
+    fHistReducedChi2ITS->Fill(track->GetITSchi2()/track->GetITSNcls());
+  }
+  
   float dca_xy=9999;
   float dca_z=9999;
   track->GetImpactParameters(dca_xy,dca_z);
@@ -871,6 +901,31 @@ bool AliAnalysisTaskAODTrackPair::MidTrackQualityChecker(AliAODTrack* track){
   return true;
 }
   
+bool AliAnalysisTaskAODTrackPair::MidV0Checker(AliAODv0* v0, bool isSel){
+    
+    double vtx[] = {fUtils->getVtxX(),fUtils->getVtxY(),fUtils->getVtxZ()};
+    
+    if (isSel) {      
+      fHistSelArmenteros->Fill(v0->Alpha(),v0->PtArmV0());    
+      fHistSelV0MassDecayLength->Fill(v0->MassK0Short(),v0->DecayLengthV0(vtx));
+      fHistSelV0MassPointingAngle->Fill(v0->MassK0Short(),v0->CosPointingAngle(vtx));
+      fHistSelV0MassV0DCA->Fill(v0->MassK0Short(),v0->DcaV0ToPrimVertex());
+      fHistSelV0MassV0TrackDCA->Fill(v0->MassK0Short(),v0->DcaV0Daughters());
+      fHistSelV0MassV0DecayRadius->Fill(v0->MassK0Short(),v0->RadiusV0());
+      fHistSelV0MassV0PropLifeTime->Fill(v0->MassK0Short(),fUtils->fPdgK0sMass*v0->DecayLengthV0(vtx)/v0->P());
+    } else {
+      fHistArmenteros->Fill(v0->Alpha(),v0->PtArmV0());    
+      fHistV0MassDecayLength->Fill(v0->MassK0Short(),v0->DecayLengthV0(vtx));
+      fHistV0MassPointingAngle->Fill(v0->MassK0Short(),v0->CosPointingAngle(vtx));
+      fHistV0MassV0DCA->Fill(v0->MassK0Short(),v0->DcaV0ToPrimVertex());
+      fHistV0MassV0TrackDCA->Fill(v0->MassK0Short(),v0->DcaV0Daughters());
+      fHistV0MassV0DecayRadius->Fill(v0->MassK0Short(),v0->RadiusV0());
+      fHistV0MassV0PropLifeTime->Fill(v0->MassK0Short(),fUtils->fPdgK0sMass*v0->DecayLengthV0(vtx)/v0->P());
+    }
+  
+    return true;
+}
+
 bool AliAnalysisTaskAODTrackPair::MidTrackPIDChecker(AliAODTrack* track, AliPID::EParticleType pid, bool isSel){
 
    float p = track->P();
@@ -881,18 +936,18 @@ bool AliAnalysisTaskAODTrackPair::MidTrackPIDChecker(AliAODTrack* track, AliPID:
 
    if (isSel) {
      fHistSelTPCdEdxP->Fill(p,dEdx);
-     fHistSelTPCSigmaPKaon->Fill(p,fUtils->getTPCSigma(track,pid)); 
+     fHistSelTPCSigmaKaon->Fill(p,fUtils->getTPCSigma(track,pid)); 
      if (beta>0.) {
        fHistSelBetaP->Fill(p,beta);
-       fHistSelTOFSigmaPKaon->Fill(p,fUtils->getTOFSigma(track,pid));
+       fHistSelTOFSigmaKaon->Fill(p,fUtils->getTOFSigma(track,pid));
        fHistSelTPCTOFSigmaKaon->Fill(p,fUtils->getTPCSigma(track,pid),fUtils->getTOFSigma(track,pid));
      }
    } else {
      fHistTPCdEdxP->Fill(p,dEdx);
-     fHistTPCSigmaPKaon->Fill(p,fUtils->getTPCSigma(track,pid)); 
+     fHistTPCSigmaKaon->Fill(p,fUtils->getTPCSigma(track,pid)); 
      if (beta>0.) {      
        fHistBetaP->Fill(p,beta);
-       fHistTOFSigmaPKaon->Fill(p,fUtils->getTOFSigma(track,pid));
+       fHistTOFSigmaKaon->Fill(p,fUtils->getTOFSigma(track,pid));
        fHistTPCTOFSigmaKaon->Fill(p,fUtils->getTPCSigma(track,pid),fUtils->getTOFSigma(track,pid));
      }
    }
@@ -951,45 +1006,56 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
     
     v0_1 = (AliAODv0*)fEvent->GetV0(iV0_1);
     
+    if ( !fUtils->isAcceptV0Kinematics(v0_1) ) {
+      continue;
+    }
+
     RecPairPt = v0_1->Pt();
     RecPairMass = v0_1->MassK0Short();
     RecPairRap = v0_1->RapK0Short();
     RecPairArmenterosArmPt = v0_1->PtArmV0();
     RecPairArmenterosAlpha = v0_1->AlphaV0();
 
-    if (0.4>RecPairMass || RecPairMass>0.6) {
-      continue;
-    }
-    
     AliAODTrack *pTrack=(AliAODTrack *)v0_1->GetDaughter(0);
     AliAODTrack *nTrack=(AliAODTrack *)v0_1->GetDaughter(1);
     
-    fHistArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
-    
+    MidV0Checker(v0_1,false);
+
+    if (0.4>RecPairMass || RecPairMass>0.6) {
+      continue;
+    }        
     if ( !fUtils->isAcceptedK0s(v0_1,pid1,pid2,0) ) {
       continue;
-    }    
+    }        
     if ( !fUtils->isAcceptArmenterosK0s(v0_1) ) {
       continue;
     }
     
+    MidV0Checker(v0_1,true);
+    
+    MidTrackQualityChecker(pTrack);
+    MidTrackQualityChecker(nTrack);
+
     MidTrackPIDChecker(pTrack,AliPID::kPion,false);
     MidTrackPIDChecker(nTrack,AliPID::kPion,false);
 
-    fTreeULSPair_ProngV0->Fill();
-    fHistSelArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());
+    fHistSelArmenteros->Fill(v0_1->Alpha(),v0_1->PtArmV0());    
+    fHistULSPairMassPt_ProngV0->Fill(RecPairMass,RecPairPt);
 
     if (!fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short())) {
       continue;
     }
-                
+    
     MidTrackPIDChecker(pTrack,AliPID::kPion,true);
     MidTrackPIDChecker(nTrack,AliPID::kPion,true);
-
+    
     for (int iV0_2=iV0_1+1; iV0_2<nV0; ++iV0_2) {
       
       v0_2 = (AliAODv0*)fEvent->GetV0(iV0_2);
 
+      if ( !fUtils->isAcceptV0Kinematics(v0_1) ) {
+	continue;
+      }
       if (!fUtils->isAcceptK0sCandidateMassRange(v0_2->MassK0Short())) {
 	continue;
       }
@@ -1012,7 +1078,8 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
       RecPairMass = lv12.M();
       RecPairRap = lv12.Rapidity();
       
-      fTreeULSPair->Fill();
+      fHistULSPairMassPt->Fill(RecPairMass,RecPairPt);
+      //fTreeULSPair->Fill();
     }
 
   }
@@ -1134,13 +1201,13 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1, Al
       continue;
     }
     
-    MidTrackPIDChecker(track1,AliPID::kKaon,false);
+    MidTrackPIDChecker(track1,pid1,false);
 
     if(!fUtils->isAcceptMidPid(track1,pid1)){
       continue;
     }
 
-    MidTrackPIDChecker(track1,AliPID::kKaon,true);
+    MidTrackPIDChecker(track1,pid1,true);
     MidTrackQualityChecker(track1);
     
     float mass1=0;
@@ -1182,10 +1249,18 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1, Al
 
       lv12 = lv1 + lv2;
       
-      if ( 1.005 < lv12.M() && lv12.M() < 1.035) {      
+      if ( (pid1 == AliPID::kKaon && pid2 == AliPID::kKaon) && lv12.M() < 1.035 ) {      
 	skip_tracks_ids[iTrack1] = true;
 	skip_tracks_ids[iTrack2] = true;
-      } 
+      } else if ( (pid1 == AliPID::kPion && pid2 == AliPID::kPion) ) {
+	if (0.48<lv12.M() && lv12.M()<0.51) {
+	  skip_tracks_ids[iTrack1] = true;
+	  skip_tracks_ids[iTrack2] = true;
+	} else if (0.70<lv12.M() && lv12.M()<0.84) {
+	  skip_tracks_ids[iTrack1] = true;
+	  skip_tracks_ids[iTrack2] = true;
+	}
+      }
       
     }//end of loop track2
   }//end of loop track1

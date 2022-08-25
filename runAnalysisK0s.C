@@ -5,11 +5,11 @@
 AliAnalysisGrid* CreateAlienHandler(string period, string run_mode, Bool_t isJDL, string type,bool onMixingAnalysis);
 
 void runAnalysisK0s(string runPeriod = "LHC16k",
-		    string run_mode  = "test",
-		    Bool_t isJDL      = true,
-		    string type      = "data",
-		    Bool_t  local     = false,
-		    bool isMix        = false)
+		     string run_mode  = "test",
+		     Bool_t isJDL      = true,
+		     string type      = "data",
+		     Bool_t  local     = false,
+		     bool isMix        = false)
 {
   // since we will compile a class, tell root where to look for headers  
 #if !defined (__CINT__) || defined (__CLING__)
@@ -86,11 +86,11 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
   float min_pair_rap = -0.5;
   float max_pair_rap = 0.5;
   float alpha = 0.2;
-  float pangle = 0.998;
-  float v0Dca = 0.1; 
-  float trackDca = 1.0;
-  float min_dlength = 5.0;
-  float max_dlength = 100.;
+  float pangle = 0.9997;
+  float v0Dca = 0.000; 
+  float trackDca = 0.5;
+  float min_dlength = 0.0;
+  float max_dlength = 30.;
   string period = runPeriod;
   string multi_method="SPDTracklets";
   bool onPURej = true;
@@ -113,20 +113,27 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
   float max_track_pt = 999.;
   float min_track_eta = -0.8;
   float max_track_eta =  0.8;
-  float min_track_p = 0.2;
-  float max_track_p = 999.;
+  float min_track_p = 0.15;
+  float max_track_p = 10.;
   float min_pion_sigma_tpc = -5;
   float max_pion_sigma_tpc =  5;
   float min_pion_sigma_tof = -5;
   float max_pion_sigma_tof =  5;
-  float min_kaon_sigma_tpc = -2;
-  float max_kaon_sigma_tpc =  2;
-  float min_kaon_sigma_tof = -2;
-  float max_kaon_sigma_tof =  2;
+  float min_kaon_sigma_tpc = -3;
+  float max_kaon_sigma_tpc =  3;
+  float min_kaon_sigma_tof = -3;
+  float max_kaon_sigma_tof =  3;
   float min_proton_sigma_tpc = -2;
   float max_proton_sigma_tpc =  2;
   float min_proton_sigma_tof = -2;
   float max_proton_sigma_tof =  2;
+  float findable = 0.8;
+  string dcaxy = "999*x";
+  float dcaz = 999;
+  float chi2tpc = 4.;
+  float chi2its = 999;
+  int nclusttpc = 80;
+  int nclustits = 0;
   
 #if !defined (__CINT__) || defined (__CLING__)
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
@@ -134,7 +141,7 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
   gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPair.cxx++g");
   AliAnalysisTaskAODTrackPair *task
     = reinterpret_cast<AliAnalysisTaskAODTrackPair*>
-    (gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f)",
+    (gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,\"%s\",%f,%f,%f,%d,%d)",
 				     offlineTriggerMask,
 				     min_vtxz,
 				     max_vtxz,
@@ -183,8 +190,15 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
 				     min_proton_sigma_tpc,
 				     max_proton_sigma_tpc,
 				     min_proton_sigma_tof,
-				     max_proton_sigma_tof				     
-				     )));
+				     max_proton_sigma_tof,
+				     findable,
+				     dcaxy.c_str(),
+				     dcaz,
+				     chi2tpc,
+				     chi2its,
+				     nclusttpc,
+				     nclustits
+				     ))); 
 #else
   gROOT->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
   gROOT->LoadMacro("AliAnalysisTaskAODEventStudy.cxx++g");
@@ -267,16 +281,16 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
   plugin->SetDefaultOutputs(kTRUE);
   
   if (onMixingAnalysis) {    
-    plugin->SetGridWorkingDir(Form("GlueBall_K0sK0s/AOD/%s/TrackPairMix/%s",runPeriod.c_str(),type.c_str()));
+    plugin->SetGridWorkingDir(Form("GlueBall_K0sK0s_20220825_2/AOD/%s/TrackPairMix/%s",runPeriod.c_str(),type.c_str()));
   } else {
-    plugin->SetGridWorkingDir(Form("GlueBall_K0sK0s/AOD/%s/TrackPair/%s",runPeriod.c_str(),type.c_str()));
+    plugin->SetGridWorkingDir(Form("GlueBall_K0sK0s_20220825_2/AOD/%s/TrackPair/%s",runPeriod.c_str(),type.c_str()));
   }
   
   plugin->SetGridOutputDir("output");
 
   //plugin->SetSplitMaxInputFileNumber(15);    
-  //plugin->SetSplitMaxInputFileNumber(5);
-  plugin->SetSplitMaxInputFileNumber(45);
+  plugin->SetSplitMaxInputFileNumber(7);
+  //plugin->SetSplitMaxInputFileNumber(45);
   plugin->SetNrunsPerMaster();
   
   //LHC17q, 

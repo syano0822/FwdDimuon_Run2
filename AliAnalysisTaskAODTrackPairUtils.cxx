@@ -65,16 +65,17 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fMinCosPointingAngleCut(0.998),
   fMinV0DCA(0.1),
   fMaxTrackDCASigma(1.5),
-  fMinDecayLength(5.0),
-  fMaxDecayLength(100.),
-  fMaxPropLifeTime(20.),
-  fMinDecayRadius(0.5),
+  fMinV0DecayLength(5.0),
+  fMaxV0DecayLength(100.),
+  fMaxV0PropLifeTime(20.),
+  fMinV0DecayRadius(0.5),
   fMinCrossRowsFindableRatio(0.8),
   fMaxTrackDCAxyName("0.0105 + 0.035/pow(x,1.1)"),
+  fMaxTrackDCAxy(2.0),
   fMaxTrackDCAz(2.0),
-  
-  fLambdaMassPdg(1.115683),
-  fK0sMassPdg(0.497611),
+    
+//fPdgLambdaMass(1.115683),
+//fPdgK0sMass(0.497611),
   fMinRejectMassWidthLambda(0.01),
   fMaxRejectMassWidthLambda(0.01),
   
@@ -473,7 +474,18 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptTrackKinematics(AliAODTrack* trac
   }
   return true;
 }
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Kinematics(AliAODv0* v0){  
+  
+  if ( !fIsPairRapCut ) {
+    return true;
+  }
 
+  if ( v0->RapK0Short() < fMinPairRapCut || fMaxPairRapCut < v0->RapK0Short()) {
+    return false;
+  }
+  
+  return true;
+}
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidMuonTrack(AliAODTrack* track){    
   if(!isAcceptMidTrackQuality(track) || !isAcceptMidPid(track,AliPID::kMuon)) {
     return false;
@@ -483,7 +495,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidMuonTrack(AliAODTrack* track){
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidTrackQuality(AliAODTrack* track){    
-  //return track->TestFilterBit(AliAODTrack::kTrkGlobal) ? true : false;
+  
   if ( fMinTrackTPCNClusts > track->GetTPCNcls() ) {
     return false;
   }  
@@ -641,45 +653,36 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0s(AliAODv0* v0,
   if ( !isAcceptMidPid(pTrack,pid1) || !isAcceptMidPid(nTrack,pid2)) {
     return false;
   }
-  
-  float rap = v0->RapK0Short();  
-  
-  if ( fMinPairRapCut > rap || fMaxPairRapCut < rap) {
-    return false;
-  }
-  
+
   double vtx[] = {fVtxX,fVtxY,fVtxZ};
   
   if ( fMinCosPointingAngleCut > v0->CosPointingAngle(vtx) ) {
     return false;
   }
-  
   if ( fMinV0DCA > v0->DcaV0ToPrimVertex() ) {
     return false;
   }
-      
   if ( fMaxTrackDCASigma < v0->DcaV0Daughters() ) {
     return false;
-  }
-  
-  if ( fMinDecayRadius > v0->RadiusV0() ) {
+  }  
+  if ( fMinV0DecayRadius > v0->RadiusV0() ) {
     return false;
   }
 
   float length = v0->DecayLengthV0(vtx);
-
-  if ( fMinDecayLength>length || fMaxDecayLength<length ) {
+  
+  if ( fMinV0DecayLength>length || fMaxV0DecayLength<length ) {
     return false;
   }
   
-  float proper_life_time = fK0sMassPdg*length/v0->P();
-
-  if ( proper_life_time > fMaxPropLifeTime ) {
+  float proper_life_time = fPdgK0sMass * length/v0->P();
+  
+  if ( proper_life_time > fMaxV0PropLifeTime ) {
     return false;
   }
-
+  
   TLorentzVector lv1,lv2,lv12;
-    
+  
   if ( pTrack->P() > nTrack->P() ) {
     lv1.SetPtEtaPhiM(pTrack->P(),pTrack->Eta(),pTrack->Phi(),TDatabasePDG::Instance()->GetParticle(2212)->Mass());
     lv2.SetPtEtaPhiM(nTrack->P(),nTrack->Eta(),nTrack->Phi(),TDatabasePDG::Instance()->GetParticle(211)->Mass());
@@ -690,23 +693,19 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0s(AliAODv0* v0,
   
   lv12 = lv1 + lv2;
   
-  if (fLambdaMassPdg - fMinRejectMassWidthLambda<lv12.M() && lv12.M()<fLambdaMassPdg + fMaxRejectMassWidthLambda) {
+  if (fPdgLambdaMass - fMinRejectMassWidthLambda<lv12.M() && lv12.M()<fPdgLambdaMass + fMaxRejectMassWidthLambda) {
     return false;
   }
-  
+
   lv1.SetPtEtaPhiM(pTrack->P(),pTrack->Eta(),pTrack->Phi(),TDatabasePDG::Instance()->GetParticle(11)->Mass());
   lv2.SetPtEtaPhiM(nTrack->P(),nTrack->Eta(),nTrack->Phi(),TDatabasePDG::Instance()->GetParticle(11)->Mass());
 
   lv12 = lv1 + lv2;
-
+  
   if (lv12.M() < 0.05) {
     return false;
   }
   
-  if (v0->Pt() < 0.2) {
-    return false;
-  }
-
   return true;
 }
 
@@ -752,13 +751,16 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(AliAODTrack* track
   if ( fMinCrossRowsFindableRatio > track->GetTPCNclsF()/track->GetTPCCrossedRows() ) {
     return false;
   }
-  
+  if ( fMaxReducedChi2TPC < track->GetTPCchi2()/track->GetTPCNcls() ) {
+    return false;
+  }
+
   float dca_xy=9999;
   float dca_z=9999;
   track->GetImpactParameters(dca_xy,dca_z);
   /*
   if ( fMaxTrackDCAxy > fabs(dca_xy) ) {
-    return false;
+    //return false;
   }
   */
   return true;
