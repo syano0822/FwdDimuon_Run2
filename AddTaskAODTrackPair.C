@@ -28,8 +28,8 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
 						 double min_pairtrackptcut=0.5,
 						 bool onMixingAnalysis=false,
 						 bool isMidTrackAnalysis=false,
-						 bool isKaonAnalysis=false,
-						 bool isK0sAnalysis=true,
+						 bool isPrimTrackAnalysis=false,
+						 bool isV0TrackAnalysis=true,
 						 float min_track_pt=0.0,
 						 float max_track_pt=999.,
 						 float min_track_eta=-0.8,
@@ -57,21 +57,34 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
 						 int nclustits = 1,
 						 int pid1 = 211,
 						 int pid2 = 211
-						 )
-
-{
+						 ){
     
   AliMuonTrackCuts* fMuonTrackCuts = new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
   fMuonTrackCuts->SetIsMC(isMC);
   fMuonTrackCuts->SetAllowDefaultParams(true);
+  
   int selectionMask = 0;
-  if(onMuEtaCut) selectionMask |= AliMuonTrackCuts::kMuEta;
-  if(onMuThetaAbsCut) selectionMask |=AliMuonTrackCuts::kMuThetaAbs;
-  if(onMuMatchAptCut) selectionMask |=AliMuonTrackCuts::kMuMatchApt;
-  if(onMuMatchLptCut) selectionMask |=AliMuonTrackCuts::kMuMatchLpt;
-  if(onMuMatchHptCut) selectionMask |=AliMuonTrackCuts::kMuMatchHpt;
-  if(onMuPdcaCut) selectionMask |=AliMuonTrackCuts::kMuPdca;
-  if(onMuChi2Cut) selectionMask |=AliMuonTrackCuts::kMuTrackChiSquare;    
+  if(onMuEtaCut){
+    selectionMask |= AliMuonTrackCuts::kMuEta;
+  }
+  if(onMuThetaAbsCut){
+    selectionMask |=AliMuonTrackCuts::kMuThetaAbs;
+  }
+  if(onMuMatchAptCut){
+    selectionMask |=AliMuonTrackCuts::kMuMatchApt;
+  }
+  if(onMuMatchLptCut){
+    selectionMask |=AliMuonTrackCuts::kMuMatchLpt;
+  }
+  if(onMuMatchHptCut){
+    selectionMask |=AliMuonTrackCuts::kMuMatchHpt;
+  }
+  if(onMuPdcaCut){
+    selectionMask |=AliMuonTrackCuts::kMuPdca;
+  }
+  if(onMuChi2Cut) {
+    selectionMask |=AliMuonTrackCuts::kMuTrackChiSquare;    
+  }
   fMuonTrackCuts->SetFilterMask(selectionMask);
   
   TFile* input = TFile::Open("./DownScale_Run2_CTP.root");
@@ -99,15 +112,14 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   utils->setPionSelectSigmaTOF(min_pion_sigma_tof,max_pion_sigma_tof);
   utils->setKaonSelectSigmaTOF(min_kaon_sigma_tof,max_kaon_sigma_tof);
   utils->setProtonSelectSigmaTOF(min_proton_sigma_tof,max_proton_sigma_tof);
-  utils->setTrackQualities(findable,dcaxy,dcaz,chi2tpc,chi2its,nclusttpc,nclustits);
+  utils->setTrackQualities(findable,dcaxy.c_str(),dcaz,chi2tpc,chi2its,nclusttpc,nclustits);
   utils->setPairTargetPIDs(pid1,pid2);
 
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
     ::Error("AddTaskAODMuonEventSelection", "No analysis manager to connect to");
     return NULL;
-  }
-  
+  }  
   if (!mgr->GetInputEventHandler()) {
     ::Error("AddTaskAODMuonEventSelection", "This task requires an input event handler");
     return NULL;
@@ -116,7 +128,7 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   AliAnalysisTaskAODTrackPair* task = new AliAnalysisTaskAODTrackPair("dimuon");
   if(isSelectEvt){
     task->SelectCollisionCandidates(offlineTriggerMask);
-  }
+  }  
   task->setUtils(utils);
   task->setEvtMixingTrackDepth(100);
   task->setEvtMixingPoolSize(100);
@@ -127,8 +139,8 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   task->setMixingAnalysis(onMixingAnalysis);
   task->setMC(isMC);
   task->setMidTrackAna(isMidTrackAnalysis);
-  task->setKaonTrackAna(isKaonAnalysis);
-  task->setK0sAna(isK0sAnalysis);
+  task->setPrimTrackAna(isPrimTrackAnalysis);
+  task->setV0TrackAna(isV0TrackAnalysis);
   mgr->AddTask(task);
   
   cout<<"min_vtxz="<< min_vtxz <<endl;
@@ -159,8 +171,8 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   cout<<"min_pairtrackptcut="<< min_pairtrackptcut <<endl;
   cout<<"onMixingAnalysis="<< onMixingAnalysis <<endl;
   cout<<"isMidTrackAnalysis="<< isMidTrackAnalysis <<endl;
-  cout<<"isKaonAnalysis="<< isKaonAnalysis <<endl;
-  cout<<"isK0sAnalysis="<< isK0sAnalysis <<endl;
+  cout<<"isPrimTrackAnalysis="<< isPrimTrackAnalysis <<endl;
+  cout<<"isV0TrackAnalysis="<< isV0TrackAnalysis <<endl;
   cout<<"min_track_pt="<< min_track_pt <<endl;
   cout<<"max_track_pt="<< max_track_pt <<endl;
   cout<<"min_track_eta="<< min_track_eta <<endl;
@@ -180,7 +192,7 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   cout<<"min_proton_sigma_tpc="<<min_proton_sigma_tof<<endl;
   cout<<"max_proton_sigma_tpc="<<max_proton_sigma_tof<<endl;
   cout<<"findable="<<findable<<endl;
-  cout<<"dcaxy="<<dcaxy<<endl;
+  cout<<"dcaxy="<<dcaxy.c_str()<<endl;
   cout<<"dcaz="<<dcaz<<endl;
   cout<<"chi2tpc="<<chi2tpc<<endl;
   cout<<"chi2its="<<chi2its<<endl;
@@ -188,7 +200,7 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   cout<<"nclustits="<<nclustits<<endl;
   cout<<"pid1="<<pid1<<endl;
   cout<<"pid2="<<pid2<<endl;
-
+  
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");
   
@@ -196,5 +208,4 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   mgr->ConnectOutput(task,1,coutput1);
 
   return task;
-
 }

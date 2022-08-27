@@ -24,10 +24,10 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   void setMidTrackAna(bool isMidTrack){
     fIsMidTrackAna = isMidTrack;
   }  
-  void setK0sAna(bool isK0s) {
+  void setV0TrackAna(bool isK0s) {
     fIsV0TrackPairAna = isK0s;
   }
-  void setKaonTrackAna(bool isKaon) {
+  void setPrimTrackAna(bool isKaon) {
     fIsPrimTrackPairAna = isKaon;
   }
   
@@ -163,15 +163,19 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   TTree* fTreeMixULSPair;
   TTree* fTreeMixLSppPair;
   TTree* fTreeMixLSmmPair;
-
+  
   TH2F* fHistULSPairMassPt;
   TH2F* fHistLSppPairMassPt;
   TH2F* fHistLSmmPairMassPt;
   
+  THnSparse* fSparseULSPairMassPt;
+  THnSparse* fSparseLSppPairMassPt;
+  THnSparse* fSparseLSmmPairMassPt;
+
   TH2F* fHistULSPairMassPt_ProngV0;
   TH2F* fHistLSppPairMassPt_ProngV0;
   TH2F* fHistLSmmPairMassPt_ProngV0;
-
+  
   TH2F* fHistULSPairMassPt_TightCut;
   TH2F* fHistLSppPairMassPt_TightCut;
   TH2F* fHistLSmmPairMassPt_TightCut;
@@ -179,6 +183,10 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   TH2F* fHistMixULSPairMassPt;
   TH2F* fHistMixLSppPairMassPt;
   TH2F* fHistMixLSmmPairMassPt;
+
+  THnSparse* fSparseMixULSPairMassPt;
+  THnSparse* fSparseMixLSppPairMassPt;
+  THnSparse* fSparseMixLSmmPairMassPt;
 
   TH2F* fHistMassK0s1K0s2;
   

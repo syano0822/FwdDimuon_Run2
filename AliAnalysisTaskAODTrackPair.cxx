@@ -101,6 +101,10 @@
    fTreeLSppPair(NULL),
    fTreeLSmmPair(NULL),
 
+   fSparseULSPairMassPt(NULL),
+   fSparseLSppPairMassPt(NULL),
+   fSparseLSmmPairMassPt(NULL),
+
    fTreeULSPair_TightCut(NULL),
    fTreeLSppPair_TightCut(NULL),
    fTreeLSmmPair_TightCut(NULL),
@@ -128,6 +132,10 @@
    fHistMixULSPairMassPt(NULL),
    fHistMixLSppPairMassPt(NULL),
    fHistMixLSmmPairMassPt(NULL),
+
+   fSparseMixULSPairMassPt(NULL),
+   fSparseMixLSppPairMassPt(NULL),
+   fSparseMixLSmmPairMassPt(NULL),
    
    fHistMassK0s1K0s2(NULL),
 
@@ -241,6 +249,10 @@
    fTreeLSppPair(NULL),
    fTreeLSmmPair(NULL),
 
+   fSparseULSPairMassPt(NULL),
+   fSparseLSppPairMassPt(NULL),
+   fSparseLSmmPairMassPt(NULL),
+
    fTreeULSPair_TightCut(NULL),
    fTreeLSppPair_TightCut(NULL),
    fTreeLSmmPair_TightCut(NULL),
@@ -268,6 +280,10 @@
    fHistMixULSPairMassPt(NULL),
    fHistMixLSppPairMassPt(NULL),
    fHistMixLSmmPairMassPt(NULL),
+
+   fSparseMixULSPairMassPt(NULL),
+   fSparseMixLSppPairMassPt(NULL),
+   fSparseMixLSmmPairMassPt(NULL),
 
    fHistMassK0s1K0s2(NULL),
 
@@ -396,7 +412,6 @@
        fTreeULSPair->Branch("RecPairCent",&RecPairCent,"RecPairCent/F");
        fTreeULSPair->Branch("RecPairDS",&RecPairDS,"RecPairDS/F");
        fOutputList->Add(fTreeULSPair);
-
        fTreeLSppPair = new TTree("fTreeLSppPair","");
        fTreeLSppPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
        fTreeLSppPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
@@ -404,7 +419,6 @@
        fTreeLSppPair->Branch("RecPairCent",&RecPairCent,"RecPairCent/F");
        fTreeLSppPair->Branch("RecPairDS",&RecPairDS,"RecPairDS/F");
        fOutputList->Add(fTreeLSppPair);
-
        fTreeLSmmPair = new TTree("fTreeLSmmPair","");
        fTreeLSmmPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
        fTreeLSmmPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
@@ -420,7 +434,6 @@
        fTreeMixULSPair->Branch("RecPairCent",&RecPairCent,"RecPairCent/F");
        fTreeMixULSPair->Branch("RecPairDS",&RecPairDS,"RecPairDS/F");
        fOutputList->Add(fTreeMixULSPair);
-
        fTreeMixLSppPair = new TTree("fTreeMixLSppPair","");
        fTreeMixLSppPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
        fTreeMixLSppPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
@@ -428,7 +441,6 @@
        fTreeMixLSppPair->Branch("RecPairCent",&RecPairCent,"RecPairCent/F");
        fTreeMixLSppPair->Branch("RecPairDS",&RecPairDS,"RecPairDS/F");
        fOutputList->Add(fTreeMixLSppPair);
-
        fTreeMixLSmmPair = new TTree("fTreeMixLSmmPair","");
        fTreeMixLSmmPair->Branch("RecPairPt",&RecPairPt,"RecPairPt/F");
        fTreeMixLSmmPair->Branch("RecPairRap",&RecPairRap,"RecPairRap/F");
@@ -441,28 +453,55 @@
      fHistTrackPairLocalBoardPair = new TH2F("fHistTrackPairLocalBoardPair","",240,0,240,240,0,240);
      fOutputList->Add(fHistTrackPairPtBalance);
      fOutputList->Add(fHistTrackPairLocalBoardPair);
-   } else {
-     if (!fIsMixingAnalysis){
+
+     fHistTrackThetaAbs = new TH2F("fHistTrackThetaAbs","",20,0,10,60,0,15);
+     fHistTrackTriggerMatch = new TH2F("fHistTrackTriggerMatch","",20,0,10,5,0,5);
+     fHistTrackPDCA = new TH2F("fHistTrackPDCA","",20,0,10,200,0,20);
+     fHistTrackChiSquare = new TH2F("fHistTrackChiSquare","",20,0,10,100,0,10);
+     fHistTriggerChiSquare = new TH2F("fHistTriggerChiSquare","",20,0,10,100,0,10);
+     fOutputList->Add(fHistTrackThetaAbs);
+     fOutputList->Add(fHistTrackTriggerMatch);
+     fOutputList->Add(fHistTrackPDCA);
+     fOutputList->Add(fHistTrackChiSquare);
+     fOutputList->Add(fHistTriggerChiSquare);     
+   }
+
+   if ( fIsMidTrackAna ) {
+     if ( !fIsMixingAnalysis ){
        fHistULSPairMassPt = new TH2F("fHistULSPairMassPt","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
        fOutputList->Add(fHistULSPairMassPt);
        fHistLSppPairMassPt = new TH2F("fHistLSppPairMassPt","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
        fOutputList->Add(fHistLSppPairMassPt);
        fHistLSmmPairMassPt = new TH2F("fHistLSmmPairMassPt","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
-       fOutputList->Add(fHistLSmmPairMassPt);
-     } else {
+       fOutputList->Add(fHistLSmmPairMassPt);     
+       int bins[3] = {int((max_mass-min_mass)/width_mass),int((max_pt-min_pt)/width_pt),100};
+       double min_bins[3] = {min_mass,min_pt,0};
+       double max_bins[3] = {max_mass,max_pt,100};       
+       fSparseULSPairMassPt = new THnSparseF("fSparseULSPairMassPt","",3,bins,min_bins,max_bins);
+       fSparseLSppPairMassPt = new THnSparseF("fSparseLSppPairMassPt","",3,bins,min_bins,max_bins);
+       fSparseLSmmPairMassPt = new THnSparseF("fSparseLSmmPairMassPt","",3,bins,min_bins,max_bins);
+       fOutputList->Add(fSparseULSPairMassPt);
+       fOutputList->Add(fSparseLSppPairMassPt);
+       fOutputList->Add(fSparseLSmmPairMassPt);
+     }     
+     if ( fIsMixingAnalysis ){
        fHistMixULSPairMassPt = new TH2F("fHistMixULSPairMassPt","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
-       fOutputList->Add(fHistMixULSPairMassPt);
+       fOutputList->Add(fHistMixULSPairMassPt);       
+       int bins[3] = {int((max_mass-min_mass)/width_mass),int((max_pt-min_pt)/width_pt),100};
+       double min_bins[3] = {min_mass,min_pt,0};
+       double max_bins[3] = {max_mass,max_pt,100};       
+       fSparseMixULSPairMassPt = new THnSparseF("fSparseMixULSPairMassPt","",3,bins,min_bins,max_bins);       
+       fOutputList->Add(fSparseMixULSPairMassPt);
      }
      
      if (fIsV0TrackPairAna){
-
        min_mass = 0.0;
        max_mass = 3.0;
        width_mass = 0.001;
-
+       
        fHistULSPairMassPt_ProngV0 = new TH2F("fHistULSPairMassPt_ProngV0","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
        fOutputList->Add(fHistULSPairMassPt_ProngV0);
-       
+	 
        fHistMassK0s1K0s2 = new TH2F("fHistMassK0s1K0s2","",200,0.4,0.6,200,0.4,0.6);
        fOutputList->Add(fHistMassK0s1K0s2);       
        fHistArmenteros = new TH2F("fHistArmenteros","",200,-3,3,400,0,0.4);
@@ -496,7 +535,6 @@
        fOutputList->Add(fHistSelV0MassV0DecayRadius);
        fOutputList->Add(fHistSelV0MassV0PropLifeTime);
      }
-     
      if (fIsPrimTrackPairAna) {
        fHistULSPairMassPt_TightCut = new TH2F("fHistULSPairMassPt_TightCut","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
        fOutputList->Add(fHistULSPairMassPt_TightCut);
@@ -505,7 +543,7 @@
        fHistLSmmPairMassPt_TightCut = new TH2F("fHistLSmmPairMassPt_TightCut","",int((max_mass-min_mass)/width_mass),min_mass,max_mass,int((max_pt-min_pt)/width_pt),min_pt,max_pt);
        fOutputList->Add(fHistLSmmPairMassPt_TightCut);
      }
-     
+       
      fHistTrackP = new TH1F("fHistTrackP","",100,0,10);
      fHistTrackPt = new TH1F("fHistTrackPt","",100,0,10);
      fHistTrackEta = new TH1F("fHistTrackEta","",20,-1,1);
@@ -527,15 +565,15 @@
      fOutputList->Add(fHistReducedChi2ITS);
      fOutputList->Add(fHistDCAz);
      fOutputList->Add(fHistDCAxyPt);
-
+       
      double min_dEdx = 0.;
      double max_dEdx = 300.;
      double width_dEdx = 0.1;
-
+     
      double min_beta = 0.;
      double max_beta = 1.2;
      double width_beta = 0.01;
-
+     
      double min_p = 0.;
      double max_p = 5.;
      double width_p = 0.1;
@@ -543,7 +581,7 @@
      double min_sigma = -10;
      double max_sigma = +10;
      double width_sigma = 0.1;
-
+     
      fHistTPCdEdxP = new TH2F("fHistTPCdEdxP","",
 			      (max_p-min_p)/width_p,min_p,max_p,
 			      (max_dEdx-min_dEdx)/width_dEdx,min_dEdx,max_dEdx);
@@ -551,73 +589,73 @@
 			   (max_p-min_p)/width_p,min_p,max_p,
 			   (max_beta-min_beta)/width_beta,min_beta,max_beta);
      fHistTPCSigmaElectron = new TH2F("fHistTPCSigmaElectron","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				      (max_p-min_p)/width_p,min_p,max_p,
+				      (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistTOFSigmaElectron = new TH2F("fHistTOFSigmaElectron","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				      (max_p-min_p)/width_p,min_p,max_p,
+				      (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistTPCSigmaMuon = new TH2F("fHistTPCSigmaMuon","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				  (max_p-min_p)/width_p,min_p,max_p,
+				  (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistTOFSigmaMuon = new TH2F("fHistTOFSigmaMuon","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);     
+				    (max_p-min_p)/width_p,min_p,max_p,
+				    (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);     
      fHistTPCSigmaPion = new TH2F("fHistTPCSigmaPion","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				    (max_p-min_p)/width_p,min_p,max_p,
+				    (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistTOFSigmaPion = new TH2F("fHistTOFSigmaPion","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);     
+				    (max_p-min_p)/width_p,min_p,max_p,
+				    (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);     
      fHistTPCSigmaKaon = new TH2F("fHistTPCSigmaKaon","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				  (max_p-min_p)/width_p,min_p,max_p,
+				  (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistTOFSigmaKaon = new TH2F("fHistTOFSigmaKaon","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				  (max_p-min_p)/width_p,min_p,max_p,
+				  (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistTPCSigmaProton = new TH2F("fHistTPCSigmaProton","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				    (max_p-min_p)/width_p,min_p,max_p,
+				    (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistTOFSigmaProton = new TH2F("fHistTOFSigmaProton","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
-
+				    (max_p-min_p)/width_p,min_p,max_p,
+				    (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+       
      fHistSelTPCdEdxP = new TH2F("fHistSelTPCdEdxP","",
-			      (max_p-min_p)/width_p,min_p,max_p,
-			      (max_dEdx-min_dEdx)/width_dEdx,min_dEdx,max_dEdx);
+				 (max_p-min_p)/width_p,min_p,max_p,
+				 (max_dEdx-min_dEdx)/width_dEdx,min_dEdx,max_dEdx);
      fHistSelBetaP = new TH2F("fHistSelBetaP","",
-			   (max_p-min_p)/width_p,min_p,max_p,
-			   (max_beta-min_beta)/width_beta,min_beta,max_beta);
+			      (max_p-min_p)/width_p,min_p,max_p,
+			      (max_beta-min_beta)/width_beta,min_beta,max_beta);
      fHistSelTPCSigmaElectron = new TH2F("fHistSelTPCSigmaElectron","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+					 (max_p-min_p)/width_p,min_p,max_p,
+					 (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistSelTOFSigmaElectron = new TH2F("fHistSelTOFSigmaElectron","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+					 (max_p-min_p)/width_p,min_p,max_p,
+					 (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistSelTPCSigmaMuon = new TH2F("fHistSelTPCSigmaMuon","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				     (max_p-min_p)/width_p,min_p,max_p,
+				     (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistSelTOFSigmaMuon = new TH2F("fHistSelTOFSigmaMuon","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);     
+				     (max_p-min_p)/width_p,min_p,max_p,
+				     (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);     
      fHistSelTPCSigmaPion = new TH2F("fHistSelTPCSigmaPion","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				     (max_p-min_p)/width_p,min_p,max_p,
+				     (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistSelTOFSigmaPion = new TH2F("fHistSelTOFSigmaPion","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);     
+				     (max_p-min_p)/width_p,min_p,max_p,
+				     (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);     
      fHistSelTPCSigmaKaon = new TH2F("fHistSelTPCSigmaKaon","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				     (max_p-min_p)/width_p,min_p,max_p,
+				     (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistSelTOFSigmaKaon = new TH2F("fHistSelTOFSigmaKaon","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				     (max_p-min_p)/width_p,min_p,max_p,
+				     (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistSelTPCSigmaProton = new TH2F("fHistSelTPCSigmaProton","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+				       (max_p-min_p)/width_p,min_p,max_p,
+				       (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
      fHistSelTOFSigmaProton = new TH2F("fHistSelTOFSigmaProton","",
-				   (max_p-min_p)/width_p,min_p,max_p,
-				   (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
-
+				       (max_p-min_p)/width_p,min_p,max_p,
+				       (max_sigma-min_sigma)/width_sigma,min_sigma,max_sigma);
+     
      fOutputList->Add(fHistTPCdEdxP);
      fOutputList->Add(fHistBetaP);
      fOutputList->Add(fHistTPCSigmaElectron);
@@ -642,8 +680,8 @@
      fOutputList->Add(fHistSelTPCSigmaKaon);
      fOutputList->Add(fHistSelTOFSigmaKaon);
      fOutputList->Add(fHistSelTPCSigmaProton);
-     fOutputList->Add(fHistSelTOFSigmaProton);     
-   }
+     fOutputList->Add(fHistSelTOFSigmaProton);          
+   }             
    
    fHistEventVtxZ = new TH1F("fHistEventVtxZ","",60,-30,30);
    fHistEventCent = new TH1F("fHistEventCent","",100,0,100);
@@ -653,21 +691,6 @@
    fOutputList->Add(fHistEventCent);
    fOutputList->Add(fHistEventMulti);
    fOutputList->Add(fHistEventVtxCont);
-   
-   if (!fIsMidTrackAna){
-     fHistTrackThetaAbs = new TH2F("fHistTrackThetaAbs","",20,0,10,60,0,15);
-     fHistTrackTriggerMatch = new TH2F("fHistTrackTriggerMatch","",20,0,10,5,0,5);
-     fHistTrackPDCA = new TH2F("fHistTrackPDCA","",20,0,10,200,0,20);
-     fHistTrackChiSquare = new TH2F("fHistTrackChiSquare","",20,0,10,100,0,10);
-     fHistTriggerChiSquare = new TH2F("fHistTriggerChiSquare","",20,0,10,100,0,10);
-     fOutputList->Add(fHistTrackThetaAbs);
-     fOutputList->Add(fHistTrackTriggerMatch);
-     fOutputList->Add(fHistTrackPDCA);
-     fOutputList->Add(fHistTrackChiSquare);
-     fOutputList->Add(fHistTriggerChiSquare);
-   } else {
-
-   }
    
    PostData(1, fOutputList);
  }
@@ -686,30 +709,27 @@
 
    EventQA();
 
-   if(!fIsMidTrackAna) {
+   if( fIsMidTrackAna ) {
      if ( !fIsMixingAnalysis ) {
        FwdMuonPairAnalysis();
-     } else {
+     }
+     if ( fIsMixingAnalysis ) {
        FwdMuonPairAnalysisEveMixing();
      }
-   } else {
+   } 
+   if( fIsMidTrackAna ) {
      if ( !fIsMixingAnalysis ) {
-       if (fIsV0TrackPairAna) {
+       if ( fIsV0TrackPairAna ) {
 	 MidV0Analysis(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
-       } else if (fIsPrimTrackPairAna) {
+       } 
+       if ( fIsPrimTrackPairAna ) {
 	 MidPairAnalysis(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
-       } else {
-	 cout<<"Mid rapidity analysis but not added K0s or Kaon track analysis"<<endl;
        }
-     } else {
-       if (fIsV0TrackPairAna) {
+     }
+     if ( fIsMixingAnalysis ) {
+       if ( fIsV0TrackPairAna ) {
 	 MidV0AnalysisEventMixing(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
-       } else if (fIsPrimTrackPairAna) {
-	 //dummy
-       } else {
-	 cout<<"Mid rapidity analysis but not added K0s or Kaon track analysis"<<endl;
-       }
-       
+       }       
      }
    }
 
@@ -1159,7 +1179,15 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
       
       v0_2 = (AliAODv0*)fEvent->GetV0(iV0_2);
 
-      if ( !fUtils->isAcceptV0Kinematics(v0_1) ) {
+      RecPairPt = v0_2->Pt();
+      RecPairMass = v0_2->MassK0Short();
+      RecPairRap = v0_2->RapK0Short();
+
+      if (0.4>RecPairMass || RecPairMass>0.6) {
+	continue;
+      }        
+      
+      if ( !fUtils->isAcceptV0Kinematics(v0_2) ) {
 	continue;
       }
       if (!fUtils->isAcceptK0sCandidateMassRange(v0_2->MassK0Short())) {
@@ -1184,7 +1212,9 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1, AliP
       RecPairMass = lv12.M();
       RecPairRap = lv12.Rapidity();
       
-      fHistULSPairMassPt->Fill(RecPairMass,RecPairPt);
+      //fHistULSPairMassPt->Fill(RecPairMass,RecPairPt);      
+      double fill[]={RecPairMass,RecPairPt,fUtils->getCentClass(1)};
+      fSparseULSPairMassPt->Fill(fill);      
     }
 
   }
@@ -1280,7 +1310,9 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(AliPID::EParticleType
 	  RecPairMass = lv12.M();
 	  RecPairRap = lv12.Rapidity();
 	  
-	  fHistMixULSPairMassPt->Fill(RecPairMass,RecPairPt);
+	  double fill[]={RecPairMass,RecPairPt,fUtils->getCentClass(1)};
+	  fSparseULSPairMassPt->Fill(fill);
+	  //fHistMixULSPairMassPt->Fill(RecPairMass,RecPairPt);
 	}
 	
       }

@@ -4,12 +4,12 @@
 
 AliAnalysisGrid* CreateAlienHandler(string period, string run_mode, Bool_t isJDL, string type,bool onMixingAnalysis);
 
-void runAnalysisKaon(string runPeriod = "LHC16k",
-		     string run_mode  = "test",
-		     Bool_t isJDL      = true,
-		     string type      = "data",
-		     Bool_t  local     = false,
-		     bool isMix        = false)
+void runAnalysisPrimPair(string runPeriod = "LHC16k",
+			 string run_mode  = "test",
+			 Bool_t isJDL      = true,
+			 string type      = "data",
+			 Bool_t  local     = false,
+			 bool isMix        = false)
 {
   // since we will compile a class, tell root where to look for headers  
 #if !defined (__CINT__) || defined (__CLING__)
@@ -107,18 +107,18 @@ void runAnalysisKaon(string runPeriod = "LHC16k",
   double min_pairtrackptcut = 0.0;
   bool onMixingAnalysis = isMix;
   bool isMidMuonAnalysis = true;
-  bool isKaonAnalysis = true;
-  bool isK0sAnalysis = false;  
+  bool isPrimTrackAnalysis = true;
+  bool isV0TrackAnalysis = false;  
   float min_track_pt = 0.0;
   float max_track_pt = 999.;
   float min_track_eta = -0.8;
   float max_track_eta =  0.8;
   float min_track_p = 0.15;
-  float max_track_p = 10.;
-  float min_pion_sigma_tpc = -5;
-  float max_pion_sigma_tpc =  5;
-  float min_pion_sigma_tof = -5;
-  float max_pion_sigma_tof =  5;
+  float max_track_p = 999.;
+  float min_pion_sigma_tpc = -3;
+  float max_pion_sigma_tpc =  3;
+  float min_pion_sigma_tof = -2;
+  float max_pion_sigma_tof =  2;
   float min_kaon_sigma_tpc = -3;
   float max_kaon_sigma_tpc =  3;
   float min_kaon_sigma_tof = -3;
@@ -128,11 +128,12 @@ void runAnalysisKaon(string runPeriod = "LHC16k",
   float min_proton_sigma_tof = -2;
   float max_proton_sigma_tof =  2;
   float findable = 0.8;
-  string dcaxy = "0.0105 + 0.035/pow(x,1.1)";
+  //string dcaxy = "0.0105 + 0.035/pow(x,1.1)";
+  string dcaxy = "0.03";
   float dcaz = 2.0;
   float chi2tpc = 4.;
   float chi2its = 36.;
-  int nclusttpc = 70;
+  int nclusttpc = 80;
   int nclustits = 1;
   int pid1 = 211;
   int pid2 = 211;
@@ -173,8 +174,8 @@ void runAnalysisKaon(string runPeriod = "LHC16k",
 				     min_pairtrackptcut,
 				     onMixingAnalysis,
 				     isMidMuonAnalysis,
-				     isKaonAnalysis,
-				     isK0sAnalysis,
+				     isPrimTrackAnalysis,
+				     isV0TrackAnalysis,
 				     min_track_pt,
 				     max_track_pt,
 				     min_track_eta,
@@ -292,8 +293,8 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
   
   plugin->SetGridOutputDir("output");
 
-  plugin->SetSplitMaxInputFileNumber(20);    
-  //plugin->SetSplitMaxInputFileNumber(7);
+  //plugin->SetSplitMaxInputFileNumber(20);    
+  plugin->SetSplitMaxInputFileNumber(7);
   //plugin->SetSplitMaxInputFileNumber(45);
   plugin->SetNrunsPerMaster();
   

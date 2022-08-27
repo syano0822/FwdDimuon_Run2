@@ -221,6 +221,7 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
     fMaxReducedChi2ITS = chi2its;
     fMinTrackTPCNClusts = nclusttpc;
     fMinTrackSPDNClusts = nclustits;
+    //fFuncMaxDCAxy = new TF1("fFuncMaxDCAxy",fMaxTrackDCAxyName.c_str(),0,100);
   }
 
   void setPileupRejectionCut(bool flag)
