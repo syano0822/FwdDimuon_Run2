@@ -31,14 +31,10 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   bool isAcceptFwdDimuon(AliAODDimuon* dimuon);
   bool isAcceptMidMuonTrack(AliAODTrack* track);
   bool isAcceptMidDimuon(AliAODDimuon* dimuon);
-
-  bool isAcceptMidTrackQuality(AliAODTrack* track);
+  bool isAcceptMidPrimTrackQuality(AliAODTrack* track);
   bool isAcceptMidPid(AliAODTrack* track,AliPID::EParticleType pid);  
   bool isAcceptV0Kinematics(AliAODv0 *v0);
-  bool isAcceptedK0s(AliAODv0 *v0,
-		     AliPID::EParticleType pid1,
-		     AliPID::EParticleType pid2,
-		     int charge);
+  bool isAcceptedK0s(AliAODv0 *v0,AliPID::EParticleType pid1,AliPID::EParticleType pid2,int charge);
   bool isAcceptV0TrackQuality(AliAODTrack* track);
   bool isAcceptArmenterosK0s(AliAODv0* v0);
   bool isAcceptArmenterosK0s_Tight(AliAODv0* v0);
@@ -135,6 +131,44 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   //Set analysis cut flags
   //////////////////////////////////////////////////////////////////////////////////////////////
   
+  void setPairTargetPIDs(int pid1, int pid2){        
+    if ( pid1 == 11 ) {
+      fTrackTragetPid1 = AliPID::kElectron;
+    } else if ( pid1 == 13 ) {
+      fTrackTragetPid1 = AliPID::kMuon;
+    } else if (pid1 == 211) {
+      fTrackTragetPid1 = AliPID::kPion;
+    } else if ( pid1 == 321 ) {
+      fTrackTragetPid1 = AliPID::kKaon;
+    } else if ( pid1 == 2212 ) {
+      fTrackTragetPid1 = AliPID::kProton;
+    } else {
+      fTrackTragetPid1 = AliPID::kPion;
+    }    
+    if ( pid2 == 11 ) {
+      fTrackTragetPid2 = AliPID::kElectron;
+    } else if ( pid2 == 13 ) {
+      fTrackTragetPid2 = AliPID::kMuon;
+    } else if (pid2 == 211) {
+      fTrackTragetPid2 = AliPID::kPion;
+    } else if ( pid2 == 321 ) {
+      fTrackTragetPid2 = AliPID::kKaon;
+    } else if ( pid2 == 2212 ) {
+      fTrackTragetPid2 = AliPID::kProton;
+    } else {
+      fTrackTragetPid2 = AliPID::kPion;
+    }
+  }
+  
+  AliPID::EParticleType getPairTargetPIDs(int track){    
+    if (track == 0) {
+      return fTrackTragetPid1;
+    } else {
+      return fTrackTragetPid2;
+    }    
+  }
+  
+
   void setVertexCut(double min, double max, int min_cont)
   {
     fMinVertexCutZ = min;
@@ -468,6 +502,9 @@ class AliAnalysisTaskAODTrackPairUtils : public TNamed {
   std::string fCollSystem;
   std::string fPass;
   
+  AliPID::EParticleType fTrackTragetPid1;
+  AliPID::EParticleType fTrackTragetPid2;
+
   TF1* fFuncMaxDCAxy;
   TF1* fMinArmenterosLine;
   TF1* fMaxArmenterosLine;

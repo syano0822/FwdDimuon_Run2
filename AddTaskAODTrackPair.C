@@ -54,7 +54,9 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
 						 float chi2tpc = 4.,
 						 float chi2its = 36.,
 						 int nclusttpc = 70,
-						 int nclustits = 1
+						 int nclustits = 1,
+						 int pid1 = 211,
+						 int pid2 = 211
 						 )
 
 {
@@ -98,6 +100,7 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   utils->setKaonSelectSigmaTOF(min_kaon_sigma_tof,max_kaon_sigma_tof);
   utils->setProtonSelectSigmaTOF(min_proton_sigma_tof,max_proton_sigma_tof);
   utils->setTrackQualities(findable,dcaxy,dcaz,chi2tpc,chi2its,nclusttpc,nclustits);
+  utils->setPairTargetPIDs(pid1,pid2);
 
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
@@ -183,6 +186,8 @@ AliAnalysisTaskAODTrackPair* AddTaskAODTrackPair(UInt_t offlineTriggerMask = Ali
   cout<<"chi2its="<<chi2its<<endl;
   cout<<"nclusttpc="<<nclusttpc<<endl;
   cout<<"nclustits="<<nclustits<<endl;
+  cout<<"pid1="<<pid1<<endl;
+  cout<<"pid2="<<pid2<<endl;
 
   AliAnalysisDataContainer *cinput  = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 = mgr->CreateContainer("dimuon",TList::Class(),AliAnalysisManager::kOutputContainer,"Dimuon.root");

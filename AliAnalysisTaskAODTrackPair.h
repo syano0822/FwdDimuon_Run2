@@ -25,10 +25,10 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
     fIsMidTrackAna = isMidTrack;
   }  
   void setK0sAna(bool isK0s) {
-    fIsK0sAna = isK0s;
+    fIsV0TrackPairAna = isK0s;
   }
   void setKaonTrackAna(bool isKaon) {
-    fIsKaonTrackAna = isKaon;
+    fIsPrimTrackPairAna = isKaon;
   }
   
   void setMixingAnalysis(bool isMix)
@@ -103,8 +103,8 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
 
   bool fIsMC;
   bool fIsMidTrackAna;
-  bool fIsK0sAna;
-  bool fIsKaonTrackAna;
+  bool fIsV0TrackPairAna;
+  bool fIsPrimTrackPairAna;
   bool fIsMixingAnalysis;
 
   int fRunNumber;
@@ -192,14 +192,29 @@ class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
   
   TH2F* fHistTPCdEdxP;
   TH2F* fHistBetaP;    
+  TH2F* fHistTPCSigmaElectron;
+  TH2F* fHistTOFSigmaElectron;
+  TH2F* fHistTPCSigmaMuon;
+  TH2F* fHistTOFSigmaMuon;
+  TH2F* fHistTPCSigmaPion;
+  TH2F* fHistTOFSigmaPion;
   TH2F* fHistTPCSigmaKaon;
   TH2F* fHistTOFSigmaKaon;
-  TH3F* fHistTPCTOFSigmaKaon;
+  TH2F* fHistTPCSigmaProton;
+  TH2F* fHistTOFSigmaProton;
+
   TH2F* fHistSelTPCdEdxP;
-  TH2F* fHistSelBetaP;      
+  TH2F* fHistSelBetaP;    
+  TH2F* fHistSelTPCSigmaElectron;
+  TH2F* fHistSelTOFSigmaElectron;
+  TH2F* fHistSelTPCSigmaMuon;
+  TH2F* fHistSelTOFSigmaMuon;
+  TH2F* fHistSelTPCSigmaPion;
+  TH2F* fHistSelTOFSigmaPion;
   TH2F* fHistSelTPCSigmaKaon;
   TH2F* fHistSelTOFSigmaKaon;
-  TH3F* fHistSelTPCTOFSigmaKaon;
+  TH2F* fHistSelTPCSigmaProton;
+  TH2F* fHistSelTOFSigmaProton;
   
   TH1F* fHistTrackP;
   TH1F* fHistTrackPt;

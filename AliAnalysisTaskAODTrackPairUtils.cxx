@@ -142,6 +142,9 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fNChEta20(0),
 
   fPIDResponse(NULL),
+  
+  fTrackTragetPid1(AliPID::kPion),
+  fTrackTragetPid2(AliPID::kPion),
 
   fMinTrackP(0.05),
   fMaxTrackP(2.0),
@@ -487,14 +490,14 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Kinematics(AliAODv0* v0){
   return true;
 }
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidMuonTrack(AliAODTrack* track){    
-  if(!isAcceptMidTrackQuality(track) || !isAcceptMidPid(track,AliPID::kMuon)) {
+  if(!isAcceptMidPrimTrackQuality(track) || !isAcceptMidPid(track,AliPID::kMuon)) {
     return false;
   } else {
     return true;
   }
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidTrackQuality(AliAODTrack* track){    
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPrimTrackQuality(AliAODTrack* track){    
   
   if ( fMinTrackTPCNClusts > track->GetTPCNcls() ) {
     return false;
