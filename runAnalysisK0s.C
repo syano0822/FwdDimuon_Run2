@@ -1,6 +1,16 @@
+#include "AliMCEventHandler.h"
+#include "AliAODInputHandler.h"
+#include "AliAnalysisAlien.h"
+#include "AliAnalysisManager.h"
+R__ADD_INCLUDE_PATH($ALICE_ROOT)
+#include <ANALYSIS/macros/AddTaskPIDResponse.C>
+R__ADD_INCLUDE_PATH($ALICE_PHYSICS)
+#include <OADB/macros/AddTaskPhysicsSelection.C>
+#include <OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C>
+R__ADD_INCLUDE_PATH($ALICE_PHYSICS)
 #include "AliAnalysisTaskAODTrackPairUtils.h"
-#include "AliAnalysisTaskAODEventStudy.h"
 #include "AliAnalysisTaskAODTrackPair.h"
+#include <PWGLF/RESONANCES/extra/AddTaskAODTrackPair.C>
 
 AliAnalysisGrid* CreateAlienHandler(string period, string run_mode, Bool_t isJDL, string type,bool onMixingAnalysis);
 
@@ -11,6 +21,36 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
 		     Bool_t  local     = false,
 		     bool isMix        = false)
 {
+
+  gSystem->Load("libCore.so");
+  gSystem->Load("libGeom.so");
+  gSystem->Load("libVMC.so");
+  gSystem->Load("libMinuit.so");
+  gSystem->Load("libPhysics.so");
+  gSystem->Load("libTree.so");
+  gSystem->Load("libSTEERBase.so");
+  gSystem->Load("libESD.so");
+  gSystem->Load("libAOD.so");
+  gSystem->Load("libANALYSIS.so");
+  gSystem->Load("libANALYSISalice.so");
+  gSystem->Load("libEventMixing.so");
+  gSystem->Load("libCORRFW.so");
+  gSystem->Load("libPWGLFresonances.so");
+  gSystem->Load("libPWGPPevcharQn.so");
+  gSystem->Load("libPWGPPevcharQnInterface.so");
+  gSystem->Load("libCore.so");  
+  gSystem->Load("libTree.so");
+  gSystem->Load("libGeom.so");
+  gSystem->Load("libVMC.so");
+  gSystem->Load("libPhysics.so");
+  gSystem->Load("libSTEERBase");
+  gSystem->Load("libESD");
+  gSystem->Load("libAOD");
+  gSystem->Load("libANALYSIS");
+  gSystem->Load("libANALYSISalice");   
+  gSystem->Load("libANALYSISaliceBase");
+  gSystem->Load("libOADB");
+  
   // since we will compile a class, tell root where to look for headers  
 #if !defined (__CINT__) || defined (__CLING__)
   gInterpreter->ProcessLine(".include $ROOTSYS/include");
@@ -32,23 +72,17 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
   AliAODInputHandler *aodH = new AliAODInputHandler();
   mgr->SetInputEventHandler(aodH);
 
-#if !defined (__CINT__) || defined (__CLING__)
   if(isEventSelection) {    
     if(run_mode=="full" || run_mode=="test" ) {
-      AliPhysicsSelectionTask* physSelTask = reinterpret_cast<AliPhysicsSelectionTask*>(gInterpreter->ExecuteMacro(Form("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C(%d,%d)",isMC,true)));
+      AliPhysicsSelectionTask* physSelTask = reinterpret_cast<AliPhysicsSelectionTask*>
+	(gInterpreter->ExecuteMacro(Form("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C(%d,%d)",isMC,true)));
     }
   }
-#else
-  if(isEventSelection){
-    gROOT->LoadMacro("$ALICE_PHYSICS/OADB/macros/AddTaskPhysicsSelection.C");
-    AliPhysicsSelectionTask* physSelTask = AddTaskPhysicsSelection(isMC,true);
-  }
-#endif
 
-#if !defined (__CINT__) || defined (__CLING__)
   if(isEventSelection){
     if(run_mode=="full" || run_mode=="test" ) {
-      AliMultSelectionTask *multSelTask=reinterpret_cast<AliMultSelectionTask*>(gInterpreter->ExecuteMacro(Form("$ALICE_PHYSICS/OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C(%d)",false)));
+    AliMultSelectionTask *multSelTask=reinterpret_cast<AliMultSelectionTask*>
+	(gInterpreter->ExecuteMacro(Form("$ALICE_PHYSICS/OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C(%d)",false)));
       multSelTask->SetUseDefaultCalib(true);
       if(isMC){
 	multSelTask->SetUseDefaultMCCalib(true);
@@ -57,29 +91,15 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
       }
     }
   }
-#else
-  if(isEventSelection){
-    gROOT->LoadMacro("$ALICE_PHYSICS/OADB/COMMON/MULTIPLICITY/macros/AddTaskMultSelection.C");
-    AliMultSelectionTask *multSelTask = AddTaskMultSelection(false);
-    multSelTask->SetUseDefaultCalib(true);
-    if(isMC) {
-      multSelTask->SetUseDefaultMCCalib(true);
-    } else {
-      multSelTask->SetUseDefaultCalib(true);
-    }
-  }
-#endif
-  
-  //AliAnalysisTaskPIDResponse *pidTask=reinterpret_cast<AliAnalysisTaskPIDResponse*>
-  //(gInterpreter->ExecuteMacro(Form("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C (%d,%d,%d,%d)",isMC,false,true,1)));    
-  
+
   AliAnalysisTaskPIDResponse *pidtask=reinterpret_cast<AliAnalysisTaskPIDResponse*>(gInterpreter->ExecuteMacro("$ALICE_ROOT/ANALYSIS/macros/AddTaskPIDResponse.C()"));
+
   
-  TFile* input = TFile::Open("./DownScale_Run2_CTP.root");
   
   unsigned int offlineTriggerMask;
   offlineTriggerMask = AliVEvent::kINT7;
-
+  string spd_multi_correction_file_path = "/Users/syano_mbp2021/analysis/run2/Glueball/SPDMultiCorrection.root";
+  string dimuon_ds_file_path = "/Users/syano_mbp2021/analysis/run2/Glueball/DownScale_Run2_CTP.root";
   float min_vtxz =-10;
   float max_vtxz = 10;
   int min_vtx_cont = 1;
@@ -106,7 +126,7 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
   int paircuttype = 0;
   double min_pairtrackptcut = 0.0;
   bool onMixingAnalysis = isMix;
-  bool isMidMuonAnalysis = true;
+  bool isMidTrackAnalysis = true;
   bool isKaonAnalysis = false;
   bool isK0sAnalysis = true;  
   float min_track_pt = 0.0;
@@ -114,7 +134,7 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
   float min_track_eta = -0.8;
   float max_track_eta =  0.8;
   float min_track_p = 0.15;
-  float max_track_p = 10.;
+  float max_track_p = 999.;
   float min_pion_sigma_tpc = -5;
   float max_pion_sigma_tpc =  5;
   float min_pion_sigma_tof = -5;
@@ -135,14 +155,12 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
   int nclusttpc = 80;
   int nclustits = 0;
   
-#if !defined (__CINT__) || defined (__CLING__)
-  gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
-  gInterpreter->LoadMacro("AliAnalysisTaskAODEventStudy.cxx++g");
-  gInterpreter->LoadMacro("AliAnalysisTaskAODTrackPair.cxx++g");
   AliAnalysisTaskAODTrackPair *task
     = reinterpret_cast<AliAnalysisTaskAODTrackPair*>
-    (gInterpreter->ExecuteMacro(Form("AddTaskAODTrackPair.C(%u, %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,\"%s\",%f,%f,%f,%d,%d)",
+    (gInterpreter->ExecuteMacro(Form("$ALICE_PHYSICS/PWGLF/RESONANCES/extra/AddTaskAODTrackPair.C(%u, \"%s\", \"%s\", %f, %f, %d, %f, %f, %f, %f, %f, %f, %f, %f, \"%s\", \"%s\",%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,%d,%f,%d,%d,%d,%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,\"%s\",%f,%f,%f,%d,%d)",
 				     offlineTriggerMask,
+				     spd_multi_correction_file_path.c_str(),
+				     dimuon_ds_file_path.c_str(),
 				     min_vtxz,
 				     max_vtxz,
 				     min_vtx_cont,
@@ -170,7 +188,7 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
 				     paircuttype,
 				     min_pairtrackptcut,
 				     onMixingAnalysis,
-				     isMidMuonAnalysis,
+				     isMidTrackAnalysis,
 				     isKaonAnalysis,
 				     isK0sAnalysis,
 				     min_track_pt,
@@ -199,39 +217,11 @@ void runAnalysisK0s(string runPeriod = "LHC16k",
 				     nclusttpc,
 				     nclustits
 				     ))); 
-#else
-  gROOT->LoadMacro("AliAnalysisTaskAODTrackPairUtils.cxx++g");
-  gROOT->LoadMacro("AliAnalysisTaskAODEventStudy.cxx++g");
-  gROOT->LoadMacro("AliAnalysisTaskAODTrackPair.cxx++g");
-  gROOT->LoadMacro("AddTaskAODTrackPairMC.C");
-  AliAnalysisTaskAODTrackPair* task = AddTaskAODTrackPairMC(
-							      offlineTriggerMask,
-							      min_vtxz,
-							      max_vtxz,
-							      min_vtx_cont,
-							      min_pair_rap,
-							      max_pair_rap,
-							      period.c_str(),
-							      multi_method.c_str(),
-							      onPURej,
-							      onLBcut,
-							      onMuEtaCut,
-							      onMuThetaAbsCut,
-							      onMuMatchAptCut,
-							      onMuMatchLptCut,
-							      onMuMatchHptCut,
-							      onMuChi2Cut,
-							      onMuPdcaCut,
-							      isMC,
-							      isSelectEvt,
-							      paircuttype,
-							      min_pairtrackptcut,
-							      onMixingAnalysis,
-							      isMidMuonAnalysis
-							      );
-#endif
   
-  if(!mgr->InitAnalysis()) return;
+  
+  if(!mgr->InitAnalysis()) {
+    return;
+  }
 
   mgr->SetDebugLevel(2);
   mgr->PrintStatus();
@@ -378,9 +368,9 @@ AliAnalysisGrid* CreateAlienHandler(string runPeriod, string run_mode, Bool_t is
 
   plugin->AddIncludePath("-I. -I$ROOTSYS/include -I$ALICE_ROOT -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include");
 
-  plugin->SetAnalysisSource("AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPair.cxx");
-  plugin->SetAdditionalLibs("libSTEERBase.so libESD.so libAOD.so libANALYSIS.so libANALYSISalice.so libANALYSISaliceBase.so libCORRFW.so libOADB.so libCore.so libTree.so libGeom.so libVMC.so libPhysics.so "
-			    "AliAnalysisTaskAODTrackPairUtils.h AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.h AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPair.h AliAnalysisTaskAODTrackPair.cxx");
+  //plugin->SetAnalysisSource("AliAnalysisTaskAODTrackPairUtils.cxx AliAnalysisTaskAODEventStudy.cxx AliAnalysisTaskAODTrackPair.cxx");
+  plugin->SetAdditionalLibs("libSTEERBase.so libESD.so libAOD.so libANALYSIS.so libANALYSISalice.so libANALYSISaliceBase.so libPWGLFrsnextra.so "
+			    "libCORRFW.so libOADB.so libCore.so libTree.so libGeom.so libPhysics.so");
   
   //Set Job
   plugin->SetExecutableCommand("aliroot -b -q");

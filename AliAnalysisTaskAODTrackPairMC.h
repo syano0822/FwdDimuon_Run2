@@ -1,88 +1,56 @@
 #ifndef AliAnalysisTaskAODTrackPairMC_cxx
 #define AliAnalysisTaskAODTrackPairMC_cxx
 
-#include "AliAnalysisTaskSE.h"
-#include "THnSparse.h"
-#include "TH3F.h"
 #include "AliAnalysisTaskAODTrackPairUtils.h"
+#include "AliAnalysisTaskSE.h"
+#include "TH3F.h"
+#include "THnSparse.h"
 
 class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
 
- public:
-
+public:
   AliAnalysisTaskAODTrackPairMC();
-  AliAnalysisTaskAODTrackPairMC(const char* name);
+  AliAnalysisTaskAODTrackPairMC(const char *name);
   virtual ~AliAnalysisTaskAODTrackPairMC();
 
-  virtual void   UserCreateOutputObjects();
-  virtual void   UserExec(Option_t *option);
+  virtual void UserCreateOutputObjects();
+  virtual void UserExec(Option_t *option);
 
-  void setMC(bool isMC){
-    fIsMC = isMC;
-  }
-  void setMidMuonAna(bool isMidMuon){
-    fIsMidTrackAna = isMidMuon;
-  }
-  void setMixingAnalysis(bool isMix)
-  {
-    fIsMixingAnalysis = isMix;
-  }
-  void setUtils(AliAnalysisTaskAODTrackPairUtils *utils)
-  {
-    fUtils = utils;
-  }
-  void setEvtMixingTrackDepth(int depth)
-  {
-    fTrackDepth=depth;
-  }
-  void setEvtMixingPoolSize(int size)
-  {
-    fPoolSize=size;
-  }
-  void setEvtMixingReadyFraction(float frac)
-  {
-    fReadyFraction=frac;
-  }
-  void setEvtMixingPoolVtxZ(bool flag)
-  {
-    onEvtMixingPoolVtxZ=flag;
-  }
-  void setEvtMixingPoolCent(bool flag)
-  {
-    onEvtMixingPoolCent=flag;
-  }
-  void setEvtMixingPoolPsi(bool flag)
-  {
-    onEvtMixingPoolPsi=flag;
-  }
-  void setMixingEventTrigger(unsigned int mask)
-  {
+  void setMC(bool isMC) { fIsMC = isMC; }
+  void setMidMuonAna(bool isMidMuon) { fIsMidTrackAna = isMidMuon; }
+  void setMixingAnalysis(bool isMix) { fIsMixingAnalysis = isMix; }
+  void setUtils(AliAnalysisTaskAODTrackPairUtils *utils) { fUtils = utils; }
+  void setEvtMixingTrackDepth(int depth) { fTrackDepth = depth; }
+  void setEvtMixingPoolSize(int size) { fPoolSize = size; }
+  void setEvtMixingReadyFraction(float frac) { fReadyFraction = frac; }
+  void setEvtMixingPoolVtxZ(bool flag) { onEvtMixingPoolVtxZ = flag; }
+  void setEvtMixingPoolCent(bool flag) { onEvtMixingPoolCent = flag; }
+  void setEvtMixingPoolPsi(bool flag) { onEvtMixingPoolPsi = flag; }
+  void setMixingEventTrigger(unsigned int mask) {
     fTriggerMaskForMixing = mask;
   }
-  void setSameEventTrigger(unsigned int mask)
-  {
-    fTriggerMaskForSame = mask;
-  }
+  void setSameEventTrigger(unsigned int mask) { fTriggerMaskForSame = mask; }
 
- private:
-
-  AliAnalysisTaskAODTrackPairMC(const AliAnalysisTaskAODTrackPairMC&); // not implemented
-  AliAnalysisTaskAODTrackPairMC& operator=(const AliAnalysisTaskAODTrackPairMC&); // not implemented
+private:
+  AliAnalysisTaskAODTrackPairMC(
+      const AliAnalysisTaskAODTrackPairMC &); // not implemented
+  AliAnalysisTaskAODTrackPairMC &
+  operator=(const AliAnalysisTaskAODTrackPairMC &); // not implemented
 
   bool Initialize();
   bool FwdMuonPairAnalysis();
   bool FwdMuonPairAnalysisEveMixing();
-  bool FwdMuonTrackQA(AliAODTrack* track);
+  bool FwdMuonTrackQA(AliAODTrack *track);
   bool MidTrackQA();
   bool FwdTrackQA();
-  bool FillingRecMuonTree(AliAODTrack* track);
+  bool FillingRecMuonTree(AliAODTrack *track);
   bool EventQA();
   bool isPrimaryMuonTrack(AliAODMCParticle *particle1);
   bool processMC();
 
   AliAODEvent *fEvent;
   AliEventPoolManager *fPoolMuonTrackMgr;
-  AliAnalysisTaskAODTrackPairUtils* fUtils;
+  AliAnalysisTaskAODTrackPairUtils *fUtils;
   TClonesArray *fMCTrackArray;
   TRandom1 *fRandom;
 
@@ -109,23 +77,23 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   bool fIsCMLL7;
 
   ////////////////////////////////////////////////
-  //Output histos
+  // Output histos
   ////////////////////////////////////////////////
 
-  TList* fOutputList;
-  TH2F* fEventCounter;
+  TList *fOutputList;
+  TH2F *fEventCounter;
 
-  TH2F* fHistTrackEta;
-  TH2F* fHistTrackThetaAbs;
-  TH2F* fHistTrackTriggerMatch;
-  TH2F* fHistTrackPDCA;
-  TH2F* fHistTrackChiSquare;
-  TH2F* fHistTriggerChiSquare;
+  TH2F *fHistTrackEta;
+  TH2F *fHistTrackThetaAbs;
+  TH2F *fHistTrackTriggerMatch;
+  TH2F *fHistTrackPDCA;
+  TH2F *fHistTrackChiSquare;
+  TH2F *fHistTriggerChiSquare;
 
-  TH1F* fHistEventVtxZ;
-  TH1F* fHistEventCent;
-  TH1F* fHistEventMulti;
-  TH1F* fHistEventVtxCont;
+  TH1F *fHistEventVtxZ;
+  TH1F *fHistEventCent;
+  TH1F *fHistEventMulti;
+  TH1F *fHistEventVtxCont;
 
   TTree *fTreeTrack;
   TTree *fTreeTrackLight;
@@ -166,12 +134,12 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   bool fTrackTPConly;
   bool fTrackGoodFwdQuarity;
   int fTrackMCType;
-  int fTrackTrigMatch;  
+  int fTrackTrigMatch;
   int fTrackPdgCode;
   int fTrackMotherPdgCode;
 
-  TTree* fTreeRecMuonP;
-  TTree* fTreeRecMuonN;
+  TTree *fTreeRecMuonP;
+  TTree *fTreeRecMuonN;
   float RecMuonPt;
   float RecMuonEta;
   float RecMuonRap;
@@ -181,32 +149,32 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   float RecMuonTriggerChiSquare;
   int RecMuonTriggerMatch;
   int RecMuonIsGoodTrack;
-  
+
   float RecMCMuonPt;
   float RecMCMuonEta;
   float RecMCMuonRap;
   float RecMCMuonPhi;
-  
-  TTree* fTreeMCMuonP;
-  TTree* fTreeMCMuonN;
+
+  TTree *fTreeMCMuonP;
+  TTree *fTreeMCMuonN;
   float MCMuonPt;
   float MCMuonEta;
   float MCMuonRap;
   float MCMuonPhi;
   int MCMuonDetect;
 
-  TTree* fTreeULSDimuon;
-  TTree* fTreeLSppDimuon;
-  TTree* fTreeLSmmDimuon;
+  TTree *fTreeULSDimuon;
+  TTree *fTreeLSppDimuon;
+  TTree *fTreeLSmmDimuon;
 
-  TTree* fTreeMCULSDimuon;
-  TTree* fTreeMCLSppDimuon;
-  TTree* fTreeMCLSmmDimuon;
+  TTree *fTreeMCULSDimuon;
+  TTree *fTreeMCLSppDimuon;
+  TTree *fTreeMCLSmmDimuon;
 
-  TTree* fTreeMixULSDimuon;
-  TTree* fTreeMixLSppDimuon;
-  TTree* fTreeMixLSmmDimuon;
-  
+  TTree *fTreeMixULSDimuon;
+  TTree *fTreeMixLSppDimuon;
+  TTree *fTreeMixLSmmDimuon;
+
   float RecDimuonPt;
   float RecDimuonRap;
   float RecDimuonMass;
@@ -220,7 +188,7 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   float RecMCMomMass;
   float RecMCMomEta;
   float RecMCMomPt;
-  
+
   int RecMCMom2Body;
   int RecMCMomDalitz;
 
@@ -235,7 +203,7 @@ class AliAnalysisTaskAODTrackPairMC : public AliAnalysisTaskSE {
   int MCDimuonDetected;
 
   bool fIsMidTrackAna;
-  
+
   ClassDef(AliAnalysisTaskAODTrackPairMC, 1); // example of analysis
 };
 
