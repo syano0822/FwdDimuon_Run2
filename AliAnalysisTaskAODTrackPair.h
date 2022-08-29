@@ -44,25 +44,26 @@ private:
 
   bool EventQA();
   bool Initialize();
+
   bool FwdMuonPairAnalysis();
   bool FwdMuonPairAnalysisEveMixing();
+
   bool FwdMuonTrackQA(AliAODTrack *track);
   bool FwdMuonPairQA(AliAODDimuon *dimuon);
 
-  bool MidTrackQA(AliAODTrack *track);
   bool MidTrackPIDChecker(AliAODTrack *track, AliPID::EParticleType pid,
                           bool isSel);
+
   bool MidTrackQualityChecker(AliAODTrack *track);
   bool MidV0Checker(AliAODv0 *v0, bool isSel);
 
-  bool MidMuonPairQA(AliAODDimuon *dimuon);
   bool MidPairAnalysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2);
+  bool MidPairAnalysisEventMixing(AliPID::EParticleType pid1,
+                                  AliPID::EParticleType pid2);
 
   bool MidV0Analysis(AliPID::EParticleType pid1, AliPID::EParticleType pid2);
   bool MidV0AnalysisEventMixing(AliPID::EParticleType pid1,
                                 AliPID::EParticleType pid2);
-
-  bool MidMuonPairAnalysisEveMixing();
 
   AliAODEvent *fEvent;
   AliEventPoolManager *fPoolMuonTrackMgr;

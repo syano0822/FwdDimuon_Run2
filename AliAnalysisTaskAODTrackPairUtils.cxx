@@ -349,30 +349,6 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptFwdDimuon(AliAODDimuon *dimuon) {
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidDimuon(AliAODDimuon *dimuon) {
-  AliAODTrack *track1 = dynamic_cast<AliAODTrack *>(dimuon->GetMu(0));
-  AliAODTrack *track2 = dynamic_cast<AliAODTrack *>(dimuon->GetMu(1));
-
-  if (fIsPairRapCut && !(fMinPairRapCut < fabs(dimuon->Y()) &&
-                         fabs(dimuon->Y()) < fMaxPairRapCut)) {
-    return false;
-  }
-  if (fIsPairPtCutForOneTrack && !fIsPairPtCutForBothTracks) {
-    if (track1->Pt() < fMinPairPtCut && track2->Pt() < fMinPairPtCut) {
-      return false;
-    }
-  } else if (!fIsPairPtCutForOneTrack && fIsPairPtCutForBothTracks) {
-    if (track1->Pt() < fMinPairPtCut || track2->Pt() < fMinPairPtCut) {
-      return false;
-    }
-  } else if (!fIsPairPtCutForOneTrack && !fIsPairPtCutForBothTracks) {
-    return true;
-  } else {
-    return false;
-  }
-  return true;
-}
-
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptTrackKinematics(
     AliAODTrack *track) {
   if (track->P() < fMinTrackP || fMaxTrackP < track->P()) {
@@ -395,16 +371,6 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Kinematics(AliAODv0 *v0) {
     return false;
   }
   return true;
-}
-
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidMuonTrack(
-    AliAODTrack *track) {
-  if (!isAcceptMidPrimTrackQuality(track) ||
-      !isAcceptMidPid(track, AliPID::kMuon)) {
-    return false;
-  } else {
-    return true;
-  }
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPrimTrackQuality(

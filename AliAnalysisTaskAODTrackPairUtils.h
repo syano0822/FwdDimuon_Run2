@@ -27,8 +27,6 @@ public:
   bool isAcceptTrackKinematics(AliAODTrack *track);
   bool isAcceptFwdMuonTrack(AliAODTrack *track);
   bool isAcceptFwdDimuon(AliAODDimuon *dimuon);
-  bool isAcceptMidMuonTrack(AliAODTrack *track);
-  bool isAcceptMidDimuon(AliAODDimuon *dimuon);
   bool isAcceptMidPrimTrackQuality(AliAODTrack *track);
   bool isAcceptMidPid(AliAODTrack *track, AliPID::EParticleType pid);
   bool isAcceptV0Kinematics(AliAODv0 *v0);
@@ -205,8 +203,6 @@ public:
     fMaxReducedChi2ITS = chi2its;
     fMinTrackTPCNClusts = nclusttpc;
     fMinTrackSPDNClusts = nclustits;
-    // fFuncMaxDCAxy = new
-    // TF1("fFuncMaxDCAxy",fMaxTrackDCAxyName.c_str(),0,100);
   }
 
   void setPileupRejectionCut(bool flag) { fIsPUcut = flag; }
@@ -251,13 +247,6 @@ public:
   void setMuonSelectSigmaTOF(float min, float max) {
     fMinMuonSigmaTOF = min;
     fMaxMuonSigmaTOF = max;
-  }
-  void setMidTrackKinematicRange(float minpt, float maxpt, float mineta,
-                                 float maxeta) {
-    // fMinMidTrackPt = minpt;
-    // fMaxMidTrackPt = maxpt;
-    // fMinMidTrackEta = mineta;
-    // fMaxMidTrackEta = maxeta;
   }
   void setArmenterosLimit(float pcm, float r0, float width) {
     fArmenterosBandWidth = width;

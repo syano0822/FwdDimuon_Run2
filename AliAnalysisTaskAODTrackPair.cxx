@@ -393,7 +393,14 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects() {
       double max_bins[3] = {max_mass, max_pt, 100};
       fSparseMixULSPairMassPt = new THnSparseF("fSparseMixULSPairMassPt", "", 3,
                                                bins, min_bins, max_bins);
+      fSparseMixLSppPairMassPt = new THnSparseF("fSparseMixLSppPairMassPt", "",
+                                                3, bins, min_bins, max_bins);
+      fSparseMixLSmmPairMassPt = new THnSparseF("fSparseMixLSmmPairMassPt", "",
+                                                3, bins, min_bins, max_bins);
+
       fOutputList->Add(fSparseMixULSPairMassPt);
+      fOutputList->Add(fSparseMixLSppPairMassPt);
+      fOutputList->Add(fSparseMixLSmmPairMassPt);
     }
 
     if (fIsV0TrackPairAna) {
@@ -770,8 +777,7 @@ bool AliAnalysisTaskAODTrackPair::FwdMuonPairAnalysisEveMixing() {
     poolVtxZ = fUtils->getVtxZ();
   }
   if (onEvtMixingPoolCent) {
-    // poolCent=fUtils->getCentClass();
-    poolCent = fUtils->getNCorrSPDTrkInfo(1);
+    poolCent = fUtils->getCentClass();
   }
   if (onEvtMixingPoolPsi) {
     poolPsi = fUtils->getPsi();
@@ -814,8 +820,7 @@ bool AliAnalysisTaskAODTrackPair::FwdMuonPairAnalysisEveMixing() {
           RecPairPt = dimuon->Pt();
           RecPairRap = fabs(dimuon->Y());
           RecPairMass = dimuon->M();
-          // RecPairCent = fUtils->getCentClass();
-          RecPairCent = fUtils->getNCorrSPDTrkInfo(1);
+          RecPairCent = fUtils->getCentClass();
           RecPairDS = fUtils->getDS();
 
           string fFiredTrigName = string(fEvent->GetFiredTriggerClasses());
@@ -909,8 +914,7 @@ bool AliAnalysisTaskAODTrackPair::FwdMuonPairAnalysis() {
       RecPairPt = dimuon->Pt();
       RecPairRap = fabs(dimuon->Y());
       RecPairMass = dimuon->M();
-      // RecPairCent = fUtils->getCentClass();
-      RecPairCent = fUtils->getNCorrSPDTrkInfo(1);
+      RecPairCent = fUtils->getCentClass();
       RecPairDS = fUtils->getDS();
 
       if (dimuon->Charge() == 0) {
@@ -929,8 +933,11 @@ bool AliAnalysisTaskAODTrackPair::FwdMuonPairAnalysis() {
 }
 
 bool AliAnalysisTaskAODTrackPair::MidTrackQualityChecker(AliAODTrack *track) {
+
   fHistTPCNClusts->Fill(track->GetTPCNcls());
+
   int nSPD = 0;
+
   if (track->HasPointOnITSLayer(0)) {
     ++nSPD;
   }
@@ -1069,42 +1076,6 @@ bool AliAnalysisTaskAODTrackPair::MidTrackPIDChecker(AliAODTrack *track,
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MidTrackQA(AliAODTrack *track) {
-
-  float dca_xy = 9999;
-  float dca_z = 9999;
-  track->GetImpactParameters(dca_xy, dca_z);
-
-  AliTOFHeader *tofHeader = (AliTOFHeader *)track->GetTOFHeader();
-  /*
-  fTrackPt = track->Pt();
-  fTrackP = track->P();
-  fTrackTheta = track->Theta();
-  fTrackPhi = track->Phi();
-  fTrackLength = track->GetIntegratedLength();
-  fTrackBeta = beta;
-  fTrackTrackChi2perNDF = track->Chi2perNDF();
-  fTrackTrackITSNcls = track->GetITSNcls();
-  fTrackTrackTPCNcls = track->GetTPCNcls();
-  fTrackTrackTOFNcls = tofHeader->GetNumberOfTOFclusters();
-  fTrackTrackTPCChi2 = track->GetTPCchi2();
-  fTrackTrackITSChi2 = track->GetITSchi2();
-  fTrackTPCCrossedRows = track->GetTPCCrossedRows();
-  fTrackTPCFindableNcls = track->GetTPCNclsF();
-  fTrackTOFBCTime = track->GetTOFBunchCrossing();
-  fTrackTOFKinkIndex = track->GetKinkIndex(0);
-  fTrackDCAxy = dca_xy;
-  fTrackDCAz = dca_z;
-  fTrackTPCsigmaMuon = fUtils->getTPCSigma(track,AliPID::kMuon);
-  fTrackTOFsigmaMuon = fUtils->getTOFSigma(track,AliPID::kMuon);
-  */
-  return true;
-}
-
-bool AliAnalysisTaskAODTrackPair::MidMuonPairQA(AliAODDimuon *dimuon) {
-  return true;
-}
-
 bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
                                                 AliPID::EParticleType pid2) {
 
@@ -1133,6 +1104,8 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
     AliAODTrack *nTrack = (AliAODTrack *)v0_1->GetDaughter(1);
 
     MidV0Checker(v0_1, false);
+    MidTrackPIDChecker(pTrack, pid1, false);
+    MidTrackPIDChecker(nTrack, pid2, false);
 
     if (0.4 > RecPairMass || RecPairMass > 0.6) {
       continue;
@@ -1149,9 +1122,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
     MidTrackQualityChecker(pTrack);
     MidTrackQualityChecker(nTrack);
 
-    MidTrackPIDChecker(pTrack, AliPID::kPion, false);
-    MidTrackPIDChecker(nTrack, AliPID::kPion, false);
-
     fHistSelArmenteros->Fill(v0_1->Alpha(), v0_1->PtArmV0());
     fHistULSPairMassPt_ProngV0->Fill(RecPairMass, RecPairPt);
 
@@ -1159,8 +1129,8 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
       continue;
     }
 
-    MidTrackPIDChecker(pTrack, AliPID::kPion, true);
-    MidTrackPIDChecker(nTrack, AliPID::kPion, true);
+    MidTrackPIDChecker(pTrack, pid1, true);
+    MidTrackPIDChecker(nTrack, pid2, true);
 
     for (int iV0_2 = iV0_1 + 1; iV0_2 < nV0; ++iV0_2) {
 
@@ -1199,8 +1169,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
       RecPairMass = lv12.M();
       RecPairRap = lv12.Rapidity();
 
-      // fHistULSPairMassPt->Fill(RecPairMass,RecPairPt);
-      double fill[] = {RecPairMass, RecPairPt, fUtils->getCentClass(1)};
+      double fill[] = {RecPairMass, RecPairPt, fUtils->getCentClass()};
       fSparseULSPairMassPt->Fill(fill);
     }
   }
@@ -1221,7 +1190,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
     poolVtxZ = fUtils->getVtxZ();
   }
   if (onEvtMixingPoolCent) {
-    poolCent = fUtils->getNCorrSPDTrkInfo(1);
+    poolCent = fUtils->getCentClass();
   }
   if (onEvtMixingPoolPsi) {
     poolPsi = fUtils->getPsi();
@@ -1241,14 +1210,22 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
 
     v0_1 = (AliAODv0 *)fEvent->GetV0(iV0_1);
 
+    if (!fUtils->isAcceptV0Kinematics(v0_1)) {
+      continue;
+    }
+
     RecPairPt = v0_1->Pt();
     RecPairMass = v0_1->MassK0Short();
     RecPairRap = v0_1->RapK0Short();
+    RecPairArmenterosArmPt = v0_1->PtArmV0();
+    RecPairArmenterosAlpha = v0_1->AlphaV0();
 
     AliAODTrack *pTrack = (AliAODTrack *)v0_1->GetDaughter(0);
     AliAODTrack *nTrack = (AliAODTrack *)v0_1->GetDaughter(1);
 
     MidV0Checker(v0_1, false);
+    MidTrackPIDChecker(pTrack, pid1, false);
+    MidTrackPIDChecker(nTrack, pid2, false);
 
     if (0.4 > RecPairMass || RecPairMass > 0.6) {
       continue;
@@ -1265,9 +1242,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
     MidTrackQualityChecker(pTrack);
     MidTrackQualityChecker(nTrack);
 
-    MidTrackPIDChecker(pTrack, AliPID::kPion, false);
-    MidTrackPIDChecker(nTrack, AliPID::kPion, false);
-
     fHistSelArmenteros->Fill(v0_1->Alpha(), v0_1->PtArmV0());
     fHistULSPairMassPt_ProngV0->Fill(RecPairMass, RecPairPt);
 
@@ -1275,8 +1249,8 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
       continue;
     }
 
-    MidTrackPIDChecker(pTrack, AliPID::kPion, true);
-    MidTrackPIDChecker(nTrack, AliPID::kPion, true);
+    MidTrackPIDChecker(pTrack, pid1, true);
+    MidTrackPIDChecker(nTrack, pid2, true);
 
     if (pool->IsReady()) {
 
@@ -1298,9 +1272,8 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
           RecPairMass = lv12.M();
           RecPairRap = lv12.Rapidity();
 
-          double fill[] = {RecPairMass, RecPairPt, fUtils->getCentClass(1)};
+          double fill[] = {RecPairMass, RecPairPt, fUtils->getCentClass()};
           fSparseULSPairMassPt->Fill(fill);
-          // fHistMixULSPairMassPt->Fill(RecPairMass,RecPairPt);
         }
       }
     }
@@ -1388,18 +1361,21 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
       }
 
       lv12 = lv1 + lv2;
-      /*
-      if ( (pid1 == AliPID::kKaon && pid2 == AliPID::kKaon) && lv12.M() < 1.035
-      ) { skip_tracks_ids[iTrack1] = true; skip_tracks_ids[iTrack2] = true; }
-      else if ( (pid1 == AliPID::kPion && pid2 == AliPID::kPion) ) { if
-      (0.48<lv12.M() && lv12.M()<0.51) { skip_tracks_ids[iTrack1] = true;
+
+      if ((pid1 == AliPID::kKaon && pid2 == AliPID::kKaon) &&
+          lv12.M() < 1.035) {
+        skip_tracks_ids[iTrack1] = true;
+        skip_tracks_ids[iTrack2] = true;
+      } else if ((pid1 == AliPID::kPion && pid2 == AliPID::kPion)) {
+        if (0.48 < lv12.M() && lv12.M() < 0.51) {
+          skip_tracks_ids[iTrack1] = true;
           skip_tracks_ids[iTrack2] = true;
-        } else if (0.70<lv12.M() && lv12.M()<0.84) {
+        } else if (0.70 < lv12.M() && lv12.M() < 0.84) {
           skip_tracks_ids[iTrack1] = true;
           skip_tracks_ids[iTrack2] = true;
         }
       }
-      */
+
     } // end of loop track2
   }   // end of loop track1
 
@@ -1413,15 +1389,14 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
 
       lv12 = lv1 + lv2;
 
-      RecPairPt = lv12.Pt();
-      RecPairMass = lv12.M();
+      double fill[] = {lv12.M(), lv12.Pt(), fUtils->getCentClass()};
 
       if (charges[iTrack1] + charges[iTrack2] == 0) {
-        fHistULSPairMassPt->Fill(RecPairMass, RecPairPt);
+        fSparseULSPairMassPt->Fill(fill);
       } else if (charges[iTrack1] + charges[iTrack2] > 0) {
-        fHistLSppPairMassPt->Fill(RecPairMass, RecPairPt);
+        fSparseLSppPairMassPt->Fill(fill);
       } else {
-        fHistLSmmPairMassPt->Fill(RecPairMass, RecPairPt);
+        fSparseLSmmPairMassPt->Fill(fill);
       }
 
       if (skip_tracks_ids[iTrack1] && skip_tracks_ids[iTrack2]) {
@@ -1442,7 +1417,8 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MidMuonPairAnalysisEveMixing() {
+bool AliAnalysisTaskAODTrackPair::MidPairAnalysisEventMixing(
+    AliPID::EParticleType pid1, AliPID::EParticleType pid2) {
 
   TObjArray *fTrackArray = new TObjArray();
   fTrackArray->SetOwner();
@@ -1451,24 +1427,109 @@ bool AliAnalysisTaskAODTrackPair::MidMuonPairAnalysisEveMixing() {
   float poolVtxZ = 0.;
   float poolPsi = 0.;
 
-  if (onEvtMixingPoolVtxZ)
+  if (onEvtMixingPoolVtxZ) {
     poolVtxZ = fUtils->getVtxZ();
-  if (onEvtMixingPoolCent)
+  }
+  if (onEvtMixingPoolCent) {
     poolCent = fUtils->getCentClass();
-  if (onEvtMixingPoolPsi)
+  }
+  if (onEvtMixingPoolPsi) {
     poolPsi = fUtils->getPsi();
+  }
 
   AliEventPool *pool = (AliEventPool *)fPoolMuonTrackMgr->GetEventPool(
       poolCent, poolVtxZ, poolPsi);
 
   Int_t nTrack = fEvent->GetNumberOfTracks();
 
+  AliAODTrack *track1;
+  AliAODTrack *track2;
+
+  TLorentzVector *lv1, *lv2, *lv12;
+
+  std::vector<TLorentzVector *> tracks;
+  std::vector<int> charges;
+  std::vector<bool> skip_tracks_ids;
+
   for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
 
-    AliAODTrack *track1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
+    track1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
 
-    if (!fUtils->isAcceptMidMuonTrack(track1))
+    if (!fUtils->isAcceptMidPrimTrackQuality(track1)) {
       continue;
+    }
+    if (!fUtils->isAcceptTrackKinematics(track1)) {
+      continue;
+    }
+
+    MidTrackPIDChecker(track1, pid1, false);
+
+    if (!fUtils->isAcceptMidPid(track1, pid1)) {
+      continue;
+    }
+
+    MidTrackPIDChecker(track1, pid1, true);
+    MidTrackQualityChecker(track1);
+
+    float mass1 = 0;
+
+    if (pid1 == AliPID::kElectron) {
+      mass1 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
+    } else if (pid1 == AliPID::kPion) {
+      mass1 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+    } else if (pid1 == AliPID::kKaon) {
+      mass1 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
+    } else if (pid1 == AliPID::kProton) {
+      mass1 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
+    } else if (pid1 == AliPID::kMuon) {
+      mass1 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
+    } else {
+      continue;
+    }
+
+    TLorentzVector *vec4;
+    vec4->SetPtEtaPhiM(track1->Pt(), track1->Eta(), track1->Phi(), mass1);
+    tracks.push_back(vec4);
+    skip_tracks_ids.push_back(false);
+    charges.push_back(track1->Charge());
+  }
+
+  nTrack = tracks.size();
+
+  for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
+
+    lv1 = tracks[iTrack1];
+
+    for (Int_t iTrack2 = iTrack1 + 1; iTrack2 < nTrack; ++iTrack2) {
+
+      lv2 = tracks[iTrack2];
+
+      if (charges[iTrack1] + charges[iTrack2] != 0) {
+        continue;
+      }
+
+      *lv12 = *lv1 + *lv2;
+
+      if ((pid1 == AliPID::kKaon && pid2 == AliPID::kKaon) &&
+          lv12->M() < 1.035) {
+        skip_tracks_ids[iTrack1] = true;
+        skip_tracks_ids[iTrack2] = true;
+      } else if ((pid1 == AliPID::kPion && pid2 == AliPID::kPion)) {
+        if (0.48 < lv12->M() && lv12->M() < 0.51) {
+          skip_tracks_ids[iTrack1] = true;
+          skip_tracks_ids[iTrack2] = true;
+        } else if (0.70 < lv12->M() && lv12->M() < 0.84) {
+          skip_tracks_ids[iTrack1] = true;
+          skip_tracks_ids[iTrack2] = true;
+        }
+      }
+
+    } // end of loop track2
+  }   // end of loop track1
+
+  for (int iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
+
+    lv1 = tracks[iTrack1];
 
     if (pool->IsReady()) {
 
@@ -1476,49 +1537,41 @@ bool AliAnalysisTaskAODTrackPair::MidMuonPairAnalysisEveMixing() {
 
         TObjArray *poolTracks = (TObjArray *)pool->GetEvent(iMixEvt);
 
-        for (Int_t iTrack2 = 0; iTrack2 < poolTracks->GetEntriesFast();
+        for (int iTrack2 = 0; iTrack2 < poolTracks->GetEntriesFast();
              ++iTrack2) {
 
-          AliAODTrack *__track2__ = (AliAODTrack *)poolTracks->At(iTrack2);
+          lv2 = tracks[iTrack2];
 
-          AliAODTrack *track2 = (AliAODTrack *)__track2__->Clone();
+          *lv12 = *lv1 + *lv2;
 
-          if (!fUtils->isAcceptMidMuonTrack(track2))
-            continue;
+          double fill[] = {lv12->M(), lv12->Pt(), fUtils->getCentClass()};
 
-          AliAODDimuon *dimuon = new AliAODDimuon();
-          dimuon->SetMuons(track1, track2);
-
-          if (!fUtils->isAcceptMidDimuon(dimuon))
-            continue;
-
-          double fill[] = {dimuon->M(), fabs(dimuon->Y()), dimuon->Pt(),
-                           fUtils->getCentClass()};
-
-          RecPairPt = dimuon->Pt();
-          RecPairRap = fabs(dimuon->Y());
-          RecPairMass = dimuon->M();
-          RecPairCent = fUtils->getCentClass();
-          RecPairDS = fUtils->getDS();
-
-          if (dimuon->Charge() == 0) {
-            fTreeMixULSPair->Fill();
-          } else if (dimuon->Charge() > 0) {
-            fTreeMixLSppPair->Fill();
+          if (charges[iTrack1] + charges[iTrack2] == 0) {
+            fSparseMixULSPairMassPt->Fill(fill);
+          } else if (charges[iTrack1] + charges[iTrack2] > 0) {
+            fSparseMixLSppPairMassPt->Fill(fill);
           } else {
-            fTreeMixLSmmPair->Fill();
+            fSparseMixLSmmPairMassPt->Fill(fill);
           }
 
-          delete track2;
-          delete dimuon;
+          if (skip_tracks_ids[iTrack1] && skip_tracks_ids[iTrack2]) {
+            continue;
+          }
+          /*
+          if (charges[iTrack1] + charges[iTrack2] == 0) {
+            fHistULSPairMassPt_TightCut->Fill(RecPairMass, RecPairPt);
+          } else if (charges[iTrack1] + charges[iTrack2] > 0) {
+            fHistLSppPairMassPt_TightCut->Fill(RecPairMass, RecPairPt);
+          } else {
+            fHistLSmmPairMassPt_TightCut->Fill(RecPairMass, RecPairPt);
+          }
+          */
+        }
+      }
+    }
 
-        } // end of loop track2
-      }   // end of loop iMixEvt
-    }     // poolPion->IsReady()
-
-    fTrackArray->Add(track1);
-
-  } // end of loop track1
+    fTrackArray->Add(lv1);
+  }
 
   TObjArray *fTrackArrayClone = (TObjArray *)fTrackArray->Clone();
   fTrackArrayClone->SetOwner();
