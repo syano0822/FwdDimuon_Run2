@@ -664,7 +664,7 @@ void AliAnalysisTaskAODTrackPair::UserExec(Option_t *) {
   }
 
   EventQA();
-  
+
   if (fIsMidTrackAna) {
     if (!fIsMixingAnalysis) {
       FwdMuonPairAnalysis();
@@ -676,7 +676,7 @@ void AliAnalysisTaskAODTrackPair::UserExec(Option_t *) {
   if (fIsMidTrackAna) {
     if (!fIsMixingAnalysis) {
       if (fIsV0TrackPairAna) {
-	MidV0Analysis(fUtils->getPairTargetPIDs(0),
+        MidV0Analysis(fUtils->getPairTargetPIDs(0),
                       fUtils->getPairTargetPIDs(1));
       }
       if (fIsPrimTrackPairAna) {
@@ -688,10 +688,6 @@ void AliAnalysisTaskAODTrackPair::UserExec(Option_t *) {
       if (fIsV0TrackPairAna) {
         MidV0AnalysisEventMixing(fUtils->getPairTargetPIDs(0),
                                  fUtils->getPairTargetPIDs(1));
-      }
-      if (fIsPrimTrackPairAna) {
-        MidPairAnalysisEventMixing(fUtils->getPairTargetPIDs(0),
-				   fUtils->getPairTargetPIDs(1));
       }
     }
   }
@@ -1083,7 +1079,6 @@ bool AliAnalysisTaskAODTrackPair::MidTrackPIDChecker(AliAODTrack *track,
 bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
                                                 AliPID::EParticleType pid2) {
 
-  cout<<"MidV0Analysis"<<endl;
   Int_t nV0 = fEvent->GetNumberOfV0s();
 
   AliAODv0 *v0_1;
@@ -1092,9 +1087,9 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
   TLorentzVector lv1, lv2, lv12;
 
   for (int iV0_1 = 0; iV0_1 < nV0; ++iV0_1) {
-    
+
     v0_1 = (AliAODv0 *)fEvent->GetV0(iV0_1);
-    
+
     if (!fUtils->isAcceptV0Kinematics(v0_1)) {
       continue;
     }
@@ -1111,31 +1106,29 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
     MidV0Checker(v0_1, false);
     MidTrackPIDChecker(pTrack, pid1, false);
     MidTrackPIDChecker(nTrack, pid2, false);
-    
+
     if (0.4 > RecPairMass || RecPairMass > 0.6) {
       continue;
     }
-    
     if (!fUtils->isAcceptedK0s(v0_1, pid1, pid2, 0)) {
       continue;
     }
-    
     if (!fUtils->isAcceptArmenterosK0s(v0_1)) {
       continue;
     }
-    
+
     MidV0Checker(v0_1, true);
 
     MidTrackQualityChecker(pTrack);
     MidTrackQualityChecker(nTrack);
-    
+
     fHistSelArmenteros->Fill(v0_1->Alpha(), v0_1->PtArmV0());
     fHistULSPairMassPt_ProngV0->Fill(RecPairMass, RecPairPt);
-    
+
     if (!fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short())) {
       continue;
     }
-    
+
     MidTrackPIDChecker(pTrack, pid1, true);
     MidTrackPIDChecker(nTrack, pid2, true);
 
@@ -1150,6 +1143,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
       if (0.4 > RecPairMass || RecPairMass > 0.6) {
         continue;
       }
+
       if (!fUtils->isAcceptV0Kinematics(v0_2)) {
         continue;
       }
@@ -1184,8 +1178,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
 
 bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
     AliPID::EParticleType pid1, AliPID::EParticleType pid2) {
-  
-  cout<<"MidV0AnalysisEventMixing"<<endl;
 
   TObjArray *fTrackArray = new TObjArray();
   fTrackArray->SetOwner();
@@ -1215,13 +1207,13 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
   TLorentzVector lv1, lv2, lv12;
 
   for (int iV0_1 = 0; iV0_1 < nV0; ++iV0_1) {
-    
+
     v0_1 = (AliAODv0 *)fEvent->GetV0(iV0_1);
 
     if (!fUtils->isAcceptV0Kinematics(v0_1)) {
       continue;
     }
-    
+
     RecPairPt = v0_1->Pt();
     RecPairMass = v0_1->MassK0Short();
     RecPairRap = v0_1->RapK0Short();
@@ -1300,7 +1292,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
 
 bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
                                                   AliPID::EParticleType pid2) {
-  cout<<"MidPairAnalysis"<<endl;
   Int_t nTrack = fEvent->GetNumberOfTracks();
 
   AliAODTrack *track1;
@@ -1426,34 +1417,8 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MidPairAnalysisEventMixing(AliPID::EParticleType pid1, AliPID::EParticleType pid2) {
-  cout<<"MidPairAnalysisEventMixing"<<endl;
-  float mass1 = 0;
-  float mass2 = 0;
-
-  if (pid1 == AliPID::kElectron) {
-    mass1 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
-  } else if (pid1 == AliPID::kPion) {
-    mass1 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
-  } else if (pid1 == AliPID::kKaon) {
-    mass1 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
-  } else if (pid1 == AliPID::kProton) {
-    mass1 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
-  } else if (pid1 == AliPID::kMuon) {
-    mass1 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
-  } 
-
-  if (pid2 == AliPID::kElectron) {
-    mass2 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
-  } else if (pid2 == AliPID::kPion) {
-    mass2 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
-  } else if (pid2 == AliPID::kKaon) {
-    mass2 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
-  } else if (pid2 == AliPID::kProton) {
-    mass2 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
-  } else if (pid2 == AliPID::kMuon) {
-    mass2 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
-  } 
+bool AliAnalysisTaskAODTrackPair::MidPairAnalysisEventMixing(
+    AliPID::EParticleType pid1, AliPID::EParticleType pid2) {
 
   TObjArray *fTrackArray = new TObjArray();
   fTrackArray->SetOwner();
@@ -1472,17 +1437,22 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysisEventMixing(AliPID::EParticleTy
     poolPsi = fUtils->getPsi();
   }
 
-  AliEventPool *pool = (AliEventPool*)fPoolMuonTrackMgr->GetEventPool(poolCent, poolVtxZ, poolPsi);
+  AliEventPool *pool = (AliEventPool *)fPoolMuonTrackMgr->GetEventPool(
+      poolCent, poolVtxZ, poolPsi);
 
   Int_t nTrack = fEvent->GetNumberOfTracks();
 
   AliAODTrack *track1;
   AliAODTrack *track2;
-  
-  TLorentzVector lv1, lv2, lv12;
 
-  for (int iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
-    
+  TLorentzVector *lv1, *lv2, *lv12;
+
+  std::vector<TLorentzVector *> tracks;
+  std::vector<int> charges;
+  std::vector<bool> skip_tracks_ids;
+
+  for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
+
     track1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
 
     if (!fUtils->isAcceptMidPrimTrackQuality(track1)) {
@@ -1491,9 +1461,9 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysisEventMixing(AliPID::EParticleTy
     if (!fUtils->isAcceptTrackKinematics(track1)) {
       continue;
     }
-    
+
     MidTrackPIDChecker(track1, pid1, false);
-    
+
     if (!fUtils->isAcceptMidPid(track1, pid1)) {
       continue;
     }
@@ -1501,38 +1471,106 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysisEventMixing(AliPID::EParticleTy
     MidTrackPIDChecker(track1, pid1, true);
     MidTrackQualityChecker(track1);
 
+    float mass1 = 0;
+
+    if (pid1 == AliPID::kElectron) {
+      mass1 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
+    } else if (pid1 == AliPID::kPion) {
+      mass1 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+    } else if (pid1 == AliPID::kKaon) {
+      mass1 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
+    } else if (pid1 == AliPID::kProton) {
+      mass1 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
+    } else if (pid1 == AliPID::kMuon) {
+      mass1 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
+    } else {
+      continue;
+    }
+
+    TLorentzVector *vec4;
+    vec4->SetPtEtaPhiM(track1->Pt(), track1->Eta(), track1->Phi(), mass1);
+    tracks.push_back(vec4);
+    skip_tracks_ids.push_back(false);
+    charges.push_back(track1->Charge());
+  }
+
+  nTrack = tracks.size();
+
+  for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
+
+    lv1 = tracks[iTrack1];
+
+    for (Int_t iTrack2 = iTrack1 + 1; iTrack2 < nTrack; ++iTrack2) {
+
+      lv2 = tracks[iTrack2];
+
+      if (charges[iTrack1] + charges[iTrack2] != 0) {
+        continue;
+      }
+
+      *lv12 = *lv1 + *lv2;
+
+      if ((pid1 == AliPID::kKaon && pid2 == AliPID::kKaon) &&
+          lv12->M() < 1.035) {
+        skip_tracks_ids[iTrack1] = true;
+        skip_tracks_ids[iTrack2] = true;
+      } else if ((pid1 == AliPID::kPion && pid2 == AliPID::kPion)) {
+        if (0.48 < lv12->M() && lv12->M() < 0.51) {
+          skip_tracks_ids[iTrack1] = true;
+          skip_tracks_ids[iTrack2] = true;
+        } else if (0.70 < lv12->M() && lv12->M() < 0.84) {
+          skip_tracks_ids[iTrack1] = true;
+          skip_tracks_ids[iTrack2] = true;
+        }
+      }
+
+    } // end of loop track2
+  }   // end of loop track1
+
+  for (int iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
+
+    lv1 = tracks[iTrack1];
+
     if (pool->IsReady()) {
 
       for (Int_t iMixEvt = 0; iMixEvt < pool->GetCurrentNEvents(); iMixEvt++) {
-	
+
         TObjArray *poolTracks = (TObjArray *)pool->GetEvent(iMixEvt);
 
-        for (int iTrack2 = 0; iTrack2 < poolTracks->GetEntriesFast(); iTrack2++) {
-	  
-	  //AliAODTrack *__track2__ = (AliAODTrack *)poolTracks->At(iTrack2);
-          //AliAODTrack *track2 = (AliAODTrack *)__track2__->Clone();
-	  track2 = (AliAODTrack *)poolTracks->At(iTrack2);
-	  
+        for (int iTrack2 = 0; iTrack2 < poolTracks->GetEntriesFast();
+             ++iTrack2) {
 
-          lv1.SetPtEtaPhiM(track1->Pt(), track1->Eta(), track1->Phi(),mass1);
-	  lv2.SetPtEtaPhiM(track2->Pt(), track2->Eta(), track2->Phi(),mass2);
-	  
-          lv12 = lv1 + lv2;
-	  
-          double fill[] = {lv12.M(), lv12.Pt(), fUtils->getCentClass()};
+          lv2 = tracks[iTrack2];
 
-          if (track1->Charge() + track2->Charge() == 0) {
+          *lv12 = *lv1 + *lv2;
+
+          double fill[] = {lv12->M(), lv12->Pt(), fUtils->getCentClass()};
+
+          if (charges[iTrack1] + charges[iTrack2] == 0) {
             fSparseMixULSPairMassPt->Fill(fill);
-          } else if (track1->Charge() + track2->Charge() > 0) {
+          } else if (charges[iTrack1] + charges[iTrack2] > 0) {
             fSparseMixLSppPairMassPt->Fill(fill);
           } else {
             fSparseMixLSmmPairMassPt->Fill(fill);
-          }	  
+          }
+
+          if (skip_tracks_ids[iTrack1] && skip_tracks_ids[iTrack2]) {
+            continue;
+          }
+          /*
+          if (charges[iTrack1] + charges[iTrack2] == 0) {
+            fHistULSPairMassPt_TightCut->Fill(RecPairMass, RecPairPt);
+          } else if (charges[iTrack1] + charges[iTrack2] > 0) {
+            fHistLSppPairMassPt_TightCut->Fill(RecPairMass, RecPairPt);
+          } else {
+            fHistLSmmPairMassPt_TightCut->Fill(RecPairMass, RecPairPt);
+          }
+          */
         }
       }
-    }    
+    }
 
-    fTrackArray->Add(track1);
+    fTrackArray->Add(lv1);
   }
 
   TObjArray *fTrackArrayClone = (TObjArray *)fTrackArray->Clone();
