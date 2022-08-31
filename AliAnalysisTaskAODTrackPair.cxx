@@ -1111,7 +1111,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
     for (int iV0_2 = iV0_1 + 1; iV0_2 < nV0; ++iV0_2) {
 
       v0_2 = (AliAODv0 *)fEvent->GetV0(iV0_2);
-
+      
       RecPairPt = v0_2->Pt();
       RecPairMass = v0_2->MassK0Short();
       RecPairRap = v0_2->RapK0Short();
@@ -1154,7 +1154,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
 bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
     AliPID::EParticleType pid1, AliPID::EParticleType pid2) {
   
-  cout<<"MidV0AnalysisEventMixing"<<endl;
+  //cout<<"MidV0AnalysisEventMixing"<<endl;
 
   TObjArray *fTrackArray = new TObjArray();
   fTrackArray->SetOwner();
@@ -1184,7 +1184,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
   TLorentzVector lv1, lv2, lv12;
 
   for (int iV0_1 = 0; iV0_1 < nV0; ++iV0_1) {
-    cout<<""<<iV0_1<<endl;
+    
     v0_1 = (AliAODv0 *)fEvent->GetV0(iV0_1);
 
     if (!fUtils->isAcceptV0Kinematics(v0_1)) {
@@ -1200,9 +1200,12 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
     AliAODTrack *pTrack = (AliAODTrack *)v0_1->GetDaughter(0);
     AliAODTrack *nTrack = (AliAODTrack *)v0_1->GetDaughter(1);
 
-    MidV0Checker(v0_1, false);
-    MidTrackPIDChecker(pTrack, pid1, false);
-    MidTrackPIDChecker(nTrack, pid2, false);
+    if (fUtils->isAcceptV0TrackQuality(pTrack) && fUtils->isAcceptV0TrackQuality(nTrack)
+	&& fUtils->isAcceptTrackKinematics(pTrack) && fUtils->isAcceptTrackKinematics(nTrack) ) {
+      MidV0Checker(v0_1, false);
+      MidTrackPIDChecker(pTrack, pid1, false);
+      MidTrackPIDChecker(nTrack, pid2, false);
+    }
 
     if (0.4 > RecPairMass || RecPairMass > 0.6) {
       continue;
