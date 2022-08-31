@@ -30,13 +30,13 @@ public:
   bool isAcceptMidPrimTrackQuality(AliAODTrack *track);
   bool isAcceptMidPid(AliAODTrack *track, AliPID::EParticleType pid);
   bool isAcceptV0Kinematics(AliAODv0 *v0);
-  bool isAcceptedK0s(AliAODv0 *v0, AliPID::EParticleType pid1,
+  bool isAcceptK0s(AliAODv0 *v0, AliPID::EParticleType pid1,
                      AliPID::EParticleType pid2, int charge);
   bool isAcceptV0TrackQuality(AliAODTrack *track);
   bool isAcceptArmenterosK0s(AliAODv0 *v0);
   bool isAcceptArmenterosK0s_Tight(AliAODv0 *v0);
 
-  bool isAcceptK0sCandidateMassRange(float mass) {
+  bool isAcceptK0sCandidateMassRange(double mass) {
     if (fMinK0sMassRange < mass && mass < fMaxK0sMassRange) {
       return true;
     } else {
@@ -56,8 +56,8 @@ public:
   int getMotherLabel(AliAODTrack *track);
   int getMotherLabel(AliAODMCParticle *part);
 
-  float getTOFSigma(AliAODTrack *track1, AliPID::EParticleType pid);
-  float getTPCSigma(AliAODTrack *track1, AliPID::EParticleType pid);
+  double getTOFSigma(AliAODTrack *track1, AliPID::EParticleType pid);
+  double getTPCSigma(AliAODTrack *track1, AliPID::EParticleType pid);
 
   bool setTrueCh();
 
@@ -80,12 +80,12 @@ public:
     return true;
   }
 
-  float getSPDTrkCorr(float vtxz, int spec) {
+  double getSPDTrkCorr(double vtxz, int spec) {
     if (spec == 0) {
       if (!fHistSPDTrkCorrEta05) {
         return 0;
       } else {
-        float delta = fHistSPDTrkCorrEta05->GetBinContent(
+        double delta = fHistSPDTrkCorrEta05->GetBinContent(
             fHistSPDTrkCorrEta05->GetXaxis()->FindBin(vtxz));
         return fRandom->Poisson(delta);
       }
@@ -93,7 +93,7 @@ public:
       if (!fHistSPDTrkCorrEta10) {
         return 0;
       } else {
-        float delta = fHistSPDTrkCorrEta10->GetBinContent(
+        double delta = fHistSPDTrkCorrEta10->GetBinContent(
             fHistSPDTrkCorrEta10->GetXaxis()->FindBin(vtxz));
         return fRandom->Poisson(delta);
       }
@@ -183,8 +183,8 @@ public:
     }
   }
 
-  void setTrackKinematicCut(float min_pt, float max_pt, float min_eta,
-                            float max_eta, float min_p, float max_p) {
+  void setTrackKinematicCut(double min_pt, double max_pt, double min_eta,
+                            double max_eta, double min_p, double max_p) {
     fMinTrackP = min_p;
     fMaxTrackP = max_p;
     fMinTrackPt = min_pt;
@@ -193,8 +193,8 @@ public:
     fMaxTrackEta = max_eta;
   }
 
-  void setTrackQualities(float findable, std::string dcaxy, float dcaz,
-                         float chi2tpc, float chi2its, int nclusttpc,
+  void setTrackQualities(double findable, std::string dcaxy, double dcaz,
+                         double chi2tpc, double chi2its, int nclusttpc,
                          int nclustits) {
     fMinCrossRowsFindableRatio = findable;
     fMaxTrackDCAxyName = dcaxy;
@@ -208,53 +208,53 @@ public:
   void setPileupRejectionCut(bool flag) { fIsPUcut = flag; }
   void setLocalBoardCut(bool flag) { fIsLBCut = flag; }
 
-  void setPionSelectSigmaTPC(float min, float max) {
+  void setPionSelectSigmaTPC(double min, double max) {
     fMinPionSigmaTPC = min;
     fMaxPionSigmaTPC = max;
   }
-  void setPionSelectSigmaTOF(float min, float max) {
+  void setPionSelectSigmaTOF(double min, double max) {
     fMinPionSigmaTOF = min;
     fMaxPionSigmaTOF = max;
   }
-  void setKaonSelectSigmaTPC(float min, float max) {
+  void setKaonSelectSigmaTPC(double min, double max) {
     fMinKaonSigmaTPC = min;
     fMaxKaonSigmaTPC = max;
   }
-  void setKaonSelectSigmaTOF(float min, float max) {
+  void setKaonSelectSigmaTOF(double min, double max) {
     fMinKaonSigmaTOF = min;
     fMaxKaonSigmaTOF = max;
   }
-  void setProtonSelectSigmaTPC(float min, float max) {
+  void setProtonSelectSigmaTPC(double min, double max) {
     fMinProtonSigmaTPC = min;
     fMaxProtonSigmaTPC = max;
   }
-  void setProtonSelectSigmaTOF(float min, float max) {
+  void setProtonSelectSigmaTOF(double min, double max) {
     fMinProtonSigmaTOF = min;
     fMaxProtonSigmaTOF = max;
   }
-  void setElectronSelectSigmaTPC(float min, float max) {
+  void setElectronSelectSigmaTPC(double min, double max) {
     fMinElectronSigmaTPC = min;
     fMaxElectronSigmaTPC = max;
   }
-  void setElectronSelectSigmaTOF(float min, float max) {
+  void setElectronSelectSigmaTOF(double min, double max) {
     fMinElectronSigmaTOF = min;
     fMaxElectronSigmaTOF = max;
   }
-  void setMuonSelectSigmaTPC(float min, float max) {
+  void setMuonSelectSigmaTPC(double min, double max) {
     fMinMuonSigmaTPC = min;
     fMaxMuonSigmaTPC = max;
   }
-  void setMuonSelectSigmaTOF(float min, float max) {
+  void setMuonSelectSigmaTOF(double min, double max) {
     fMinMuonSigmaTOF = min;
     fMaxMuonSigmaTOF = max;
   }
-  void setArmenterosLimit(float pcm, float r0, float width) {
+  void setArmenterosLimit(double pcm, double r0, double width) {
     fArmenterosBandWidth = width;
     fArmenterosPCM = pcm;
     fArmenterosR0 = r0;
   }
-  void setV0SelectCuts(float alpha, float pangle, float v0Dca, float trackDca,
-                       float min_dlength, float max_dlength) {
+  void setV0SelectCuts(double alpha, double pangle, double v0Dca, double trackDca,
+                       double min_dlength, double max_dlength) {
     fArmenterosAlphaCutParamForPtArm = alpha;
     fMinCosPointingAngleCut = pangle;
     fMinV0DCA = v0Dca;
@@ -263,11 +263,11 @@ public:
     fMaxV0DecayLength = max_dlength;
   }
 
-  void setV0CutParams(float min, float max) {
+  void setV0CutParams(double min, double max) {
     fMinV0Alpha = min;
     fMaxV0Alpha = max;
   }
-  void setK0sCandidateMassRange(float min, float max) {
+  void setK0sCandidateMassRange(double min, double max) {
     fMinK0sMassRange = min;
     fMaxK0sMassRange = max;
   }
@@ -407,8 +407,8 @@ public:
   const int fPdgCodeK0star = 313;
   const int fPdgCodePhi = 333;
 
-  const float fPdgLambdaMass = 1.115683;
-  const float fPdgK0sMass = 0.497611;
+  const double fPdgLambdaMass = 1.115683;
+  const double fPdgK0sMass = 0.497611;
 
   // private:
 
@@ -442,32 +442,32 @@ public:
   TF1 *fFuncMaxDCAxy;
   TF1 *fMinArmenterosLine;
   TF1 *fMaxArmenterosLine;
-  float fArmenterosBandWidth;
-  float fArmenterosPCM;
-  float fArmenterosR0;
-  float fArmenterosAlphaCutParamForPtArm;
-  float fMinCosPointingAngleCut;
-  float fMinV0DCA;
-  float fMaxTrackDCASigma;
-  float fMinV0DecayLength;
-  float fMaxV0DecayLength;
-  float fMaxV0PropLifeTime;
-  float fMinV0DecayRadius;
-  float fMinV0Alpha;
-  float fMaxV0Alpha;
-  float fMinK0sMassRange;
-  float fMaxK0sMassRange;
-  // float fLambdaMassPdg;
-  // float fK0sMassPdg;
-  float fMinRejectMassWidthLambda;
-  float fMaxRejectMassWidthLambda;
+  double fArmenterosBandWidth;
+  double fArmenterosPCM;
+  double fArmenterosR0;
+  double fArmenterosAlphaCutParamForPtArm;
+  double fMinCosPointingAngleCut;
+  double fMinV0DCA;
+  double fMaxTrackDCASigma;
+  double fMinV0DecayLength;
+  double fMaxV0DecayLength;
+  double fMaxV0PropLifeTime;
+  double fMinV0DecayRadius;
+  double fMinV0Alpha;
+  double fMaxV0Alpha;
+  double fMinK0sMassRange;
+  double fMaxK0sMassRange;
+  // double fLambdaMassPdg;
+  // double fK0sMassPdg;
+  double fMinRejectMassWidthLambda;
+  double fMaxRejectMassWidthLambda;
 
-  float fMinCrossRowsFindableRatio;
+  double fMinCrossRowsFindableRatio;
   std::string fMaxTrackDCAxyName;
-  float fMaxTrackDCAxy;
-  float fMaxTrackDCAz;
-  float fMaxReducedChi2TPC;
-  float fMaxReducedChi2ITS;
+  double fMaxTrackDCAxy;
+  double fMaxTrackDCAz;
+  double fMaxReducedChi2TPC;
+  double fMaxReducedChi2ITS;
   int fMinTrackTPCNClusts;
   int fMinTrackSPDNClusts;
 
@@ -560,37 +560,37 @@ public:
   TH1D *fHistSPDTrkCorrEta05;
   TH1D *fHistSPDTrkCorrEta10;
 
-  float fMinTrackP;
-  float fMaxTrackP;
-  float fMinTrackPt;
-  float fMaxTrackPt;
-  float fMinTrackEta;
-  float fMaxTrackEta;
+  double fMinTrackP;
+  double fMaxTrackP;
+  double fMinTrackPt;
+  double fMaxTrackPt;
+  double fMinTrackEta;
+  double fMaxTrackEta;
 
-  float fMinPionSigmaTPC;
-  float fMaxPionSigmaTPC;
-  float fMinPionSigmaTOF;
-  float fMaxPionSigmaTOF;
+  double fMinPionSigmaTPC;
+  double fMaxPionSigmaTPC;
+  double fMinPionSigmaTOF;
+  double fMaxPionSigmaTOF;
 
-  float fMinKaonSigmaTPC;
-  float fMaxKaonSigmaTPC;
-  float fMinKaonSigmaTOF;
-  float fMaxKaonSigmaTOF;
+  double fMinKaonSigmaTPC;
+  double fMaxKaonSigmaTPC;
+  double fMinKaonSigmaTOF;
+  double fMaxKaonSigmaTOF;
 
-  float fMinProtonSigmaTPC;
-  float fMaxProtonSigmaTPC;
-  float fMinProtonSigmaTOF;
-  float fMaxProtonSigmaTOF;
+  double fMinProtonSigmaTPC;
+  double fMaxProtonSigmaTPC;
+  double fMinProtonSigmaTOF;
+  double fMaxProtonSigmaTOF;
 
-  float fMinElectronSigmaTPC;
-  float fMaxElectronSigmaTPC;
-  float fMinElectronSigmaTOF;
-  float fMaxElectronSigmaTOF;
+  double fMinElectronSigmaTPC;
+  double fMaxElectronSigmaTPC;
+  double fMinElectronSigmaTOF;
+  double fMaxElectronSigmaTOF;
 
-  float fMinMuonSigmaTPC;
-  float fMaxMuonSigmaTPC;
-  float fMinMuonSigmaTOF;
-  float fMaxMuonSigmaTOF;
+  double fMinMuonSigmaTPC;
+  double fMaxMuonSigmaTPC;
+  double fMinMuonSigmaTOF;
+  double fMaxMuonSigmaTOF;
 
   bool fIsMidTrackAna;
 

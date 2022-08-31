@@ -414,16 +414,19 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPrimTrackQuality(
     return false;
   }
 
+  
+
   return true;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(
     AliAODTrack *track, AliPID::EParticleType pid) {
 
-  float minSigmaRangeTPC = 0;
-  float maxSigmaRangeTPC = 0;
-  float minSigmaRangeTOF = 0;
-  float maxSigmaRangeTOF = 0;
+
+  double minSigmaRangeTPC = 0;
+  double maxSigmaRangeTPC = 0;
+  double minSigmaRangeTOF = 0;
+  double maxSigmaRangeTOF = 0;
 
   if (pid == AliPID::kPion) {
     minSigmaRangeTPC = fMinPionSigmaTPC;
@@ -454,15 +457,15 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(
     return false;
   }
 
-  float sigTOF = track->GetTOFsignal();
+  double sigTOF = track->GetTOFsignal();
   bool hasTOF = true;
   if (sigTOF > 99998.5) {
     hasTOF = false;
   }
 
-  float fSigmaTPC = fPIDResponse->NumberOfSigmasTPC(track, pid);
-  float fSigmaTOF = fPIDResponse->NumberOfSigmasTOF(track, pid);
-  float fSigmaTPCTOF = sqrt(fSigmaTPC * fSigmaTPC + fSigmaTOF * fSigmaTOF);
+  double fSigmaTPC = fPIDResponse->NumberOfSigmasTPC(track, pid);
+  double fSigmaTOF = fPIDResponse->NumberOfSigmasTOF(track, pid);
+  double fSigmaTPCTOF = sqrt(fSigmaTPC * fSigmaTPC + fSigmaTOF * fSigmaTOF);
 
   if (pid == AliPID::kKaon) {
     if (track->Pt() < 0.6) {
@@ -512,7 +515,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0s(AliAODv0 *v0,
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0,
                                                      AliPID::EParticleType pid1,
                                                      AliPID::EParticleType pid2,
                                                      int charge) {
@@ -553,13 +556,13 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0s(AliAODv0 *v0,
     return false;
   }
 
-  float length = v0->DecayLengthV0(vtx);
+  double length = v0->DecayLengthV0(vtx);
 
   if (fMinV0DecayLength > length || fMaxV0DecayLength < length) {
     return false;
   }
 
-  float proper_life_time = fPdgK0sMass * length / v0->P();
+  double proper_life_time = fPdgK0sMass * length / v0->P();
 
   if (proper_life_time > fMaxV0PropLifeTime) {
     return false;
@@ -602,8 +605,8 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0s(AliAODv0 *v0,
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptArmenterosK0s(AliAODv0 *v0) {
 
-  float alpha = fabs(v0->Alpha());
-  float pt_arm = v0->PtArmV0();
+  double alpha = fabs(v0->Alpha());
+  double pt_arm = v0->PtArmV0();
 
   if (pt_arm < fArmenterosAlphaCutParamForPtArm * alpha) {
     return false;
@@ -615,13 +618,13 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptArmenterosK0s(AliAODv0 *v0) {
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptArmenterosK0s_Tight(
     AliAODv0 *v0) {
 
-  float alpha = v0->Alpha();
+  double alpha = v0->Alpha();
 
   if (alpha < fMinV0Alpha || alpha > fMaxV0Alpha) {
     return false;
   }
 
-  float arm_pt = v0->PtArmV0();
+  double arm_pt = v0->PtArmV0();
   double min_arm_pt = fMinArmenterosLine->Eval(alpha);
   double max_arm_pt = fMaxArmenterosLine->Eval(alpha);
 
@@ -652,11 +655,13 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(
   float dca_xy = 9999;
   float dca_z = 9999;
   track->GetImpactParameters(dca_xy, dca_z);
+
   /*
   if ( fMaxTrackDCAxy > fabs(dca_xy) ) {
     //return false;
   }
   */
+  
   return true;
 }
 
@@ -1158,12 +1163,12 @@ bool AliAnalysisTaskAODTrackPairUtils::setVZERO() {
 
   return true;
 }
-float AliAnalysisTaskAODTrackPairUtils::getTOFSigma(AliAODTrack *track1,
-                                                    AliPID::EParticleType pid) {
+double AliAnalysisTaskAODTrackPairUtils::getTOFSigma(AliAODTrack *track1,
+						     AliPID::EParticleType pid) {  
   return fPIDResponse->NumberOfSigmasTOF(track1, pid);
 }
-float AliAnalysisTaskAODTrackPairUtils::getTPCSigma(AliAODTrack *track1,
-                                                    AliPID::EParticleType pid) {
+double AliAnalysisTaskAODTrackPairUtils::getTPCSigma(AliAODTrack *track1,
+						     AliPID::EParticleType pid) {
   return fPIDResponse->NumberOfSigmasTPC(track1, pid);
 }
 bool AliAnalysisTaskAODTrackPairUtils::setPeriodInfo() {

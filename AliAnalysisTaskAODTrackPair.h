@@ -27,7 +27,7 @@ public:
   void setUtils(AliAnalysisTaskAODTrackPairUtils *utils) { fUtils = utils; }
   void setEvtMixingTrackDepth(int depth) { fTrackDepth = depth; }
   void setEvtMixingPoolSize(int size) { fPoolSize = size; }
-  void setEvtMixingReadyFraction(float frac) { fReadyFraction = frac; }
+  void setEvtMixingReadyFraction(double frac) { fReadyFraction = frac; }
   void setEvtMixingPoolVtxZ(bool flag) { onEvtMixingPoolVtxZ = flag; }
   void setEvtMixingPoolCent(bool flag) { onEvtMixingPoolCent = flag; }
   void setEvtMixingPoolPsi(bool flag) { onEvtMixingPoolPsi = flag; }
@@ -82,7 +82,7 @@ private:
   unsigned int fTriggerMaskForSame;
   unsigned int fTriggerMaskForMixing;
 
-  float fReadyFraction;
+  double fReadyFraction;
 
   bool onEvtMixingPoolVtxZ;
   bool onEvtMixingPoolCent;
@@ -157,13 +157,13 @@ private:
 
   TH2F *fHistMassK0s1K0s2;
 
-  float RecPairPt;
-  float RecPairRap;
-  float RecPairMass;
-  float RecPairArmenterosArmPt;
-  float RecPairArmenterosAlpha;
-  float RecPairCent;
-  float RecPairDS;
+  double RecPairPt;
+  double RecPairRap;
+  double RecPairMass;
+  double RecPairArmenterosArmPt;
+  double RecPairArmenterosAlpha;
+  double RecPairCent;
+  double RecPairDS;
 
   TH2F *fHistTPCdEdxP;
   TH2F *fHistBetaP;
