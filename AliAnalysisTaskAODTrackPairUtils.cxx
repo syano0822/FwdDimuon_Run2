@@ -39,6 +39,15 @@ ClassImp(AliAnalysisTaskAODTrackPairUtils)
 
       fMinV0Alpha(-0.84), fMaxV0Alpha(0.84), fMinK0sMassRange(0.486),
       fMaxK0sMassRange(0.510),
+  
+  fMinRhoMassRange(0.64),
+  fMaxRhoMassRange(0.90),
+  fMinKstarMassRange(0.70),
+  fMaxKstarMassRange(1.10),
+  fMinF980MassRange(0.94),
+  fMaxF980MassRange(1.01),
+  fMinF1270MassRange(1.21),
+  fMaxF1270MassRange(1.38),
 
       fArmenterosBandWidth(0.05), fArmenterosPCM(0.207), fArmenterosR0(0.85),
 
@@ -376,6 +385,13 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Kinematics(AliAODv0 *v0) {
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPrimTrackQuality(
     AliAODTrack *track) {
 
+  if ( (track->GetStatus() & AliVTrack::kTPCrefit) == 0 ) {    
+    return false;
+  }
+  if ( (track->GetStatus() & AliVTrack::kITSrefit) == 0 ) {    
+    return false;
+  }
+
   if (fMinTrackTPCNClusts > track->GetTPCNcls()) {
     return false;
   }
@@ -402,7 +418,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPrimTrackQuality(
   if (fMaxReducedChi2ITS < track->GetITSchi2() / track->GetITSNcls()) {
     return false;
   }
-
+  
   float dca_xy = 9999;
   float dca_z = 9999;
   track->GetImpactParameters(dca_xy, dca_z);
@@ -515,10 +531,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0,
-                                                     AliPID::EParticleType pid1,
-                                                     AliPID::EParticleType pid2,
-                                                     int charge) {
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Basic(AliAODv0 *v0, int charge){
 
   if (v0->GetNProngs() != 2 || v0->GetOnFlyStatus() == 1 ||
       v0->Charge() != charge) {
@@ -531,18 +544,25 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0,
   if (!pTrack || !nTrack) {
     return false;
   }
+
   if (!isAcceptTrackKinematics(pTrack) || !isAcceptTrackKinematics(nTrack)) {
     return false;
   }
   if (!isAcceptV0TrackQuality(pTrack) || !isAcceptV0TrackQuality(nTrack)) {
     return false;
   }
-  if (!isAcceptMidPid(pTrack, pid1) || !isAcceptMidPid(nTrack, pid2)) {
+
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Quality(AliAODv0 *v0, int charge){
+
+  if ( !isAcceptV0Basic(v0,charge) ) {
     return false;
   }
-
+      
   double vtx[] = {fVtxX, fVtxY, fVtxZ};
-
+  
   if (fMinCosPointingAngleCut > v0->CosPointingAngle(vtx)) {
     return false;
   }
@@ -557,17 +577,35 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0,
   }
 
   double length = v0->DecayLengthV0(vtx);
-
+  
   if (fMinV0DecayLength > length || fMaxV0DecayLength < length) {
     return false;
   }
-
+  
   double proper_life_time = fPdgK0sMass * length / v0->P();
 
   if (proper_life_time > fMaxV0PropLifeTime) {
     return false;
   }
 
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0,
+						   AliPID::EParticleType pid1,
+						   AliPID::EParticleType pid2,
+						   int charge) {
+  if ( !isAcceptV0Quality(v0,charge) ) {
+    return false;
+  }
+  
+  if ( !isAcceptArmenterosK0s(v0) ) {
+    return false;
+  }
+
+  AliAODTrack *pTrack = (AliAODTrack *)v0->GetDaughter(0);
+  AliAODTrack *nTrack = (AliAODTrack *)v0->GetDaughter(1);
+  
   TLorentzVector lv1, lv2, lv12;
 
   if (pTrack->P() > nTrack->P()) {
@@ -637,7 +675,11 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptArmenterosK0s_Tight(
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(
     AliAODTrack *track) {
-
+  
+  if ( (track->GetStatus() & AliVTrack::kTPCrefit) == 0 ) {    
+    return false;
+  }
+  
   if (fMinTrackTPCNClusts > track->GetTPCNcls()) {
     return false;
   }
@@ -663,6 +705,146 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(
   */
   
   return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isMissPidCandidateFromProtonPion(AliAODTrack* track1, AliAODTrack* track2,
+									std::string name){
+  
+  if ( !(name == "Lambda") ) {
+    return false;
+  }
+
+  TLorentzVector lv1;
+  TLorentzVector lv2;
+  TLorentzVector lv12;
+  
+  double mass1=0, mass2=0, mass12=0;
+
+  if ( (track1->P() > track2->P()) && isAcceptMidPid(track1,AliPID::kProton) && isAcceptMidPid(track2,AliPID::kPion)) {
+    mass1 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
+    mass2 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+
+    lv1.SetPtEtaPhiM(track1->Pt(),track1->Eta(),track1->Phi(),mass1);
+    lv2.SetPtEtaPhiM(track2->Pt(),track2->Eta(),track2->Phi(),mass2);
+    
+    lv12 = lv1 + lv2;
+    mass12 = lv12.M();
+      
+    if (fPdgLambdaMass - fMinRejectMassWidthLambda < mass12 &&
+	mass12 < fPdgLambdaMass + fMaxRejectMassWidthLambda) {
+      return true;
+    }
+
+  }
+  
+  if ( (track1->P() < track2->P()) && isAcceptMidPid(track1,AliPID::kProton) && isAcceptMidPid(track2,AliPID::kPion)) {
+    mass1 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+    mass2 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
+
+    lv1.SetPtEtaPhiM(track1->Pt(),track1->Eta(),track1->Phi(),mass1);
+    lv2.SetPtEtaPhiM(track2->Pt(),track2->Eta(),track2->Phi(),mass2);
+    
+    lv12 = lv1 + lv2;
+    mass12 = lv12.M();
+      
+    if (fPdgLambdaMass - fMinRejectMassWidthLambda < mass12 &&
+	mass12 < fPdgLambdaMass + fMaxRejectMassWidthLambda) {
+      return true;
+    }
+  }  
+  
+  return false;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isMissPidCandidateFromKaonPion(AliAODTrack* track1, AliAODTrack* track2,
+								      std::string name){
+  
+  if ( !(name == "Kstar") ) {
+    return false;
+  }
+
+  TLorentzVector lv1;
+  TLorentzVector lv2;
+  TLorentzVector lv12;
+  
+  double mass1=0, mass2=0, mass12=0;
+
+  if ( (track1->P() > track2->P()) && isAcceptMidPid(track1,AliPID::kKaon) && isAcceptMidPid(track2,AliPID::kPion)) {
+    mass1 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
+    mass2 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+
+    lv1.SetPtEtaPhiM(track1->Pt(),track1->Eta(),track1->Phi(),mass1);
+    lv2.SetPtEtaPhiM(track2->Pt(),track2->Eta(),track2->Phi(),mass2);
+    
+    lv12 = lv1 + lv2;
+    mass12 = lv12.M();
+
+    if ( name == "Kstar" && isAcceptKstarCandidateMassRange(mass12) ) {
+      return true;
+    }
+  }
+
+  if ( (track1->P() < track2->P()) && isAcceptMidPid(track1,AliPID::kPion) && isAcceptMidPid(track2,AliPID::kKaon)) {
+    mass1 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+    mass2 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
+    
+    lv1.SetPtEtaPhiM(track1->Pt(),track1->Eta(),track1->Phi(),mass1);
+    lv2.SetPtEtaPhiM(track2->Pt(),track2->Eta(),track2->Phi(),mass2);
+    
+    lv12 = lv1 + lv2;
+    mass12 = lv12.M();
+
+    if ( name == "Kstar" && isAcceptKstarCandidateMassRange(mass12) ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isMissPidCandidateFromPionPion(AliAODTrack* track1, AliAODTrack* track2,
+								      std::string name){
+  
+  if ( !(name == "Eta" || name == "K0s" || name == "Rho" || name == "F980" || name == "F1270") ) {
+    return false;
+  }
+
+  TLorentzVector lv1;
+  TLorentzVector lv2;
+  TLorentzVector lv12;
+  
+  double mass1=0, mass2=0, mass12=0;
+
+  if ( isAcceptMidPid(track1,AliPID::kPion) && isAcceptMidPid(track2,AliPID::kPion)) {
+      
+    mass1 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+    mass2 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+    
+    lv1.SetPtEtaPhiM(track1->Pt(),track1->Eta(),track1->Phi(),mass1);
+    lv2.SetPtEtaPhiM(track2->Pt(),track2->Eta(),track2->Phi(),mass2);
+    
+    lv12 = lv1 + lv2;
+    mass12 = lv12.M();
+
+    if (name == "Eta" &&  0.415 > mass12 ) {
+      return true;
+    }     
+    if (name == "K0s" && isAcceptK0sCandidateMassRange(mass12) ) {
+      return true;
+    } 
+    if (name == "Rho" && isAcceptRhoCandidateMassRange(mass12) ) {
+      return true;
+    } 
+    if (name == "F980" && isAcceptF980CandidateMassRange(mass12) ) {
+      return true;
+    } 
+    if (name == "F1270" && isAcceptF1270CandidateMassRange(mass12) ) {
+      return true;
+    } 
+
+  }
+  
+  return false;
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODTrack *track1,

@@ -23,16 +23,24 @@ public:
   void setMC(bool isMC) { fIsMC = isMC; }
   void setEvtSelection(bool isEvtSel) { fIsEvtSelect = isEvtSel; }
 
-  bool isAcceptEvent();
+  bool isAcceptEvent();  
   bool isAcceptTrackKinematics(AliAODTrack *track);
+
   bool isAcceptFwdMuonTrack(AliAODTrack *track);
   bool isAcceptFwdDimuon(AliAODDimuon *dimuon);
+
   bool isAcceptMidPrimTrackQuality(AliAODTrack *track);
   bool isAcceptMidPid(AliAODTrack *track, AliPID::EParticleType pid);
+  
+
+  bool isAcceptV0TrackQuality(AliAODTrack *track);
+  bool isAcceptV0Basic(AliAODv0 *v0, int charge);
+  bool isAcceptV0Quality(AliAODv0 *v0, int charge);
   bool isAcceptV0Kinematics(AliAODv0 *v0);
   bool isAcceptK0s(AliAODv0 *v0, AliPID::EParticleType pid1,
-                     AliPID::EParticleType pid2, int charge);
-  bool isAcceptV0TrackQuality(AliAODTrack *track);
+		   AliPID::EParticleType pid2, int charge);  
+  
+
   bool isAcceptArmenterosK0s(AliAODv0 *v0);
   bool isAcceptArmenterosK0s_Tight(AliAODv0 *v0);
 
@@ -43,7 +51,39 @@ public:
       return false;
     }
   }
-
+  bool isAcceptRhoCandidateMassRange(double mass) {
+    if (fMinRhoMassRange < mass && mass < fMaxRhoMassRange) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  bool isAcceptKstarCandidateMassRange(double mass) {
+    if (fMinKstarMassRange < mass && mass < fMaxKstarMassRange) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  bool isAcceptF980CandidateMassRange(double mass) {
+    if (fMinF980MassRange < mass && mass < fMaxF980MassRange) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  bool isAcceptF1270CandidateMassRange(double mass) {
+    if (fMinF1270MassRange < mass && mass < fMaxF1270MassRange) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  
+  bool isMissPidCandidateFromProtonPion(AliAODTrack* track1, AliAODTrack* track2, std::string name);
+  bool isMissPidCandidateFromKaonPion(AliAODTrack* track1, AliAODTrack* track2, std::string name);
+  bool isMissPidCandidateFromPionPion(AliAODTrack* track1, AliAODTrack* track2, std::string name);
+  
   bool isSameMotherPair(AliAODTrack *track1, AliAODTrack *track2);
   bool isSameMotherPair(AliAODMCParticle *part1, AliAODMCParticle *part2);
   bool isCharmQuarkOrigin(AliAODMCParticle *particle);
@@ -114,6 +154,28 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////////
   // Set analysis cut flags
   //////////////////////////////////////////////////////////////////////////////////////////////
+
+  void setK0sCandidateMassRange(double min, double max){
+    fMinK0sMassRange = min;
+    fMaxK0sMassRange = max;
+  }
+  void setRhoCandidateMassRange(double min, double max){
+    fMinRhoMassRange = min;
+    fMaxRhoMassRange = max;
+  }
+  void setF980CandidateMassRange(double min, double max){
+    fMinF980MassRange = min;
+    fMaxF980MassRange = max;
+  }
+  void setF1270CandidateMassRange(double min, double max){
+    fMinF1270MassRange = min;
+    fMaxF1270MassRange = max;
+  }
+  void setKstarCandidateMassRange(double min, double max){
+    fMinKstarMassRange = min;
+    fMaxKstarMassRange = max;
+  }
+
 
   void setPairTargetPIDs(int pid1, int pid2) {
     if (pid1 == 11) {
@@ -267,10 +329,6 @@ public:
     fMinV0Alpha = min;
     fMaxV0Alpha = max;
   }
-  void setK0sCandidateMassRange(double min, double max) {
-    fMinK0sMassRange = min;
-    fMaxK0sMassRange = max;
-  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////
   // Set analysis object
@@ -404,7 +462,7 @@ public:
   const int fPdgCodeRho = 113;
   const int fPdgCodeOmega = 223;
   const int fPdgCodeEtaPrime = 331;
-  const int fPdgCodeK0star = 313;
+  const int fPdgCodeKstar = 313;
   const int fPdgCodePhi = 333;
 
   const double fPdgLambdaMass = 1.115683;
@@ -455,10 +513,18 @@ public:
   double fMinV0DecayRadius;
   double fMinV0Alpha;
   double fMaxV0Alpha;
+  
   double fMinK0sMassRange;
   double fMaxK0sMassRange;
-  // double fLambdaMassPdg;
-  // double fK0sMassPdg;
+  double fMinRhoMassRange;
+  double fMaxRhoMassRange;
+  double fMinKstarMassRange;
+  double fMaxKstarMassRange;
+  double fMinF980MassRange;
+  double fMaxF980MassRange;
+  double fMinF1270MassRange;
+  double fMaxF1270MassRange;
+ 
   double fMinRejectMassWidthLambda;
   double fMaxRejectMassWidthLambda;
 

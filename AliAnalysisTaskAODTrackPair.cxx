@@ -361,6 +361,7 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects() {
                      int((max_pt - min_pt) / width_pt), binnum_cent};
       double min_bins[3] = {min_mass, min_pt, 0};
       double max_bins[3] = {max_mass, max_pt, 100};      
+      
       fSparseULSPairMassPt = new THnSparseF("fSparseULSPairMassPt", "", 3, bins,
                                             min_bins, max_bins);
       fSparseLSppPairMassPt = new THnSparseF("fSparseLSppPairMassPt", "", 3,
@@ -396,7 +397,6 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects() {
       fSparseMixLSppPairMassPt->SetBinEdges(2,bins_cent.data());
       fSparseMixLSmmPairMassPt->SetBinEdges(2,bins_cent.data());
       
-
       fOutputList->Add(fSparseMixULSPairMassPt);
       fOutputList->Add(fSparseMixLSppPairMassPt);
       fOutputList->Add(fSparseMixLSmmPairMassPt);
@@ -1068,14 +1068,11 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
     RecPairPt = v0_1->Pt();
     RecPairMass = v0_1->MassK0Short();
     RecPairRap = v0_1->RapK0Short();
-    RecPairArmenterosArmPt = v0_1->PtArmV0();
-    RecPairArmenterosAlpha = v0_1->AlphaV0();
 
     AliAODTrack *pTrack = (AliAODTrack *)v0_1->GetDaughter(0);
     AliAODTrack *nTrack = (AliAODTrack *)v0_1->GetDaughter(1);
     
-    if (fUtils->isAcceptV0TrackQuality(pTrack) && fUtils->isAcceptV0TrackQuality(nTrack)
-	&& fUtils->isAcceptTrackKinematics(pTrack) && fUtils->isAcceptTrackKinematics(nTrack) ) {
+    if (fUtils->isAcceptV0Basic(v0_1, 0)) {
       MidV0Checker(v0_1, false);    
       MidTrackPIDChecker(pTrack, pid1, false);
       MidTrackPIDChecker(nTrack, pid2, false);
@@ -1086,10 +1083,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
     }
     
     if (!fUtils->isAcceptK0s(v0_1, pid1, pid2, 0)) {
-      continue;
-    }
-    
-    if (!fUtils->isAcceptArmenterosK0s(v0_1)) {
       continue;
     }
     
@@ -1126,9 +1119,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
         continue;
       }
       if (!fUtils->isAcceptK0s(v0_2, pid1, pid2, 0)) {
-        continue;
-      }
-      if (!fUtils->isAcceptArmenterosK0s(v0_2)) {
         continue;
       }
 
@@ -1194,15 +1184,12 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
     RecPairPt = v0_1->Pt();
     RecPairMass = v0_1->MassK0Short();
     RecPairRap = v0_1->RapK0Short();
-    RecPairArmenterosArmPt = v0_1->PtArmV0();
-    RecPairArmenterosAlpha = v0_1->AlphaV0();
 
     AliAODTrack *pTrack = (AliAODTrack *)v0_1->GetDaughter(0);
     AliAODTrack *nTrack = (AliAODTrack *)v0_1->GetDaughter(1);
 
-    if (fUtils->isAcceptV0TrackQuality(pTrack) && fUtils->isAcceptV0TrackQuality(nTrack)
-	&& fUtils->isAcceptTrackKinematics(pTrack) && fUtils->isAcceptTrackKinematics(nTrack) ) {
-      MidV0Checker(v0_1, false);
+    if (fUtils->isAcceptV0Basic(v0_1, 0)) {
+      MidV0Checker(v0_1, false);    
       MidTrackPIDChecker(pTrack, pid1, false);
       MidTrackPIDChecker(nTrack, pid2, false);
     }
@@ -1211,9 +1198,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
       continue;
     }
     if (!fUtils->isAcceptK0s(v0_1, pid1, pid2, 0)) {
-      continue;
-    }
-    if (!fUtils->isAcceptArmenterosK0s(v0_1)) {
       continue;
     }
 
@@ -1273,7 +1257,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
 
 bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
                                                   AliPID::EParticleType pid2) {
-  //cout<<"MidPairAnalysis"<<endl;
+  
   Int_t nTrack = fEvent->GetNumberOfTracks();
 
   AliAODTrack *track1;
@@ -1281,21 +1265,17 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
 
   TLorentzVector lv1, lv2, lv12;
 
-  std::vector<TLorentzVector> tracks;
-  std::vector<int> charges;
-  std::vector<bool> skip_tracks_ids;
-
   for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
 
     track1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
 
-    if (!fUtils->isAcceptMidPrimTrackQuality(track1)) {
-      continue;
-    }
     if (!fUtils->isAcceptTrackKinematics(track1)) {
       continue;
     }
-
+    if (!fUtils->isAcceptMidPrimTrackQuality(track1)) {
+      continue;
+    }
+    
     MidTrackPIDChecker(track1, pid1, false);
 
     if (!fUtils->isAcceptMidPid(track1, pid1)) {
@@ -1306,7 +1286,7 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
     MidTrackQualityChecker(track1);
 
     double mass1 = 0;
-
+    
     if (pid1 == AliPID::kElectron) {
       mass1 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
     } else if (pid1 == AliPID::kPion) {
@@ -1320,79 +1300,52 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
     } else {
       continue;
     }
-
-    TLorentzVector vec4;
-    vec4.SetPtEtaPhiM(track1->Pt(), track1->Eta(), track1->Phi(), mass1);
-    tracks.push_back(vec4);
-    skip_tracks_ids.push_back(false);
-    charges.push_back(track1->Charge());
-  }
-
-  nTrack = tracks.size();
-
-  for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
-
-    lv1 = tracks[iTrack1];
-
+    
     for (Int_t iTrack2 = iTrack1 + 1; iTrack2 < nTrack; ++iTrack2) {
 
-      lv2 = tracks[iTrack2];
+      track2 = (AliAODTrack *)fEvent->GetTrack(iTrack2);
 
-      if (charges[iTrack1] + charges[iTrack2] != 0) {
-        continue;
+      if (!fUtils->isAcceptTrackKinematics(track2)) {
+	continue;
+      }
+      if (!fUtils->isAcceptMidPrimTrackQuality(track2)) {
+	continue;
+      }
+      if (!fUtils->isAcceptMidPid(track2, pid2)) {
+	continue;
       }
 
-      lv12 = lv1 + lv2;
-
-      if ((pid1 == AliPID::kKaon && pid2 == AliPID::kKaon) &&
-          lv12.M() < 1.035) {
-        skip_tracks_ids[iTrack1] = true;
-        skip_tracks_ids[iTrack2] = true;
-      } else if ((pid1 == AliPID::kPion && pid2 == AliPID::kPion)) {
-        if (0.48 < lv12.M() && lv12.M() < 0.51) {
-          skip_tracks_ids[iTrack1] = true;
-          skip_tracks_ids[iTrack2] = true;
-        } else if (0.70 < lv12.M() && lv12.M() < 0.84) {
-          skip_tracks_ids[iTrack1] = true;
-          skip_tracks_ids[iTrack2] = true;
-        }
+      double mass2 = 0;
+    
+      if (pid2 == AliPID::kElectron) {
+	mass2 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
+      } else if (pid2 == AliPID::kPion) {
+	mass2 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+      } else if (pid2 == AliPID::kKaon) {
+	mass2 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
+      } else if (pid2 == AliPID::kProton) {
+	mass2 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
+      } else if (pid2 == AliPID::kMuon) {
+	mass2 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
+      } else {
+	continue;
       }
-
-    } // end of loop track2
-  }   // end of loop track1
-
-  for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
-
-    lv1 = tracks[iTrack1];
-
-    for (Int_t iTrack2 = iTrack1 + 1; iTrack2 < nTrack; ++iTrack2) {
-
-      lv2 = tracks[iTrack2];
-
+      	    
+      lv1.SetPtEtaPhiM(track1->Pt(),track1->Eta(),track1->Phi(),mass1);
+      lv2.SetPtEtaPhiM(track2->Pt(),track2->Eta(),track2->Phi(),mass2);
+      
       lv12 = lv1 + lv2;
 
       double fill[] = {lv12.M(), lv12.Pt(), fUtils->getCentClass()};
 
-      if (charges[iTrack1] + charges[iTrack2] == 0) {
+      if (track1->Charge() + track2->Charge() == 0){
         fSparseULSPairMassPt->Fill(fill);
-      } else if (charges[iTrack1] + charges[iTrack2] > 0) {
+      } else if (track1->Charge() + track2->Charge() > 0){
         fSparseLSppPairMassPt->Fill(fill);
       } else {
         fSparseLSmmPairMassPt->Fill(fill);
       }
-
-      if (skip_tracks_ids[iTrack1] && skip_tracks_ids[iTrack2]) {
-        continue;
-      }
-
-      if (charges[iTrack1] + charges[iTrack2] == 0) {
-        fHistULSPairMassPt_TightCut->Fill(RecPairMass, RecPairPt);
-      } else if (charges[iTrack1] + charges[iTrack2] > 0) {
-        fHistLSppPairMassPt_TightCut->Fill(RecPairMass, RecPairPt);
-      } else {
-        fHistLSmmPairMassPt_TightCut->Fill(RecPairMass, RecPairPt);
-      }
-
+      
     } // end of loop track2
   }   // end of loop track1
 
