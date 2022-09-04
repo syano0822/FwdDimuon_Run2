@@ -85,6 +85,8 @@ ClassImp(AliAnalysisTaskAODTrackPair)
       fSparseLSmmPairMassPt(NULL),
 
   fSparseULSPairMassPt_SmallOpeningAngle(NULL),
+  fSparseLSppPairMassPt_SmallOpeningAngle(NULL),
+  fSparseLSmmPairMassPt_SmallOpeningAngle(NULL),
 
   fSparseULSPairMassPt_SideBandLeftRight(NULL),
   fSparseULSPairMassPt_SideBandLeft(NULL),
@@ -98,8 +100,7 @@ ClassImp(AliAnalysisTaskAODTrackPair)
       fTreeLSmmPair_ProngV0(NULL),
 
       fTreeMixULSPair(NULL), fTreeMixLSppPair(NULL), fTreeMixLSmmPair(NULL),
-  
-  
+    
       fHistULSPairMassPt(NULL), fHistLSppPairMassPt(NULL),
       fHistLSmmPairMassPt(NULL),
 
@@ -115,6 +116,8 @@ ClassImp(AliAnalysisTaskAODTrackPair)
       fSparseMixULSPairMassPt(NULL), fSparseMixLSppPairMassPt(NULL),
       fSparseMixLSmmPairMassPt(NULL),
   fSparseMixULSPairMassPt_SmallOpeningAngle(NULL),
+  fSparseMixLSppPairMassPt_SmallOpeningAngle(NULL),
+  fSparseMixLSmmPairMassPt_SmallOpeningAngle(NULL),
 
       fHistMassK0s1K0s2(NULL),
 
@@ -178,6 +181,8 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name)
       fSparseLSmmPairMassPt(NULL),
   
   fSparseULSPairMassPt_SmallOpeningAngle(NULL),
+  fSparseLSppPairMassPt_SmallOpeningAngle(NULL),
+  fSparseLSmmPairMassPt_SmallOpeningAngle(NULL),
 
   fSparseULSPairMassPt_SideBandLeftRight(NULL),
   fSparseULSPairMassPt_SideBandLeft(NULL),
@@ -207,6 +212,8 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name)
       fSparseMixULSPairMassPt(NULL), fSparseMixLSppPairMassPt(NULL),
       fSparseMixLSmmPairMassPt(NULL),  
   fSparseMixULSPairMassPt_SmallOpeningAngle(NULL),
+  fSparseMixLSppPairMassPt_SmallOpeningAngle(NULL),
+  fSparseMixLSmmPairMassPt_SmallOpeningAngle(NULL),
 
       fHistMassK0s1K0s2(NULL),
 
@@ -412,9 +419,16 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects() {
 
       fSparseULSPairMassPt_SmallOpeningAngle  = new THnSparseF("fSparseULSPairMassPt_SmallOpeningAngle", "", 3, bins,
 							       min_bins, max_bins);
+      fSparseLSppPairMassPt_SmallOpeningAngle  = new THnSparseF("fSparseLSppPairMassPt_SmallOpeningAngle", "", 3, bins,
+								min_bins, max_bins);
+      fSparseLSmmPairMassPt_SmallOpeningAngle  = new THnSparseF("fSparseLSmmPairMassPt_SmallOpeningAngle", "", 3, bins,
+								min_bins, max_bins);     
       fSparseULSPairMassPt_SmallOpeningAngle->SetBinEdges(2,bins_cent.data());
+      fSparseLSppPairMassPt_SmallOpeningAngle->SetBinEdges(2,bins_cent.data());
+      fSparseLSmmPairMassPt_SmallOpeningAngle->SetBinEdges(2,bins_cent.data());
       fOutputList->Add(fSparseULSPairMassPt_SmallOpeningAngle);
-
+      fOutputList->Add(fSparseLSppPairMassPt_SmallOpeningAngle);
+      fOutputList->Add(fSparseLSmmPairMassPt_SmallOpeningAngle);
     }
     if (fIsMixingAnalysis) {
       fHistMixULSPairMassPt =
@@ -432,20 +446,26 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects() {
       fSparseMixLSppPairMassPt = new THnSparseF("fSparseMixLSppPairMassPt", "",
                                                 3, bins, min_bins, max_bins);
       fSparseMixLSmmPairMassPt = new THnSparseF("fSparseMixLSmmPairMassPt", "",
-                                                3, bins, min_bins, max_bins);
-      
+                                                3, bins, min_bins, max_bins);      
       fSparseMixULSPairMassPt->SetBinEdges(2,bins_cent.data());
       fSparseMixLSppPairMassPt->SetBinEdges(2,bins_cent.data());
-      fSparseMixLSmmPairMassPt->SetBinEdges(2,bins_cent.data());
-      
+      fSparseMixLSmmPairMassPt->SetBinEdges(2,bins_cent.data());      
       fOutputList->Add(fSparseMixULSPairMassPt);
       fOutputList->Add(fSparseMixLSppPairMassPt);
       fOutputList->Add(fSparseMixLSmmPairMassPt);
 
       fSparseMixULSPairMassPt_SmallOpeningAngle  = new THnSparseF("fSparseMixULSPairMassPt_SmallOpeningAngle", "", 3, bins,
-							       min_bins, max_bins);
+								  min_bins, max_bins);
+      fSparseMixLSppPairMassPt_SmallOpeningAngle  = new THnSparseF("fSparseMixLSppPairMassPt_SmallOpeningAngle", "", 3, bins,
+								   min_bins, max_bins);
+      fSparseMixLSmmPairMassPt_SmallOpeningAngle  = new THnSparseF("fSparseMixLSmmPairMassPt_SmallOpeningAngle", "", 3, bins,
+								   min_bins, max_bins);     
       fSparseMixULSPairMassPt_SmallOpeningAngle->SetBinEdges(2,bins_cent.data());
+      fSparseMixLSppPairMassPt_SmallOpeningAngle->SetBinEdges(2,bins_cent.data());
+      fSparseMixLSmmPairMassPt_SmallOpeningAngle->SetBinEdges(2,bins_cent.data());
       fOutputList->Add(fSparseMixULSPairMassPt_SmallOpeningAngle);
+      fOutputList->Add(fSparseMixLSppPairMassPt_SmallOpeningAngle);
+      fOutputList->Add(fSparseMixLSmmPairMassPt_SmallOpeningAngle);
     }
 
     if (fIsV0TrackPairAna) {
@@ -1179,7 +1199,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
       double fill[] = {RecPairMass, RecPairPt, fUtils->getCentClass()};
       
       if (fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short()) && fUtils->isAcceptK0sCandidateMassRange(v0_2->MassK0Short())) {
-	if (fUtils->isAcceptV0V0TrackPairOpeningAngle(TMath::Cos(angle))) {
+	if (fUtils->isAcceptTrackPairOpeningAngle(TMath::Cos(angle))) {
 	  fSparseULSPairMassPt->Fill(fill);
 	  fHistOpeningAngle->Fill(TMath::Cos(angle));
 	} else {
@@ -1308,7 +1328,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
           RecPairRap = lv12.Rapidity();
 
           double fill[] = {RecPairMass, RecPairPt, fUtils->getCentClass()};
-	  if (fUtils->isAcceptV0V0TrackPairOpeningAngle(TMath::Cos(angle))) {
+	  if (fUtils->isAcceptTrackPairOpeningAngle(TMath::Cos(angle))) {
 	    fSparseMixULSPairMassPt->Fill(fill);
 	    fHistOpeningAngle->Fill(TMath::Cos(angle));
 	  } else {
@@ -1412,14 +1432,28 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
       
       lv12 = lv1 + lv2;
 
+      double angle = lv1.Angle(lv2.Vect());
+
       double fill[] = {lv12.M(), lv12.Pt(), fUtils->getCentClass()};
 
       if (track1->Charge() + track2->Charge() == 0){
-        fSparseULSPairMassPt->Fill(fill);
+        if (fUtils->isAcceptTrackPairOpeningAngle(TMath::Cos(angle))) {
+	  fSparseULSPairMassPt->Fill(fill);
+	} else {
+	  fSparseULSPairMassPt_SmallOpeningAngle->Fill(fill);
+	}
       } else if (track1->Charge() + track2->Charge() > 0){
-        fSparseLSppPairMassPt->Fill(fill);
+	if (fUtils->isAcceptTrackPairOpeningAngle(TMath::Cos(angle))) {
+	  fSparseLSppPairMassPt->Fill(fill);
+	} else {
+	  fSparseLSppPairMassPt_SmallOpeningAngle->Fill(fill);
+	}
       } else {
-        fSparseLSmmPairMassPt->Fill(fill);
+	if (fUtils->isAcceptTrackPairOpeningAngle(TMath::Cos(angle))) {
+	  fSparseLSmmPairMassPt->Fill(fill);
+	} else {
+	  fSparseLSmmPairMassPt_SmallOpeningAngle->Fill(fill);
+	}
       }
       
     } // end of loop track2
@@ -1521,15 +1555,30 @@ bool AliAnalysisTaskAODTrackPair::MidPairAnalysisEventMixing(AliPID::EParticleTy
 	  
           lv12 = lv1 + lv2;
 	  
-          double fill[] = {lv12.M(), lv12.Pt(), fUtils->getCentClass()};
+	  double angle = lv1.Angle(lv2.Vect());
 
-          if (track1->Charge() + track2->Charge() == 0) {
-            fSparseMixULSPairMassPt->Fill(fill);
-          } else if (track1->Charge() + track2->Charge() > 0) {
-            fSparseMixLSppPairMassPt->Fill(fill);
-          } else {
-            fSparseMixLSmmPairMassPt->Fill(fill);
-          }	  
+          double fill[] = {lv12.M(), lv12.Pt(), fUtils->getCentClass()};
+	  
+	  if (track1->Charge() + track2->Charge() == 0){
+	    if (fUtils->isAcceptTrackPairOpeningAngle(TMath::Cos(angle))) {
+	      fSparseMixULSPairMassPt->Fill(fill);
+	    } else {
+	      fSparseMixULSPairMassPt_SmallOpeningAngle->Fill(fill);
+	    }
+	  } else if (track1->Charge() + track2->Charge() > 0){
+	    if (fUtils->isAcceptTrackPairOpeningAngle(TMath::Cos(angle))) {
+	      fSparseMixLSppPairMassPt->Fill(fill);
+	    } else {
+	      fSparseMixLSppPairMassPt_SmallOpeningAngle->Fill(fill);
+	    }
+	  } else {
+	    if (fUtils->isAcceptTrackPairOpeningAngle(TMath::Cos(angle))) {
+	      fSparseMixLSmmPairMassPt->Fill(fill);
+	    } else {
+	      fSparseMixLSmmPairMassPt_SmallOpeningAngle->Fill(fill);
+	    }
+	  }
+	  
         }
       }
     }    

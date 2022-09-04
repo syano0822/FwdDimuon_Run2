@@ -42,7 +42,7 @@ public:
   bool isAcceptArmenterosK0s(AliAODv0 *v0);
   bool isAcceptArmenterosK0s_Tight(AliAODv0 *v0);
   
-  bool isAcceptV0V0TrackPairOpeningAngle(double angle){
+  bool isAcceptTrackPairOpeningAngle(double angle){
     if ( fMaxPairCosOpeningAngleCut > angle ) {
       return true;
     } else {
