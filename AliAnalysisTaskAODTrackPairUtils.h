@@ -37,12 +37,18 @@ public:
   bool isAcceptV0Basic(AliAODv0 *v0, int charge);
   bool isAcceptV0Quality(AliAODv0 *v0, int charge);
   bool isAcceptV0Kinematics(AliAODv0 *v0);
-  bool isAcceptK0s(AliAODv0 *v0, AliPID::EParticleType pid1,
-		   AliPID::EParticleType pid2, int charge);  
-  
-
+  bool isAcceptK0s(AliAODv0 *v0);
+    
   bool isAcceptArmenterosK0s(AliAODv0 *v0);
   bool isAcceptArmenterosK0s_Tight(AliAODv0 *v0);
+  
+  bool isAcceptV0V0TrackPairOpeningAngle(double angle){
+    if ( fMaxPairCosOpeningAngleCut > angle ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   bool isAcceptK0sCandidateMassRange(double mass) {
     if (fMinK0sMassRange < mass && mass < fMaxK0sMassRange) {
@@ -51,6 +57,23 @@ public:
       return false;
     }
   }
+  
+  bool isAcceptK0sCandidateSideBandLeft(double mass) {
+    if (fMinK0sMassSideBandLeft < mass && mass < fMaxK0sMassSideBandLeft) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  bool isAcceptK0sCandidateSideBandRight(double mass) {
+    if (fMinK0sMassSideBandRight < mass && mass < fMaxK0sMassSideBandRight) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   bool isAcceptRhoCandidateMassRange(double mass) {
     if (fMinRhoMassRange < mass && mass < fMaxRhoMassRange) {
       return true;
@@ -225,6 +248,9 @@ public:
     fMaxPairRapCut = max;
     fIsPairRapCut = true;
   }
+  void setPairOpeningAngleCut(double val) {
+    fMaxPairCosOpeningAngleCut = val;
+  }
   void setPairKinematicCut(int type = 0, double min = 0.) {
     if (type == 0) {
       fIsPairPtCutForOneTrack = false;
@@ -316,13 +342,14 @@ public:
     fArmenterosR0 = r0;
   }
   void setV0SelectCuts(double alpha, double pangle, double v0Dca, double trackDca,
-                       double min_dlength, double max_dlength) {
+                       double min_dlength, double max_dlength, double lifetime) {
     fArmenterosAlphaCutParamForPtArm = alpha;
     fMinCosPointingAngleCut = pangle;
     fMinV0DCA = v0Dca;
     fMaxTrackDCASigma = trackDca;
     fMinV0DecayLength = min_dlength;
     fMaxV0DecayLength = max_dlength;
+    fMaxV0PropLifeTime = lifetime;
   }
 
   void setV0CutParams(double min, double max) {
@@ -525,6 +552,11 @@ public:
   double fMinF1270MassRange;
   double fMaxF1270MassRange;
  
+  double fMinK0sMassSideBandLeft;
+  double fMaxK0sMassSideBandLeft;
+  double fMinK0sMassSideBandRight;
+  double fMaxK0sMassSideBandRight;
+
   double fMinRejectMassWidthLambda;
   double fMaxRejectMassWidthLambda;
 
@@ -549,6 +581,7 @@ public:
   bool fIsPairRapCut;
   double fMinPairRapCut;
   double fMaxPairRapCut;
+  double fMaxPairCosOpeningAngleCut;
 
   bool fIsPairPtCutForOneTrack;
   bool fIsPairPtCutForBothTracks;

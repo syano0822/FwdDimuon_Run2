@@ -7,7 +7,8 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
     double min_vtxz = -10, double max_vtxz = 10, int min_vtx_cont = 1,
     double min_pair_rap = -0.5, double max_pair_rap = 0.5, double alpha = 0.2,
     double pangle = 0.998, double v0Dca = 0.1, double trackDca = 1.0,
-    double min_dlength = 5.0, double max_dlength = 100., string period = "LHC18c",
+    double min_dlength = 5.0, double max_dlength = 100., double max_lifetime = 20.,
+    string period = "LHC18c",
     string multi_method = "SPDTracklets", bool onPURej = true,
     bool onLBcut = true, bool onMuEtaCut = true, bool onMuThetaAbsCut = true,
     bool onMuMatchAptCut = true, bool onMuMatchLptCut = true,
@@ -27,7 +28,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
     double min_proton_sigma_tof = -2, double max_proton_sigma_tof = 2,
     double findable = 0.8, string dcaxy = "0.0105+0.035/pow(x,1.1)",
     double dcaz = 2.0, double chi2tpc = 4., double chi2its = 36.,
-    int nclusttpc = 70, int nclustits = 1, int pid1 = 211, int pid2 = 211) {
+    int nclusttpc = 70, int nclustits = 1, double pair_opangle = 0.98, int pid1 = 211, int pid2 = 211) {
 
   AliMuonTrackCuts *fMuonTrackCuts =
       new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
@@ -70,7 +71,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   utils->setVertexCut(min_vtxz, max_vtxz, min_vtx_cont);
   utils->setPairRapidityCut(min_pair_rap, max_pair_rap);
   utils->setV0SelectCuts(alpha, pangle, v0Dca, trackDca, min_dlength,
-                         max_dlength);
+                         max_dlength,max_lifetime);
   utils->setPileupRejectionCut(onPURej);
   utils->setLocalBoardCut(onLBcut);
   utils->setMultiEstimateMethod(multi_method);
@@ -88,6 +89,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   utils->setProtonSelectSigmaTOF(min_proton_sigma_tof, max_proton_sigma_tof);
   utils->setTrackQualities(findable, dcaxy.c_str(), dcaz, chi2tpc, chi2its,
                            nclusttpc, nclustits);
+  utils->setPairOpeningAngleCut(pair_opangle);
   utils->setPairTargetPIDs(pid1, pid2);
 
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
@@ -131,6 +133,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   cout << "trackDca=" << trackDca << endl;
   cout << "min_dlength=" << min_dlength << endl;
   cout << "max_dlength=" << max_dlength << endl;
+  cout << "max_lifetime=" << max_lifetime << endl;
   cout << "period=" << period << endl;
   cout << "multi_method=" << multi_method << endl;
   cout << "onPURej=" << onPURej << endl;
@@ -175,6 +178,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   cout << "chi2its=" << chi2its << endl;
   cout << "nclusttpc=" << nclusttpc << endl;
   cout << "nclustits=" << nclustits << endl;
+  cout << "pair_opangle=" << pair_opangle << endl;
   cout << "pid1=" << pid1 << endl;
   cout << "pid2=" << pid2 << endl;
 

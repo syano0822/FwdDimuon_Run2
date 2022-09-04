@@ -139,6 +139,12 @@ private:
   THnSparse *fSparseLSppPairMassPt;
   THnSparse *fSparseLSmmPairMassPt;
 
+  THnSparse *fSparseULSPairMassPt_SideBandLeftRight;
+  THnSparse *fSparseULSPairMassPt_SideBandLeft;
+  THnSparse *fSparseULSPairMassPt_SideBandRight;
+  THnSparse *fSparseULSPairMassPt_SideBand;
+  THnSparse *fSparseULSPairMassPt_SmallOpeningAngle;
+
   TH2F *fHistULSPairMassPt_ProngV0;
   TH2F *fHistLSppPairMassPt_ProngV0;
   TH2F *fHistLSmmPairMassPt_ProngV0;
@@ -154,6 +160,7 @@ private:
   THnSparse *fSparseMixULSPairMassPt;
   THnSparse *fSparseMixLSppPairMassPt;
   THnSparse *fSparseMixLSmmPairMassPt;
+  THnSparse *fSparseMixULSPairMassPt_SmallOpeningAngle;
 
   TH2F *fHistMassK0s1K0s2;
 
@@ -201,6 +208,7 @@ private:
   TH1F *fHistReducedChi2ITS;
   TH1F *fHistDCAz;
   TH2F *fHistDCAxyPt;
+  TH1F* fHistOpeningAngle;
 
   TH2F *fHistArmenteros;
   TH2F *fHistSelArmenteros;

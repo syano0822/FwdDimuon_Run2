@@ -25,7 +25,8 @@ ClassImp(AliAnalysisTaskAODTrackPairUtils)
       fMCArray(NULL), fRunNumber(-99999), fRunNumberIndex(-99999), fIsMC(false),
       fIsVtxZcut(true), fMaxVertexCutZ(-10), fMinVertexCutZ(10),
 
-      fIsPairRapCut(true), fMinPairRapCut(-4.0), fMaxPairRapCut(-2.5),
+      fIsPairRapCut(true), fMinPairRapCut(-4.0), fMaxPairRapCut(-2.5), 
+  fMaxPairCosOpeningAngleCut(0.92),
 
       fIsPairPtCutForOneTrack(false), fIsPairPtCutForBothTracks(false),
       fMinPairPtCut(0.),
@@ -48,6 +49,11 @@ ClassImp(AliAnalysisTaskAODTrackPairUtils)
   fMaxF980MassRange(1.01),
   fMinF1270MassRange(1.21),
   fMaxF1270MassRange(1.38),
+  fMinK0sMassSideBandLeft(0.450), 
+  fMaxK0sMassSideBandLeft(0.465),  
+  fMinK0sMassSideBandRight(0.535), 
+  fMaxK0sMassSideBandRight(0.550), 
+ 
 
       fArmenterosBandWidth(0.05), fArmenterosPCM(0.207), fArmenterosR0(0.85),
 
@@ -379,6 +385,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Kinematics(AliAODv0 *v0) {
   if (v0->RapK0Short() < fMinPairRapCut || fMaxPairRapCut < v0->RapK0Short()) {
     return false;
   }
+
   return true;
 }
 
@@ -591,21 +598,23 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Quality(AliAODv0 *v0, int charg
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0,
-						   AliPID::EParticleType pid1,
-						   AliPID::EParticleType pid2,
-						   int charge) {
-  if ( !isAcceptV0Quality(v0,charge) ) {
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0){
+
+  if ( !isAcceptV0Quality(v0,0) ) {
     return false;
   }
   
   if ( !isAcceptArmenterosK0s(v0) ) {
     return false;
   }
-
+  
   AliAODTrack *pTrack = (AliAODTrack *)v0->GetDaughter(0);
   AliAODTrack *nTrack = (AliAODTrack *)v0->GetDaughter(1);
   
+  if ( !isAcceptMidPid(pTrack,AliPID::kPion) || !isAcceptMidPid(nTrack,AliPID::kPion) ) {
+    return false;
+  }
+
   TLorentzVector lv1, lv2, lv12;
 
   if (pTrack->P() > nTrack->P()) {
@@ -626,7 +635,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0,
       lv12.M() < fPdgLambdaMass + fMaxRejectMassWidthLambda) {
     return false;
   }
-
+  
   lv1.SetPtEtaPhiM(pTrack->P(), pTrack->Eta(), pTrack->Phi(),
                    TDatabasePDG::Instance()->GetParticle(11)->Mass());
   lv2.SetPtEtaPhiM(nTrack->P(), nTrack->Eta(), nTrack->Phi(),
