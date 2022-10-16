@@ -1,37 +1,44 @@
 AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
-    UInt_t offlineTriggerMask = AliVEvent::kINT7,
-    string spd_multi_correction_file_path =
-        "/Users/syano_mbp2021/analysis/run2/Glueball/SPDMultiCorrection.root",
-    string dimuon_ds_file_path =
-        "/Users/syano_mbp2021/analysis/run2/Glueball/DownScale_Run2_CTP.root",
-    double min_vtxz = -10, double max_vtxz = 10, int min_vtx_cont = 1,
-    double min_pair_rap = -0.5, double max_pair_rap = 0.5, double alpha = 0.2,
-    double pangle = 0.998, double v0Dca = 0.1, double trackDca = 1.0,
-    double min_dlength = 5.0, double max_dlength = 100., double max_lifetime = 20.,
-    string period = "LHC18c",
-    string multi_method = "SPDTracklets", bool onPURej = true,
-    bool onLBcut = true, bool onMuEtaCut = true, bool onMuThetaAbsCut = true,
-    bool onMuMatchAptCut = true, bool onMuMatchLptCut = true,
-    bool onMuMatchHptCut = false, bool onMuChi2Cut = true,
-    bool onMuPdcaCut = true, bool isMC = false, bool isSelectEvt = true,
-    int paircuttype = 1, double min_pairtrackptcut = 0.5,
-    bool onMixingAnalysis = false, bool isMidTrackAnalysis = false,
-    bool isPrimTrackAnalysis = false, bool isV0TrackAnalysis = true,
-    double min_track_pt = 0.0, double max_track_pt = 999.,
-    double min_track_eta = -0.8, double max_track_eta = 0.8,
-    double min_track_p = 0.3, double max_track_p = 2.5,
-    double min_pion_sigma_tpc = -5, double max_pion_sigma_tpc = 5,
-    double min_pion_sigma_tof = -5, double max_pion_sigma_tof = 5,
-    double min_kaon_sigma_tpc = -2, double max_kaon_sigma_tpc = 2,
-    double min_kaon_sigma_tof = -2, double max_kaon_sigma_tof = 2,
-    double min_proton_sigma_tpc = -2, double max_proton_sigma_tpc = 2,
-    double min_proton_sigma_tof = -2, double max_proton_sigma_tof = 2,
-    double findable = 0.8, string dcaxy = "0.0105+0.035/pow(x,1.1)",
-    double dcaz = 2.0, double chi2tpc = 4., double chi2its = 36.,
-    int nclusttpc = 70, int nclustits = 1, double pair_opangle = 0.98, int pid1 = 211, int pid2 = 211) {
-
+						 UInt_t offlineTriggerMask = AliVEvent::kINT7,
+						 string spd_multi_correction_file_path =
+						 "/Users/syano_mbp2021/analysis/run2/Glueball/SPDMultiCorrection.root",
+						 string dimuon_ds_file_path =
+						 "/Users/syano_mbp2021/analysis/run2/Glueball/DownScale_Run2_CTP.root",
+						 double min_vtxz = -10, double max_vtxz = 10, int min_vtx_cont = 1,
+						 double min_pair_rap = -0.5, double max_pair_rap = 0.5, double alpha = 0.2,
+						 double pangle = 0.998, double v0Dca = 0.1, double trackDca = 1.0,
+						 double min_dlength = 5.0, double max_dlength = 100., double max_lifetime = 20.,
+						 string period = "LHC18c",
+						 string multi_method = "SPDTracklets", bool onPURej = true,
+						 bool onLBcut = true, bool onMuEtaCut = true, bool onMuThetaAbsCut = true,
+						 bool onMuMatchAptCut = true, bool onMuMatchLptCut = true,
+						 bool onMuMatchHptCut = false, bool onMuChi2Cut = true,
+						 bool onMuPdcaCut = true, bool isMC = false, bool isSelectEvt = true,
+						 int paircuttype = 1, double min_pairtrackptcut = 0.5,
+						 bool onMixingAnalysis = false, bool isMidTrackAnalysis = false,
+						 bool isPrimTrackAnalysis = false, bool isV0TrackAnalysis = true,
+						 double min_track_pt = 0.0, double max_track_pt = 999.,
+						 double min_track_eta = -0.8, double max_track_eta = 0.8,
+						 double min_track_p = 0.3, double max_track_p = 2.5,
+						 double min_pion_sigma_tpc = -5, double max_pion_sigma_tpc = 5,
+						 double min_pion_sigma_tof = -5, double max_pion_sigma_tof = 5,
+						 double min_kaon_sigma_tpc = -2, double max_kaon_sigma_tpc = 2,
+						 double min_kaon_sigma_tof = -2, double max_kaon_sigma_tof = 2,
+						 double min_proton_sigma_tpc = -2, double max_proton_sigma_tpc = 2,
+						 double min_proton_sigma_tof = -2, double max_proton_sigma_tof = 2,
+						 double findable = 0.8, string dcaxy = "0.0105+0.035/pow(x,1.1)",
+						 double dcaz = 2.0, double chi2tpc = 4., double chi2its = 36.,
+						 int nclusttpc = 70, int nclustits = 1, double pair_opangle = 0.98,
+						 int pid1 = 211, int pid2 = 211,
+						 int trackdepth = 100,
+						 int poolsize = 100,
+						 double readypoolfraction = 0.1,
+						 bool onpoolVtx = true,
+						 bool onpoolCent = true,
+						 bool onpoolPsi = true) {
+  
   AliMuonTrackCuts *fMuonTrackCuts =
-      new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
+    new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
   fMuonTrackCuts->SetIsMC(isMC);
   fMuonTrackCuts->SetAllowDefaultParams(true);
 
@@ -62,8 +69,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   TFile *input = TFile::Open(dimuon_ds_file_path.c_str());
   TFile *input2 = TFile::Open(spd_multi_correction_file_path.c_str());
 
-  AliAnalysisTaskAODTrackPairUtils *utils =
-      new AliAnalysisTaskAODTrackPairUtils();
+  AliAnalysisTaskAODTrackPairUtils *utils = new AliAnalysisTaskAODTrackPairUtils();
   utils->setMC(isMC);
   utils->setEvtSelection(isSelectEvt);
   utils->setDownScalingHist(input);
@@ -91,7 +97,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
                            nclusttpc, nclustits);
   utils->setPairOpeningAngleCut(pair_opangle);
   utils->setPairTargetPIDs(pid1, pid2);
-
+  
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
     ::Error("AddTaskAODMuonEventSelection",
@@ -108,13 +114,14 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   if (isSelectEvt) {
     task->SelectCollisionCandidates(offlineTriggerMask);
   }
+
   task->setUtils(utils);
-  task->setEvtMixingTrackDepth(100);
-  task->setEvtMixingPoolSize(100);
-  task->setEvtMixingReadyFraction(0.1);
-  task->setEvtMixingPoolVtxZ(true);
-  task->setEvtMixingPoolCent(true);
-  task->setEvtMixingPoolPsi(true);
+  task->setEvtMixingTrackDepth(trackdepth);
+  task->setEvtMixingPoolSize(poolsize);
+  task->setEvtMixingReadyFraction(readypoolfraction);
+  task->setEvtMixingPoolVtxZ(onpoolVtx);
+  task->setEvtMixingPoolCent(onpoolCent);
+  task->setEvtMixingPoolPsi(onpoolPsi);
   task->setMixingAnalysis(onMixingAnalysis);
   task->setMC(isMC);
   task->setMidTrackAna(isMidTrackAnalysis);
@@ -181,6 +188,12 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   cout << "pair_opangle=" << pair_opangle << endl;
   cout << "pid1=" << pid1 << endl;
   cout << "pid2=" << pid2 << endl;
+  cout << "trackdepth=" << trackdepth << endl;
+  cout << "poolsize=" << poolsize << endl;
+  cout << "readypoolfraction=" << readypoolfraction << endl;
+  cout << "onpoolVtx=" << onpoolVtx << endl;
+  cout << "onpoolCent=" << onpoolCent << endl;
+  cout << "onpoolPsi=" << onpoolPsi << endl;
 
   AliAnalysisDataContainer *cinput = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 =

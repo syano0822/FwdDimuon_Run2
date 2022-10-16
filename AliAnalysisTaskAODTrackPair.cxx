@@ -60,7 +60,7 @@ ClassImp(AliAnalysisTaskAODTrackPair)
     : AliAnalysisTaskSE(), fEvent(NULL), fPoolMuonTrackMgr(NULL), fUtils(NULL),
       fIsMC(false), fIsMidTrackAna(false), fIsV0TrackPairAna(false),
       fIsPrimTrackPairAna(false), fIsMixingAnalysis(false), fRunNumber(-99999),
-      fTrackDepth(1000), fPoolSize(1), fReadyFraction(0.1),
+      fTrackDepth(1), fPoolSize(1), fReadyFraction(0.1),
       fTriggerMaskForSame(AliVEvent::kMuonUnlikeLowPt7 |
                           AliVEvent::kMuonLikeLowPt7),
       fTriggerMaskForMixing(AliVEvent::kMuonSingleLowPt7),
@@ -156,7 +156,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name)
     : AliAnalysisTaskSE(name), fEvent(NULL), fPoolMuonTrackMgr(NULL),
       fUtils(NULL), fIsMC(false), fIsMidTrackAna(false),
       fIsV0TrackPairAna(false), fIsPrimTrackPairAna(false),
-      fIsMixingAnalysis(false), fRunNumber(-99999), fTrackDepth(1000),
+      fIsMixingAnalysis(false), fRunNumber(-99999), fTrackDepth(1),
       fPoolSize(1), fReadyFraction(0.1),
       fTriggerMaskForSame(AliVEvent::kMuonUnlikeLowPt7 |
                           AliVEvent::kMuonLikeLowPt7),
@@ -251,20 +251,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name)
       RecPairArmenterosArmPt(0.), RecPairArmenterosAlpha(0.), RecPairCent(0.),
       RecPairDS(0.) {
 
-  double fCentBins[] = {-1, 9, 15, 21, 26, 34, 42, 51, 61, 99999};
-  double fVtxBins[] = {-50, -10.5, -6, -2, 0, 2, 6, 10.5, 50};
-  double fPsiBins[] = {-10, -1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5, 10};
-
-  int fNCentBins = sizeof(fCentBins) / sizeof(double) - 1;
-  int fNVtxZBins = sizeof(fVtxBins) / sizeof(double) - 1;
-  int fNPsiBins = sizeof(fPsiBins) / sizeof(double) - 1;
-
-  fPoolMuonTrackMgr = new AliEventPoolManager(
-      fPoolSize, fTrackDepth, fNCentBins, (double *)fCentBins, fNVtxZBins,
-      (double *)fVtxBins, fNPsiBins, (double *)fPsiBins);
-  fPoolMuonTrackMgr->SetTargetValues(fTrackDepth, (double)fReadyFraction,
-                                     fPoolSize);
-
+  
   // Define input and output slots here
   // Input slot #0 works with a TChain
   DefineInput(0, TChain::Class());
@@ -277,6 +264,19 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name)
 AliAnalysisTaskAODTrackPair::~AliAnalysisTaskAODTrackPair() {}
 //________________________________________________________________________
 void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects() {
+
+  double fCentBins[] = {0,1,5,10,20,40,60,100};
+  double fVtxBins[] = {-50, -10.5, -6, -2, 0, 2, 6, 10.5, 50};
+  double fPsiBins[] = {-10, -1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5, 10};
+  
+  int fNCentBins = sizeof(fCentBins) / sizeof(double) - 1;
+  int fNVtxZBins = sizeof(fVtxBins) / sizeof(double) - 1;
+  int fNPsiBins = sizeof(fPsiBins) / sizeof(double) - 1;
+
+  fPoolMuonTrackMgr = new AliEventPoolManager(fPoolSize, fTrackDepth, fNCentBins, (double *)fCentBins, fNVtxZBins,
+					      (double *)fVtxBins, fNPsiBins, (double *)fPsiBins);
+  fPoolMuonTrackMgr->SetTargetValues(fTrackDepth, (double)fReadyFraction,fPoolSize);
+  
   // Create histograms
   // Called once
   fOutputList = new TList();
@@ -744,7 +744,7 @@ void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects() {
 //________________________________________________________________________
 
 void AliAnalysisTaskAODTrackPair::UserExec(Option_t *) {
-
+  
   if (!Initialize()) {
     return;
   }
@@ -1346,14 +1346,14 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
     }  
     poolPsi = fUtils->getPsi();
   }
-
+  
   AliEventPool *pool = (AliEventPool *)fPoolMuonTrackMgr->GetEventPool(poolCent, poolVtxZ, poolPsi);
 
   Int_t nV0 = fEvent->GetNumberOfV0s();
 
   AliAODv0 *v0_1;
   AliAODv0 *v0_2;
-
+  
   for (int iV0_1 = 0; iV0_1 < nV0; ++iV0_1) {
     
     v0_1 = (AliAODv0 *)fEvent->GetV0(iV0_1);
@@ -1393,7 +1393,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
 
     MidTrackQualityChecker(pTrack);
     MidTrackQualityChecker(nTrack);
-
+    
     fHistSelArmenteros->Fill(v0_1->Alpha(), v0_1->PtArmV0());
     fHistULSPairMassPt_ProngV0->Fill(RecPairMass, RecPairPt);
 
@@ -1405,13 +1405,13 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
 
     MidTrackPIDChecker(pTrack, pid1, true);
     MidTrackPIDChecker(nTrack, pid2, true);
-
+    
     if (pool->IsReady()) {
-
+      
       for (Int_t iMixEvt = 0; iMixEvt < pool->GetCurrentNEvents(); iMixEvt++) {
-
+	
         TObjArray *poolTracks = (TObjArray *)pool->GetEvent(iMixEvt);
-
+	
         for (int iV0_2 = 0; iV0_2 < poolTracks->GetEntriesFast(); ++iV0_2) {
 	  
 	  v0_2 = (AliAODv0 *)poolTracks->At(iV0_2);
