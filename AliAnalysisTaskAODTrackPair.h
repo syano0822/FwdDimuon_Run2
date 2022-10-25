@@ -35,7 +35,7 @@ public:
     fTriggerMaskForMixing = mask;
   }
   void setSameEventTrigger(unsigned int mask) { fTriggerMaskForSame = mask; }
-
+  
 private:
   AliAnalysisTaskAODTrackPair(
       const AliAnalysisTaskAODTrackPair &); // not implemented
@@ -65,9 +65,12 @@ private:
   bool MidV0AnalysisEventMixing(AliPID::EParticleType pid1,
                                 AliPID::EParticleType pid2);
 
+  bool ProcessMC();
+
   AliAODEvent *fEvent;
   AliEventPoolManager *fPoolMuonTrackMgr;
   AliAnalysisTaskAODTrackPairUtils *fUtils;
+  TClonesArray *fMCTrackArray;
 
   bool fIsMC;
   bool fIsMidTrackAna;
@@ -146,9 +149,14 @@ private:
   THnSparse *fSparseULSPairMassPt_SideBandRight;
   THnSparse *fSparseULSPairMassPt_SideBand;   
 
+  TH2F *fHistTrueK0sPtRapidity;
+  TH2F *fHistRecTrueK0sPtRapidity;
+
   TH2F *fHistULSPairMassPt_ProngV0;
   TH2F *fHistLSppPairMassPt_ProngV0;
   TH2F *fHistLSmmPairMassPt_ProngV0;
+
+  TH2F *fHistULSPairMassPt_ProngV0_TrueK0s;
 
   TH2F *fHistULSPairMassPt_TightCut;
   TH2F *fHistLSppPairMassPt_TightCut;
@@ -215,19 +223,47 @@ private:
   TH1F* fHistOpeningAngle;
 
   TH2F *fHistArmenteros;
-  TH2F *fHistSelArmenteros;
   TH2F *fHistV0MassDecayLength;
   TH2F *fHistV0MassPointingAngle;
   TH2F *fHistV0MassV0DCA;
   TH2F *fHistV0MassV0TrackDCA;
   TH2F *fHistV0MassV0DecayRadius;
   TH2F *fHistV0MassV0PropLifeTime;
+  
+  TH2F *fHistSelArmenteros; 
   TH2F *fHistSelV0MassDecayLength;
   TH2F *fHistSelV0MassPointingAngle;
   TH2F *fHistSelV0MassV0DCA;
   TH2F *fHistSelV0MassV0TrackDCA;
   TH2F *fHistSelV0MassV0DecayRadius;
   TH2F *fHistSelV0MassV0PropLifeTime;
+  
+  TH2F *fHistArmenteros_TrueK0s;
+  TH2F *fHistV0MassDecayLength_TrueK0s;
+  TH2F *fHistV0MassPointingAngle_TrueK0s;
+  TH2F *fHistV0MassV0DCA_TrueK0s;
+  TH2F *fHistV0MassV0TrackDCA_TrueK0s;
+  TH2F *fHistV0MassV0DecayRadius_TrueK0s;
+  TH2F *fHistV0MassV0PropLifeTime_TrueK0s;
+  
+  TH2F *fHistSelArmenteros_TrueK0s; 
+  TH2F *fHistSelV0MassDecayLength_TrueK0s;
+  TH2F *fHistSelV0MassPointingAngle_TrueK0s;
+  TH2F *fHistSelV0MassV0DCA_TrueK0s;
+  TH2F *fHistSelV0MassV0TrackDCA_TrueK0s;
+  TH2F *fHistSelV0MassV0DecayRadius_TrueK0s;
+  TH2F *fHistSelV0MassV0PropLifeTime_TrueK0s;
+  
+  TTree *fTreeK0s;
+  double TrueMass;
+  double TrueRap;
+  double TruePhi;
+  double TruePt;
+  double RecMass;
+  double RecRap;
+  double RecPhi;
+  double RecPt;
+  bool isDetect;
 
   ClassDef(AliAnalysisTaskAODTrackPair, 1); // example of analysis
 };

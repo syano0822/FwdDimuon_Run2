@@ -336,19 +336,22 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptFwdMuonTrack(
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptFwdDimuon(AliAODDimuon *dimuon) {
+  
   AliAODTrack *track1 = dynamic_cast<AliAODTrack *>(dimuon->GetMu(0));
   AliAODTrack *track2 = dynamic_cast<AliAODTrack *>(dimuon->GetMu(1));
 
   int triggerLB1 = AliAnalysisMuonUtility::GetLoCircuit(track1);
   int triggerLB2 = AliAnalysisMuonUtility::GetLoCircuit(track2);
-
+  
   if (fIsLBCut && triggerLB1 == triggerLB2) {
     return false;
   }
+  
   if (fIsPairRapCut && !(fMinPairRapCut < fabs(dimuon->Y()) &&
                          fabs(dimuon->Y()) < fMaxPairRapCut)) {
     return false;
   }
+  
   if (fIsPairPtCutForOneTrack && !fIsPairPtCutForBothTracks) {
     if (track1->Pt() < fMinPairPtCut && track2->Pt() < fMinPairPtCut) {
       return false;
@@ -642,6 +645,58 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0sFromKpmStar(AliAODv0 *v0,dou
 
 }
 
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0sK0sOpeningAngle(AliAODv0 *v0_1, AliAODv0 *v0_2){
+  TLorentzVector lv1,lv2;
+  
+  lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),
+		   TDatabasePDG::Instance()->GetParticle(310)->Mass());
+  lv2.SetPtEtaPhiM(v0_2->Pt(),v0_2->Eta(),v0_2->Phi(),
+		   TDatabasePDG::Instance()->GetParticle(310)->Mass());
+
+  if ( TMath::Cos(lv1.Angle(lv2.Vect())) > fMaxPairCosOpeningAngleCut) {
+    return false;
+  }
+
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptNotSharingTracks(AliAODv0 *v0_1, AliAODv0 *v0_2){
+
+  TLorentzVector lv1,lv2,lv12;
+  
+  AliAODTrack *pTrack1 = (AliAODTrack *)v0_1->GetDaughter(0);
+  AliAODTrack *nTrack1 = (AliAODTrack *)v0_1->GetDaughter(1);
+  
+  AliAODTrack *pTrack2 = (AliAODTrack *)v0_2->GetDaughter(0);
+  AliAODTrack *nTrack2 = (AliAODTrack *)v0_2->GetDaughter(1);
+  isAcceptK0sK0s
+  lv1.SetPtEtaPhiM(pTrack1->Pt(),pTrack1->Eta(),pTrack1->Phi(),
+		   TDatabasePDG::Instance()->GetParticle(211)->Mass());
+  lv2.SetPtEtaPhiM(pTrack2->Pt(),pTrack2->Eta(),pTrack2->Phi(),
+		   TDatabasePDG::Instance()->GetParticle(211)->Mass());
+  lv12 = lv1 + lv2;
+  
+  double pM = lv12.M();
+	 
+  if (lv1.Angle(lv2.Vect())<0.001) {
+    return false;
+  }
+  
+  lv1.SetPtEtaPhiM(nTrack1->Pt(),nTrack1->Eta(),nTrack1->Phi(),
+		   TDatabasePDG::Instance()->GetParticle(211)->Mass());
+  lv2.SetPtEtaPhiM(nTrack2->Pt(),nTrack2->Eta(),nTrack2->Phi(),
+		   TDatabasePDG::Instance()->GetParticle(211)->Mass());
+  lv12 = lv1 + lv2;
+	 
+  double nM = lv12.M();
+  
+  if (lv1.Angle(lv2.Vect())<0.001) {
+    return false;
+  }
+  
+  return true;
+}
+
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0){
 
   if ( !isAcceptV0Quality(v0,0) ) {
@@ -750,7 +805,7 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(
   float dca_xy = 9999;
   float dca_z = 9999;
   track->GetImpactParameters(dca_xy, dca_z);
-
+  
   /*
   if ( fMaxTrackDCAxy > fabs(dca_xy) ) {
     //return false;

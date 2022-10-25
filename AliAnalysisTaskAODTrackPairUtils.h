@@ -38,7 +38,9 @@ public:
   bool isAcceptV0Quality(AliAODv0 *v0, int charge);
   bool isAcceptV0Kinematics(AliAODv0 *v0);
   bool isAcceptK0s(AliAODv0 *v0);
-  
+  bool isAcceptK0sK0sOpeningAngle(AliAODv0 *v0_1, AliAODv0 *v0_2);
+  bool isAcceptNotSharingTracks(AliAODv0 *v0_1, AliAODv0 *v0_2);
+
   bool isAcceptArmenterosK0s(AliAODv0 *v0);
   bool isAcceptArmenterosK0s_Tight(AliAODv0 *v0);
   
@@ -113,7 +115,7 @@ public:
   bool isBeautyQuarkOrigin(AliAODMCParticle *particle);
   bool isHeavyFlavorOrigin(AliAODMCParticle *particle);
   bool isPrimary(AliAODMCParticle *particle);
-
+  
   int getMotherPdgCode(AliAODTrack *track);
   int getMotherPdgCode(AliAODMCParticle *part);
   int getMotherLabel(AliAODTrack *track);
