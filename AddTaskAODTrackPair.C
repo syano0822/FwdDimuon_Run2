@@ -6,8 +6,16 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
 						 "/Users/syano_mbp2021/analysis/run2/Glueball/DownScale_Run2_CTP.root",
 						 double min_vtxz = -10, double max_vtxz = 10, int min_vtx_cont = 1,
 						 double min_pair_rap = -0.5, double max_pair_rap = 0.5, double alpha = 0.2,
-						 double pangle = 0.998, double v0Dca = 0.1, double trackDca = 1.0,
-						 double min_dlength = 5.0, double max_dlength = 100., double max_lifetime = 20.,
+						 double min_pangle = 0.998,
+						 double max_pangle = 0.998,
+						 double min_v0Dca = 0.1,
+						 double max_v0Dca = 0.1,
+						 double min_trackDca = 1.0,
+						 double max_trackDca = 1.0,
+						 double min_dlength = 5.0,
+						 double max_dlength = 100.,
+						 double min_lifetime = 20.,
+						 double max_lifetime = 20.,
 						 string period = "LHC18c",
 						 string multi_method = "SPDTracklets", bool onPURej = true,
 						 bool onLBcut = true, bool onMuEtaCut = true, bool onMuThetaAbsCut = true,
@@ -35,7 +43,8 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
 						 double readypoolfraction = 0.1,
 						 bool onpoolVtx = true,
 						 bool onpoolCent = true,
-						 bool onpoolPsi = true) {
+						 bool onpoolPsi = true,
+						 bool isManual = true) {
   
   AliMuonTrackCuts *fMuonTrackCuts =
     new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
@@ -76,8 +85,17 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   utils->setSPDTrkCorrHist(input2, period);
   utils->setVertexCut(min_vtxz, max_vtxz, min_vtx_cont);
   utils->setPairRapidityCut(min_pair_rap, max_pair_rap);
-  utils->setV0SelectCuts(alpha, pangle, v0Dca, trackDca, min_dlength,
-                         max_dlength,max_lifetime);
+  utils->setV0SelectCuts(alpha,
+			 min_pangle, 
+			 max_pangle, 
+			 min_v0Dca,
+			 max_v0Dca,
+			 min_trackDca,
+			 max_trackDca,
+			 min_dlength,
+                         max_dlength,
+			 min_lifetime,
+			 max_lifetime);
   utils->setPileupRejectionCut(onPURej);
   utils->setLocalBoardCut(onLBcut);
   utils->setMultiEstimateMethod(multi_method);
@@ -127,6 +145,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   task->setMidTrackAna(isMidTrackAnalysis);
   task->setPrimTrackAna(isPrimTrackAnalysis);
   task->setV0TrackAna(isV0TrackAnalysis);
+  task->setManualV0Analysis(isManual);
   mgr->AddTask(task);
 
   cout << "min_vtxz=" << min_vtxz << endl;
@@ -135,11 +154,15 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   cout << "min_pair_rap=" << min_pair_rap << endl;
   cout << "max_pair_rap=" << max_pair_rap << endl;
   cout << "alpha=" << alpha << endl;
-  cout << "pangle=" << pangle << endl;
-  cout << "v0Dca=" << v0Dca << endl;
-  cout << "trackDca=" << trackDca << endl;
+  cout << "min_pangle=" << min_pangle << endl;
+  cout << "max_pangle=" << max_pangle << endl;
+  cout << "min_v0Dca=" << min_v0Dca << endl;
+  cout << "max_v0Dca=" << max_v0Dca << endl;
+  cout << "min_trackDca=" << min_trackDca << endl;
+  cout << "max_trackDca=" << max_trackDca << endl;
   cout << "min_dlength=" << min_dlength << endl;
   cout << "max_dlength=" << max_dlength << endl;
+  cout << "min_lifetime=" << min_lifetime << endl;
   cout << "max_lifetime=" << max_lifetime << endl;
   cout << "period=" << period << endl;
   cout << "multi_method=" << multi_method << endl;
@@ -194,6 +217,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   cout << "onpoolVtx=" << onpoolVtx << endl;
   cout << "onpoolCent=" << onpoolCent << endl;
   cout << "onpoolPsi=" << onpoolPsi << endl;
+  cout << "isManual" << isManual << endl;
 
   AliAnalysisDataContainer *cinput = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 =
