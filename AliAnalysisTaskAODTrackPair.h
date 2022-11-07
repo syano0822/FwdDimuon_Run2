@@ -6,6 +6,7 @@
 #include "AliEventPoolManager.h"
 #include "TH3F.h"
 #include "THnSparse.h"
+//#include "TObjectArray.h"
 
 class AliAnalysisTaskAODTrackPair : public AliAnalysisTaskSE {
 
@@ -22,6 +23,7 @@ public:
   void setMidTrackAna(bool isMidTrack) { fIsMidTrackAna = isMidTrack; }
   void setV0TrackAna(bool isK0s) { fIsV0TrackPairAna = isK0s; }
   void setPrimTrackAna(bool isKaon) { fIsPrimTrackPairAna = isKaon; }
+  void setManualV0Analysis(bool isManual) {fIsManualV0Analysis=isManual;}
 
   void setMixingAnalysis(bool isMix) { fIsMixingAnalysis = isMix; }
   void setUtils(AliAnalysisTaskAODTrackPairUtils *utils) { fUtils = utils; }
@@ -36,6 +38,7 @@ public:
   }
   void setSameEventTrigger(unsigned int mask) { fTriggerMaskForSame = mask; }
   
+
 private:
   AliAnalysisTaskAODTrackPair(
       const AliAnalysisTaskAODTrackPair &); // not implemented
@@ -65,18 +68,32 @@ private:
   bool MidV0AnalysisEventMixing(AliPID::EParticleType pid1,
                                 AliPID::EParticleType pid2);
 
+  bool AddV0ToArray(AliPID::EParticleType pid1, AliPID::EParticleType pid2);
+
+  AliAODv0* calcAODv0(AliAODTrack* aodTrack1,AliAODTrack* aodTrack2);
+  bool updateAODv0(AliAODv0* v0);
+
   bool ProcessMC();
+
+  void GetHelixCenter(const AliExternalTrackParam *track,Double_t center[2], const Double_t b);
+  bool Preoptimize(const AliExternalTrackParam *nt, AliExternalTrackParam *pt,
+		   Double_t *lPreprocessxn, Double_t *lPreprocessxp, const Double_t b);
 
   AliAODEvent *fEvent;
   AliEventPoolManager *fPoolMuonTrackMgr;
   AliAnalysisTaskAODTrackPairUtils *fUtils;
   TClonesArray *fMCTrackArray;
-
+  //TClonesArray* fAODv0Array;
+  TObjArray* fAODv0Array;
+  //vector<AliAODv0*> fAODv0Array; 
+  
   bool fIsMC;
   bool fIsMidTrackAna;
   bool fIsV0TrackPairAna;
   bool fIsPrimTrackPairAna;
   bool fIsMixingAnalysis;
+  bool fIsManualV0Analysis;
+
 
   int fRunNumber;
   int fTrackDepth;
@@ -149,6 +166,13 @@ private:
   THnSparse *fSparseULSPairMassPt_SideBandRight;
   THnSparse *fSparseULSPairMassPt_SideBand;   
 
+  THnSparse *fSparseNeutralK0sPair;
+  THnSparse *fSparseNeutralNegativeK0sPair;
+  THnSparse *fSparseNeutralPositiveK0sPair;
+  THnSparse *fSparsePositiveK0sPair;
+  THnSparse *fSparseNegativeK0sPair;
+  THnSparse *fSparsePositiveNegativeK0sPair;
+
   TH2F *fHistTrueK0sPtRapidity;
   TH2F *fHistRecTrueK0sPtRapidity;
 
@@ -220,7 +244,8 @@ private:
   TH1F *fHistReducedChi2ITS;
   TH1F *fHistDCAz;
   TH2F *fHistDCAxyPt;
-  TH1F* fHistOpeningAngle;
+  TH2F* fHistOpeningAngleP;
+  TH2F* fHistEnergyAsymmP;
 
   TH2F *fHistArmenteros;
   TH2F *fHistV0MassDecayLength;
@@ -259,12 +284,20 @@ private:
   double TrueRap;
   double TruePhi;
   double TruePt;
+  double RecV0DecayLength;
+  double RecV0Radius;
   double RecMass;
   double RecRap;
   double RecPhi;
   double RecPt;
+  double RecDcaV0Daughters;
+  double RecDcaV0ToPrimVertex;
+  double RecCosPointingAngle;
+  double RecLifetimeV0;
+  double RecDcaToPrimVertex1;
+  double RecDcaToPrimVertex2;
   bool isDetect;
-
+  
   ClassDef(AliAnalysisTaskAODTrackPair, 1); // example of analysis
 };
 

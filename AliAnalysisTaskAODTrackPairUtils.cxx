@@ -8,10 +8,17 @@
 #include "AliPIDResponse.h"
 #include "AliVEventHandler.h"
 
+#include "AliESDVertex.h"
+
 #include "AliAnalysisTaskAODTrackPairUtils.h"
 
 #include "TClonesArray.h"
 #include "TDatabasePDG.h"
+
+#include "KFParticle.h"
+#include "KFVertex.h"
+#include "KFPVertex.h"
+#include "KFPTrack.h"
 
 #include "iostream"
 #include <time.h>
@@ -20,26 +27,42 @@ using namespace std;
 
 ClassImp(AliAnalysisTaskAODTrackPairUtils)
 
-    AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils()
-    : TNamed(), fEvent(NULL), fMultSelection(NULL), fInputHandler(NULL),
-      fMCArray(NULL), fRunNumber(-99999), fRunNumberIndex(-99999), fIsMC(false),
-      fIsVtxZcut(true), fMaxVertexCutZ(-10), fMinVertexCutZ(10),
+AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
+  fEvent(NULL),
+  fMultSelection(NULL),
+  fInputHandler(NULL),
+  fMCArray(NULL), 
+  fRunNumber(-99999),
+  fRunNumberIndex(-99999),
+  fIsMC(false),
+  fIsVtxZcut(true), 
+  fMaxVertexCutZ(-10),
+  fMinVertexCutZ(10),
 
-      fIsPairRapCut(true), fMinPairRapCut(-4.0), fMaxPairRapCut(-2.5), 
+  fIsPairRapCut(true),
+  fMinPairRapCut(-4.0),
+  fMaxPairRapCut(-2.5), 
   fMaxPairCosOpeningAngleCut(0.92),
 
-      fIsPairPtCutForOneTrack(false), fIsPairPtCutForBothTracks(false),
-      fMinPairPtCut(0.),
+  fIsPairPtCutForOneTrack(false),
+  fIsPairPtCutForBothTracks(false),								       
+								       fMinPairPtCut(0.),								       
+								       fIsPUcut(true), 
+  fIsLBCut(true),
 
-      fIsPUcut(true), fIsLBCut(true),
+  fIsDalitzProd(false),
+  fIs2BodyProd(false),
 
-      fIsDalitzProd(false), fIs2BodyProd(false),
+  fMuonTrackCuts(NULL), 
+  fPeriod("LHC16k"),
+  fCollSystem("pp13TeV"),
+  fPass("pass1"),
+  fMultiMethod("SPDtracklet"),
 
-      fMuonTrackCuts(NULL), fPeriod("LHC16k"), fCollSystem("pp13TeV"),
-      fPass("pass1"), fMultiMethod("SPDtracklet"),
-
-      fMinV0Alpha(-0.84), fMaxV0Alpha(0.84), fMinK0sMassRange(0.486),
-      fMaxK0sMassRange(0.510),
+  fMinV0Alpha(-0.84),
+  fMaxV0Alpha(0.84),
+  fMinK0sMassRange(0.486),
+  fMaxK0sMassRange(0.510),
   
   fMinRhoMassRange(0.64),
   fMaxRhoMassRange(0.90),
@@ -55,75 +78,136 @@ ClassImp(AliAnalysisTaskAODTrackPairUtils)
   fMaxK0sMassSideBandRight(0.550), 
  
 
-      fArmenterosBandWidth(0.05), fArmenterosPCM(0.207), fArmenterosR0(0.85),
+  fArmenterosBandWidth(0.05),
+  fArmenterosPCM(0.207),
+  fArmenterosR0(0.85),
 
-      fArmenterosAlphaCutParamForPtArm(0.2), fMinCosPointingAngleCut(0.998),
-      fMinV0DCA(0.1), fMaxTrackDCASigma(1.5), fMinV0DecayLength(5.0),
-      fMaxV0DecayLength(100.), fMaxV0PropLifeTime(20.), fMinV0DecayRadius(0.5),
-      fMinCrossRowsFindableRatio(0.8),
-      fMaxTrackDCAxyName("0.0105 + 0.035/pow(x,1.1)"), fMaxTrackDCAxy(2.0),
-      fMaxTrackDCAz(2.0),
+  fArmenterosAlphaCutParamForPtArm(0.2),
+  fMinCosPointingAngleCut(0.998),
+  fMinV0DCA(0.1), 
+  fMaxV0DCA(0.1), 
+  fMinV0DaughterDCA(1.5),
+  fMaxV0DaughterDCA(1.5),
+  fMinV0DecayLength(5.0),
+  fMaxV0DecayLength(100.),
+  fMinV0PropLifeTime(20.),
+  fMaxV0PropLifeTime(20.),
+  fMinV0DecayRadius(0.5),
+  fMaxV0DecayRadius(0.5),
+  fMinCrossRowsFindableRatio(0.8),
+  fMaxTrackDCAxyName("0.0105 + 0.035/pow(x,1.1)"),
+  fMaxTrackDCAxy(2.0),
+  fMaxTrackDCAz(2.0),
 
-      // fPdgLambdaMass(1.115683),
-      // fPdgK0sMass(0.497611),
-      fMinRejectMassWidthLambda(0.01), fMaxRejectMassWidthLambda(0.01),
+  fMinRejectMassWidthLambda(0.01),
+  fMaxRejectMassWidthLambda(0.01),
 
-      fHistDsCINT7(NULL), fHistDsCMSL7(NULL), fHistDsCMLL7(NULL),
+  fHistDsCINT7(NULL),
+  fHistDsCMSL7(NULL),
+  fHistDsCMLL7(NULL),
 
-      fHistSPDTrkCorrEta05(NULL), fHistSPDTrkCorrEta10(NULL),
+  fHistSPDTrkCorrEta05(NULL),
+  fHistSPDTrkCorrEta10(NULL),
 
-      fVtxX(0), fVtxY(0), fVtxZ(0), fCent(0), fPsi(0), fNContVtx(0),
-      fMinContVtx(1), fCentSPDTrk(0.), fCentV0A(0.), fCentV0C(0.), fCentV0M(0.),
+  fVtxX(0),
+  fVtxY(0),
+  fVtxZ(0),
+  fCent(0),
+  fPsi(0),
+  fNContVtx(0),
+  fMinContVtx(1),
+  fCentSPDTrk(0.),
+  fCentV0A(0.),
+  fCentV0C(0.),
+  fCentV0M(0.),
 
-      fTrueVtx(),
+  fTrueVtx(),
 
-      fDSfactor(1.),
+  fDSfactor(1.),
 
-      fIsCINT7(false), fIsCMSL7(false), fIsCMSH7(false), fIsCMUL7(false),
-      fIsCMLL7(false),
+  fIsCINT7(false),
+  fIsCMSL7(false),
+  fIsCMSH7(false),
+  fIsCMUL7(false),
+  fIsCMLL7(false),
+  fIs0MSL(false), 
+  fIs0MSH(false), 
+  fIs0MUL(false), 
+  fIs0MLL(false),
 
-      fIs0MSL(false), fIs0MSH(false), fIs0MUL(false), fIs0MLL(false),
+  fInput0MSH(0),
+  fInput0MLL(0),
+  fInput0MUL(0),
+  fInput0MSL(0),
 
-      fInput0MSH(0), fInput0MLL(0), fInput0MUL(0), fInput0MSL(0),
+  fNSPDTrk05(0),
+  fNSPDTrk10(0),
+  fNSPDTrk15(0),
+  fNSPDTrk20(0),
+  fNSPDTrkAll(0),
 
-      fNSPDTrk05(0), fNSPDTrk10(0), fNSPDTrk15(0), fNSPDTrk20(0),
-      fNSPDTrkAll(0),
+  fNClustSPD1(0),
+  fNClustSPD2(0),
 
-      fNClustSPD1(0), fNClustSPD2(0),
+  fChV0A(0.),
+  fChV0C(0.),
+  fChV0M(0.),
+  fTimeV0A(0.),
+  fTimeV0C(0.),
 
-      fChV0A(0.), fChV0C(0.), fChV0M(0.), fTimeV0A(0.), fTimeV0C(0.),
+  fNChV0A(0),
+  fNChV0C(0),
 
-      fNChV0A(0), fNChV0C(0),
+  fNChEta05(0),
+  fNChEta10(0),
+  fNChEta15(0),
+  fNChEta20(0),
 
-      fNChEta05(0), fNChEta10(0), fNChEta15(0), fNChEta20(0),
+  fPIDResponse(NULL),
 
-      fPIDResponse(NULL),
+  fTrackTragetPid1(AliPID::kPion),
+  fTrackTragetPid2(AliPID::kPion),
 
-      fTrackTragetPid1(AliPID::kPion), fTrackTragetPid2(AliPID::kPion),
-
-      fMinTrackP(0.05), fMaxTrackP(2.0), fMinTrackPt(0.05), fMaxTrackPt(2.0),
-      fMinTrackEta(-0.8), fMaxTrackEta(+0.8),
+  fMinTrackP(0.05),
+  fMaxTrackP(2.0),
+  fMinTrackPt(0.05),
+  fMaxTrackPt(2.0),
+  fMinTrackEta(-0.8),
+  fMaxTrackEta(+0.8),
   fMinLeadingTrackPt(5.0),
 
-      fMinPionSigmaTPC(-5.0), fMaxPionSigmaTPC(5.0), fMinPionSigmaTOF(-5.0),
-      fMaxPionSigmaTOF(5.0),
+  fMinPionSigmaTPC(-5.0),
+  fMaxPionSigmaTPC(5.0),
+  fMinPionSigmaTOF(-5.0),
+  fMaxPionSigmaTOF(5.0),
 
-      fMinKaonSigmaTPC(-2.0), fMaxKaonSigmaTPC(2.0), fMinKaonSigmaTOF(-2.0),
-      fMaxKaonSigmaTOF(2.0),
+  fMinKaonSigmaTPC(-2.0),
+  fMaxKaonSigmaTPC(2.0),
+  fMinKaonSigmaTOF(-2.0),
+  fMaxKaonSigmaTOF(2.0),
 
-      fMinProtonSigmaTPC(-2.0), fMaxProtonSigmaTPC(2.0),
-      fMinProtonSigmaTOF(-2.0), fMaxProtonSigmaTOF(2.0),
+  fMinProtonSigmaTPC(-2.0),
+  fMaxProtonSigmaTPC(2.0),
+  fMinProtonSigmaTOF(-2.0),
+  fMaxProtonSigmaTOF(2.0),
 
-      fMinElectronSigmaTPC(-2.0), fMaxElectronSigmaTPC(2.0),
-      fMinElectronSigmaTOF(-2.0), fMaxElectronSigmaTOF(2.0),
+  fMinElectronSigmaTPC(-2.0),
+  fMaxElectronSigmaTPC(2.0),
+  fMinElectronSigmaTOF(-2.0),
+  fMaxElectronSigmaTOF(2.0),
 
-      fMinMuonSigmaTPC(-2.0), fMaxMuonSigmaTPC(2.0), fMinMuonSigmaTOF(-2.0),
-      fMaxMuonSigmaTOF(2.0),
+  fMinMuonSigmaTPC(-2.0),
+  fMaxMuonSigmaTPC(2.0),
+  fMinMuonSigmaTOF(-2.0),
+  fMaxMuonSigmaTOF(2.0),
+  fMinTrackTPCNClusts(70),
+  fMinTrackSPDNClusts(1), 
+  fMaxReducedChi2TPC(4.),
+  fMaxReducedChi2ITS(36.),
 
-      fMinTrackTPCNClusts(70), fMinTrackSPDNClusts(1), fMaxReducedChi2TPC(4.),
-      fMaxReducedChi2ITS(36.),
+  fIsMidTrackAna(false)
+{
 
-      fIsMidTrackAna(false) {
   fRandom = new TRandom1();
   time_t t;
   time(&t);
@@ -146,9 +230,85 @@ ClassImp(AliAnalysisTaskAODTrackPairUtils)
 }
 
 AliAnalysisTaskAODTrackPairUtils::~AliAnalysisTaskAODTrackPairUtils() {}
+/*
+KFParticle AliAnalysisTaskAODTrackPairUtils::CreateKFParticle(AliExternalTrackParam& track, AliPID::EParticleType PID, int Charge)
+{
+   
+  Double_t fP[6];
+  exTrack->GetXYZ(fP);
+  exTrack->PxPyPz(fP + 3);
 
+  Int_t fQ = exTrack->Charge() * TMath::Abs(Charge);
+  fP[3] *= TMath::Abs(Charge);
+  fP[4] *= TMath::Abs(Charge);
+  fP[5] *= TMath::Abs(Charge);
+
+  Double_t pt = 1. / TMath::Abs(exTrack->GetParameter()[4]) * TMath::Abs(Charge);
+  Double_t cs = TMath::Cos(exTrack->GetAlpha()), sn = TMath::Sin(exTrack->GetAlpha());
+  Double_t r = TMath::Sqrt((1. - exTrack->GetParameter()[2]) * (1. + exTrack->GetParameter()[2]));
+  
+  Double_t m00 = -sn, m10 = cs;
+  Double_t m23 = -pt * (sn + exTrack->GetParameter()[2] * cs / r), m43 = -pt * pt * (r * cs - exTrack->GetParameter()[2] * sn);
+  Double_t m24 = pt * (cs - exTrack->GetParameter()[2] * sn / r), m44 = -pt * pt * (r * sn + exTrack->GetParameter()[2] * cs);
+  Double_t m35 = pt, m45 = -pt * pt * exTrack->GetParameter()[3];
+  
+  m43 *= exTrack->GetSign();
+  m44 *= exTrack->GetSign();
+  m45 *= exTrack->GetSign();
+  
+  const Double_t* cTr = exTrack->GetCovariance();
+  Double_t fC[21];
+  fC[0] = cTr[0] * m00 * m00;
+  fC[1] = cTr[0] * m00 * m10;
+  fC[2] = cTr[0] * m10 * m10;
+  fC[3] = cTr[1] * m00;
+  fC[4] = cTr[1] * m10;
+  fC[5] = cTr[2];
+  fC[6] = m00 * (cTr[3] * m23 + cTr[10] * m43);
+  fC[7] = m10 * (cTr[3] * m23 + cTr[10] * m43);
+  fC[8] = cTr[4] * m23 + cTr[11] * m43;
+  fC[9] = m23 * (cTr[5] * m23 + cTr[12] * m43) + m43 * (cTr[12] * m23 + cTr[14] * m43);
+  fC[10] = m00 * (cTr[3] * m24 + cTr[10] * m44);
+  fC[11] = m10 * (cTr[3] * m24 + cTr[10] * m44);
+  fC[12] = cTr[4] * m24 + cTr[11] * m44;
+  fC[13] = m23 * (cTr[5] * m24 + cTr[12] * m44) + m43 * (cTr[12] * m24 + cTr[14] * m44);
+  fC[14] = m24 * (cTr[5] * m24 + cTr[12] * m44) + m44 * (cTr[12] * m24 + cTr[14] * m44);
+  fC[15] = m00 * (cTr[6] * m35 + cTr[10] * m45);
+  fC[16] = m10 * (cTr[6] * m35 + cTr[10] * m45);
+  fC[17] = cTr[7] * m35 + cTr[11] * m45;
+  fC[18] = m23 * (cTr[8] * m35 + cTr[12] * m45) + m43 * (cTr[13] * m35 + cTr[14] * m45);
+  fC[19] = m24 * (cTr[8] * m35 + cTr[12] * m45) + m44 * (cTr[13] * m35 + cTr[14] * m45);
+  fC[20] = m35 * (cTr[9] * m35 + cTr[13] * m45) + m45 * (cTr[13] * m35 + cTr[14] * m45);
+  
+  double Mass = 0;
+  if (PID == AliPID::kPion) {
+    Mass = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+  } else if (PID == AliPID::kKaon) {
+    Mass = TDatabasePDG::Instance()->GetParticle(321)->Mass();
+  } else if (PID == AliPID::kProton) {
+    Mass = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
+  }
+
+  KFParticle KFtrack12;
+  KFtrack12.Create(fP, fC, fQ, Mass);
+  
+  return KFtrack12;
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::KFReconstruction(AlAODTrack* aodTrack,AliPID::EParticleType pid) {
+  
+  AliExternalTrackParam *exTrack = new AliExternalTrackParam();
+  exTrack->CopyFromVTrack(aodTrack);
+  
+  KFParticle kfPart = CreateKFParticle(exTrack,pid,1);
+
+  delete exTrack;
+  
+  return true;
+}
+*/
 void AliAnalysisTaskAODTrackPairUtils::setInit() {
-
+  
   if (fMaxTrackDCAxyName != fFuncMaxDCAxy->GetTitle()) {
     fFuncMaxDCAxy =
         new TF1("fFuncMaxDCAxy", fMaxTrackDCAxyName.c_str(), 0, 100);
@@ -548,11 +708,10 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Basic(AliAODv0 *v0, int charge){
 
-  if (v0->GetNProngs() != 2 || v0->GetOnFlyStatus() == 1 ||
-      v0->Charge() != charge) {
+  if (v0->GetNProngs() != 2 || v0->GetOnFlyStatus() == 1) {
     return false;
   }
-
+  
   AliAODTrack *pTrack = (AliAODTrack *)v0->GetDaughter(0);
   AliAODTrack *nTrack = (AliAODTrack *)v0->GetDaughter(1);
 
@@ -571,38 +730,17 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Basic(AliAODv0 *v0, int charge)
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Quality(AliAODv0 *v0, int charge){
-
-  if ( !isAcceptV0Basic(v0,charge) ) {
-    return false;
-  }
   
   double vtx[] = {fVtxX, fVtxY, fVtxZ};
-  
-  if (fMinCosPointingAngleCut > v0->CosPointingAngle(vtx)) {
-    return false;
-  }
-  if (fMinV0DCA > v0->DcaV0ToPrimVertex()) {
-    return false;
-  }
-  if (fMaxTrackDCASigma < v0->DcaV0Daughters()) {
-    return false;
-  }
-  if (fMinV0DecayRadius > v0->RadiusV0()) {
-    return false;
-  }
-
   double length = v0->DecayLengthV0(vtx);
-  
-  if (fMinV0DecayLength > length || fMaxV0DecayLength < length) {
-    return false;
-  }
-  
   double proper_life_time = fPdgK0sMass * length / v0->P();
-
-  if (proper_life_time > fMaxV0PropLifeTime) {
-    return false;
-  }
-
+  
+  if (fMinCosPointingAngleCut > v0->CosPointingAngle(vtx) || fMaxCosPointingAngleCut < v0->CosPointingAngle(vtx)) return false;
+  if (fMinV0DCA > v0->DcaV0ToPrimVertex() || fMaxV0DCA < v0->DcaV0ToPrimVertex())                                 return false;
+  if (fMinV0DaughterDCA > v0->DcaV0Daughters() || fMaxV0DaughterDCA < v0->DcaV0Daughters())                       return false;
+  if (fMinV0DecayLength > length || fMaxV0DecayLength < length)                                                   return false;    
+  if (proper_life_time < fMinV0PropLifeTime || proper_life_time > fMaxV0PropLifeTime)                             return false;
+  
   return true;
 }
 
@@ -646,30 +784,80 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0sFromKpmStar(AliAODv0 *v0,dou
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0sK0sOpeningAngle(AliAODv0 *v0_1, AliAODv0 *v0_2){
-  TLorentzVector lv1,lv2;
+  
+  double p0 = 3.516924;
+  double p1 = -2.013138;
+  double p2 = 0.625594;
+  double p3 = -0.111681;
+  double p4 = 0.011414;
+  double p5 = -0.000620;
+  double p6 = 0.000014;
+  double p7 = 0.13;
+  
+  TLorentzVector lv1,lv2,lv12;
   
   lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),
 		   TDatabasePDG::Instance()->GetParticle(310)->Mass());
   lv2.SetPtEtaPhiM(v0_2->Pt(),v0_2->Eta(),v0_2->Phi(),
 		   TDatabasePDG::Instance()->GetParticle(310)->Mass());
+  
+  lv12 = lv1 + lv2;
+  
+  double x = lv12.P();
 
-  if ( TMath::Cos(lv1.Angle(lv2.Vect())) > fMaxPairCosOpeningAngleCut) {
+  double max = p0+p1*pow(x,1)+p2*pow(x,2)+p3*pow(x,3)+p4*pow(x,4)+p5*pow(x,5)+p6*pow(x,6) + p7;
+  double min = p0+p1*pow(x,1)+p2*pow(x,2)+p3*pow(x,3)+p4*pow(x,4)+p5*pow(x,5)+p6*pow(x,6) - p7;
+
+  double angle = lv1.Angle(lv2.Vect());
+
+  if (max<angle || min>angle) {
     return false;
+  } else {    
+    return true;
   }
+}
 
-  return true;
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptEnergyAsym(AliAODv0 *v0_1, AliAODv0 *v0_2){
+  
+  TLorentzVector lv1,lv2,lv12;
+  
+  lv1.SetPtEtaPhiM(v0_1->Pt(),v0_1->Eta(),v0_1->Phi(),
+		   TDatabasePDG::Instance()->GetParticle(310)->Mass());
+  lv2.SetPtEtaPhiM(v0_2->Pt(),v0_2->Eta(),v0_2->Phi(),
+		   TDatabasePDG::Instance()->GetParticle(310)->Mass());
+  
+  double asymm = (lv1.E() - lv2.E()) / (lv1.E() + lv2.E());
+
+  if (fabs(asymm)>0.8) {
+    return false;
+  } else {
+    return true;
+  }
+  
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptNotSharingTracks(AliAODv0 *v0_1, AliAODv0 *v0_2){
-
-  TLorentzVector lv1,lv2,lv12;
   
   AliAODTrack *pTrack1 = (AliAODTrack *)v0_1->GetDaughter(0);
   AliAODTrack *nTrack1 = (AliAODTrack *)v0_1->GetDaughter(1);
   
   AliAODTrack *pTrack2 = (AliAODTrack *)v0_2->GetDaughter(0);
   AliAODTrack *nTrack2 = (AliAODTrack *)v0_2->GetDaughter(1);
-  isAcceptK0sK0s
+  
+  int pId1 = pTrack1->GetID()>-1 ? pTrack1->GetID() : -1*pTrack1->GetID() - 1;
+  int nId1 = nTrack1->GetID()>-1 ? nTrack1->GetID() : -1*nTrack1->GetID() - 1;
+  int pId2 = pTrack2->GetID()>-1 ? pTrack2->GetID() : -1*pTrack2->GetID() - 1;
+  int nId2 = nTrack2->GetID()>-1 ? nTrack2->GetID() : -1*nTrack2->GetID() - 1;
+  
+  if ( (pId1==nId1) || (pId1==pId2) || (pId1==nId2) || (nId1==pId2) || (nId1==nId2) || (pId2==nId2)) {
+    return false;
+  } else {
+    return true;
+  }
+  
+  /*
+  return true;
+
   lv1.SetPtEtaPhiM(pTrack1->Pt(),pTrack1->Eta(),pTrack1->Phi(),
 		   TDatabasePDG::Instance()->GetParticle(211)->Mass());
   lv2.SetPtEtaPhiM(pTrack2->Pt(),pTrack2->Eta(),pTrack2->Phi(),
@@ -693,26 +881,21 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptNotSharingTracks(AliAODv0 *v0_1, 
   if (lv1.Angle(lv2.Vect())<0.001) {
     return false;
   }
-  
-  return true;
+    return true;
+  */
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0){
-
+  
   if ( !isAcceptV0Quality(v0,0) ) {
     return false;
-  }
-  
+  }    
   if ( !isAcceptArmenterosK0s(v0) ) {
     return false;
   }
   
   AliAODTrack *pTrack = (AliAODTrack *)v0->GetDaughter(0);
   AliAODTrack *nTrack = (AliAODTrack *)v0->GetDaughter(1);
-  
-  if ( !isAcceptMidPid(pTrack,AliPID::kPion) || !isAcceptMidPid(nTrack,AliPID::kPion) ) {
-    return false;
-  }
 
   TLorentzVector lv1, lv2, lv12;
   
@@ -781,36 +964,20 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptArmenterosK0s_Tight(
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(
-    AliAODTrack *track) {
+bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(AliAODTrack *track) {
   
-  if ( (track->GetStatus() & AliVTrack::kTPCrefit) == 0 ) {    
-    return false;
-  }
+  if ( (track->GetStatus() & AliVTrack::kTPCrefit) == 0 )                               return false;
+  if ( fMinTrackTPCNClusts > track->GetTPCNcls() )                                      return false;
+  if ( track->GetKinkIndex(0) != 0 )                                                    return false;
+  if ( fMinCrossRowsFindableRatio > track->GetTPCNclsF() / track->GetTPCCrossedRows() ) return false;
+  if ( fMaxReducedChi2TPC < track->GetTPCchi2() / track->GetTPCNcls() )                 return false;
   
-  if (fMinTrackTPCNClusts > track->GetTPCNcls()) {
-    return false;
-  }
-  if (track->GetKinkIndex(0) != 0) {
-    return false;
-  }
-  if (fMinCrossRowsFindableRatio >
-      track->GetTPCNclsF() / track->GetTPCCrossedRows()) {
-    return false;
-  }
-  if (fMaxReducedChi2TPC < track->GetTPCchi2() / track->GetTPCNcls()) {
-    return false;
-  }
-
-  float dca_xy = 9999;
-  float dca_z = 9999;
-  track->GetImpactParameters(dca_xy, dca_z);
+  AliExternalTrackParam exTrack;
+  exTrack.CopyFromVTrack(track);
+  exTrack.CheckCovariance();
+  double d = exTrack.GetD(getVtxX(),getVtxY(),fEvent->GetMagneticField());
   
-  /*
-  if ( fMaxTrackDCAxy > fabs(dca_xy) ) {
-    //return false;
-  }
-  */
+  if (fabs(d) < fFuncMaxDCAxy->Eval(track->Pt()) ) return false;
   
   return true;
 }
@@ -1252,7 +1419,7 @@ bool AliAnalysisTaskAODTrackPairUtils::setVtxZCentPsi() {
   if (!fMultSelection)
     return false;
 
-  AliAODVertex *vtx = (AliAODVertex *)fEvent->GetPrimaryVertexSPD();
+  AliAODVertex *vtx = (AliAODVertex *)fEvent->GetPrimaryVertex();
 
   if (!vtx)
     return false;

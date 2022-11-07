@@ -15,6 +15,10 @@ public:
   AliAnalysisTaskAODTrackPairUtils();
   ~AliAnalysisTaskAODTrackPairUtils();
 
+  //AliESDVertex* getESDVertex(AliAODVertex* aodVtx);
+  //AliExternalTrackParam* ReKF(AliAODTrack *track);
+  //KFParticle CreateKFParticle(AliExternalTrackParam& track, Double_t Mass, Int_t Charge);
+
   void setPeriod(std::string period) { fPeriod = period; }
 
   bool setEvent(AliAODEvent *event, AliVEventHandler *handler);
@@ -39,6 +43,7 @@ public:
   bool isAcceptV0Kinematics(AliAODv0 *v0);
   bool isAcceptK0s(AliAODv0 *v0);
   bool isAcceptK0sK0sOpeningAngle(AliAODv0 *v0_1, AliAODv0 *v0_2);
+  bool isAcceptEnergyAsym(AliAODv0 *v0_1, AliAODv0 *v0_2);
   bool isAcceptNotSharingTracks(AliAODv0 *v0_1, AliAODv0 *v0_2);
 
   bool isAcceptArmenterosK0s(AliAODv0 *v0);
@@ -350,15 +355,23 @@ public:
     fArmenterosPCM = pcm;
     fArmenterosR0 = r0;
   }
-  void setV0SelectCuts(double alpha, double pangle, double v0Dca, double trackDca,
-                       double min_dlength, double max_dlength, double lifetime) {
+  void setV0SelectCuts(double alpha, 
+		       double min_pangle, double max_pangle,
+		       double min_v0Dca, double max_v0Dca,
+		       double min_trackDca, double max_trackDca,
+                       double min_dlength, double max_dlength, 
+		       double min_lifetime, double max_lifetime) {
     fArmenterosAlphaCutParamForPtArm = alpha;
-    fMinCosPointingAngleCut = pangle;
-    fMinV0DCA = v0Dca;
-    fMaxTrackDCASigma = trackDca;
+    fMinCosPointingAngleCut = min_pangle;
+    fMaxCosPointingAngleCut = max_pangle;
+    fMinV0DCA = min_v0Dca;
+    fMaxV0DCA = max_v0Dca;
+    fMinV0DaughterDCA = min_trackDca;
+    fMaxV0DaughterDCA = max_trackDca;
     fMinV0DecayLength = min_dlength;
     fMaxV0DecayLength = max_dlength;
-    fMaxV0PropLifeTime = lifetime;
+    fMinV0PropLifeTime = min_lifetime;
+    fMaxV0PropLifeTime = max_lifetime;
   }
 
   void setV0CutParams(double min, double max) {
@@ -536,17 +549,23 @@ public:
   TF1 *fFuncMaxDCAxy;
   TF1 *fMinArmenterosLine;
   TF1 *fMaxArmenterosLine;
+  
   double fArmenterosBandWidth;
   double fArmenterosPCM;
   double fArmenterosR0;
   double fArmenterosAlphaCutParamForPtArm;
   double fMinCosPointingAngleCut;
+  double fMaxCosPointingAngleCut;
   double fMinV0DCA;
-  double fMaxTrackDCASigma;
+  double fMaxV0DCA;
+  double fMinV0DaughterDCA;
+  double fMaxV0DaughterDCA;
   double fMinV0DecayLength;
   double fMaxV0DecayLength;
+  double fMinV0PropLifeTime;
   double fMaxV0PropLifeTime;
   double fMinV0DecayRadius;
+  double fMaxV0DecayRadius;
   double fMinV0Alpha;
   double fMaxV0Alpha;
   
@@ -571,10 +590,12 @@ public:
 
   double fMinCrossRowsFindableRatio;
   std::string fMaxTrackDCAxyName;
+
   double fMaxTrackDCAxy;
   double fMaxTrackDCAz;
   double fMaxReducedChi2TPC;
   double fMaxReducedChi2ITS;
+
   int fMinTrackTPCNClusts;
   int fMinTrackSPDNClusts;
 
