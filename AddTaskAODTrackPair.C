@@ -4,6 +4,8 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
 						 "/Users/syano_mbp2021/analysis/run2/Glueball/SPDMultiCorrection.root",
 						 string dimuon_ds_file_path =
 						 "/Users/syano_mbp2021/analysis/run2/Glueball/DownScale_Run2_CTP.root",
+						 string k0s_cuts_file_path=
+						 "/Users/syano_mbp2021/analysis/run2/Glueball/K0sSelectionCuts.root",
 						 double min_vtxz = -10, double max_vtxz = 10, int min_vtx_cont = 1,
 						 double min_pair_rap = -0.5, double max_pair_rap = 0.5, double alpha = 0.2,
 						 double min_pangle = 0.998,
@@ -44,45 +46,20 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
 						 bool onpoolVtx = true,
 						 bool onpoolCent = true,
 						 bool onpoolPsi = true,
-						 bool isManual = true) {
+						 bool isManual = true,
+						 bool decay_length_cut=true,
+						 bool pointangle_cut=true,
+						 bool chi2_cut=true,
+						 bool pairDCA_cut=true,
+						 bool track_distance_cut=true,
+						 bool dcaxy_cut=true,
+						 bool lifetime_cut=true) {
+    
+  TFile *input3 = TFile::Open(k0s_cuts_file_path.c_str());
   
-  AliMuonTrackCuts *fMuonTrackCuts =
-    new AliMuonTrackCuts("StandardMuonTrackCuts", "StandardMuonTrackCuts");
-  fMuonTrackCuts->SetIsMC(isMC);
-  fMuonTrackCuts->SetAllowDefaultParams(true);
-
-  int selectionMask = 0;
-  if (onMuEtaCut) {
-    selectionMask |= AliMuonTrackCuts::kMuEta;
-  }
-  if (onMuThetaAbsCut) {
-    selectionMask |= AliMuonTrackCuts::kMuThetaAbs;
-  }
-  if (onMuMatchAptCut) {
-    selectionMask |= AliMuonTrackCuts::kMuMatchApt;
-  }
-  if (onMuMatchLptCut) {
-    selectionMask |= AliMuonTrackCuts::kMuMatchLpt;
-  }
-  if (onMuMatchHptCut) {
-    selectionMask |= AliMuonTrackCuts::kMuMatchHpt;
-  }
-  if (onMuPdcaCut) {
-    selectionMask |= AliMuonTrackCuts::kMuPdca;
-  }
-  if (onMuChi2Cut) {
-    selectionMask |= AliMuonTrackCuts::kMuTrackChiSquare;
-  }
-  fMuonTrackCuts->SetFilterMask(selectionMask);
-
-  TFile *input = TFile::Open(dimuon_ds_file_path.c_str());
-  TFile *input2 = TFile::Open(spd_multi_correction_file_path.c_str());
-
   AliAnalysisTaskAODTrackPairUtils *utils = new AliAnalysisTaskAODTrackPairUtils();
   utils->setMC(isMC);
   utils->setEvtSelection(isSelectEvt);
-  utils->setDownScalingHist(input);
-  utils->setSPDTrkCorrHist(input2, period);
   utils->setVertexCut(min_vtxz, max_vtxz, min_vtx_cont);
   utils->setPairRapidityCut(min_pair_rap, max_pair_rap);
   utils->setV0SelectCuts(alpha,
@@ -97,23 +74,15 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
 			 min_lifetime,
 			 max_lifetime);
   utils->setPileupRejectionCut(onPURej);
-  utils->setLocalBoardCut(onLBcut);
-  utils->setMultiEstimateMethod(multi_method);
-  utils->setMuonTrackCut(fMuonTrackCuts);
   utils->setPairKinematicCut(paircuttype, min_pairtrackptcut);
-  utils->setMidTrackAna(isMidTrackAnalysis);
-  utils->setPeriod(period);
-  utils->setTrackKinematicCut(min_track_pt, max_track_pt, min_track_eta,
-                              max_track_eta, min_track_p, max_track_p);
+  utils->setTrackKinematicCut(min_track_pt, max_track_pt, min_track_eta, max_track_eta, min_track_p, max_track_p);
   utils->setPionSelectSigmaTPC(min_pion_sigma_tpc, max_pion_sigma_tpc);
   utils->setKaonSelectSigmaTPC(min_kaon_sigma_tpc, max_kaon_sigma_tpc);
   utils->setProtonSelectSigmaTPC(min_proton_sigma_tpc, max_proton_sigma_tpc);
   utils->setPionSelectSigmaTOF(min_pion_sigma_tof, max_pion_sigma_tof);
   utils->setKaonSelectSigmaTOF(min_kaon_sigma_tof, max_kaon_sigma_tof);
   utils->setProtonSelectSigmaTOF(min_proton_sigma_tof, max_proton_sigma_tof);
-  utils->setTrackQualities(findable, dcaxy.c_str(), dcaz, chi2tpc, chi2its,
-                           nclusttpc, nclustits);
-  utils->setPairOpeningAngleCut(pair_opangle);
+  utils->setTrackQualities(findable, dcaxy.c_str(), dcaz, chi2tpc, chi2its, nclusttpc, nclustits);
   utils->setPairTargetPIDs(pid1, pid2);
   
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
@@ -142,10 +111,9 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   task->setEvtMixingPoolPsi(onpoolPsi);
   task->setMixingAnalysis(onMixingAnalysis);
   task->setMC(isMC);
-  task->setMidTrackAna(isMidTrackAnalysis);
-  task->setPrimTrackAna(isPrimTrackAnalysis);
-  task->setV0TrackAna(isV0TrackAnalysis);
-  task->setManualV0Analysis(isManual);
+  task->setManualV0Analysis(isManual);  
+  task->setK0sCus(input3);
+  task->setK0sCuts(decay_length_cut,pointangle_cut,chi2_cut,pairDCA_cut,track_distance_cut,dcaxy_cut,lifetime_cut);  
   mgr->AddTask(task);
 
   cout << "min_vtxz=" << min_vtxz << endl;
@@ -217,8 +185,8 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   cout << "onpoolVtx=" << onpoolVtx << endl;
   cout << "onpoolCent=" << onpoolCent << endl;
   cout << "onpoolPsi=" << onpoolPsi << endl;
-  cout << "isManual" << isManual << endl;
-
+  cout << "isManual=" << isManual << endl;
+  
   AliAnalysisDataContainer *cinput = mgr->GetCommonInputContainer();
   AliAnalysisDataContainer *coutput1 =
       mgr->CreateContainer("dimuon", TList::Class(),

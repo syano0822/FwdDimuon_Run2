@@ -21,6 +21,9 @@
 #include "AliVParticle.h"
 #include "AliVTrack.h"
 
+#include "AliKFParticle.h"
+#include "AliKFVertex.h"
+
 #include "AliAODRecoDecay.h"
 #include "AliAODDimuon.h"
 #include "AliAODEvent.h"
@@ -51,188 +54,106 @@
 
 #include "AliAnalysisTaskAODTrackPairUtils.h"
 
+#include "KFParticleBase.h"
 #include "KFParticle.h"
-#include "KFVertex.h"
-#include "KFPVertex.h"
 #include "KFPTrack.h"
+#include "KFPVertex.h"
+#include "KFVertex.h"
 
 #include "iostream"
 #include "memory"
-// Authors: Satoshi Yano
-// Reviewed:
 
 using namespace std;
 
 ClassImp(AliAnalysisTaskAODTrackPair)
 
-    AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair()
-    : AliAnalysisTaskSE(), fEvent(NULL), fPoolMuonTrackMgr(NULL), fUtils(NULL),
-  fMCTrackArray(NULL), fAODv0Array(NULL), fIsMC(false), fIsMidTrackAna(false), fIsV0TrackPairAna(false),
-  fIsPrimTrackPairAna(false), fIsMixingAnalysis(false), fIsManualV0Analysis(true), fRunNumber(-99999),
-      fTrackDepth(1), fPoolSize(1), fReadyFraction(0.1),
-      fTriggerMaskForSame(AliVEvent::kMuonUnlikeLowPt7 |
-                          AliVEvent::kMuonLikeLowPt7),
-      fTriggerMaskForMixing(AliVEvent::kMuonSingleLowPt7),
-      onEvtMixingPoolVtxZ(true), onEvtMixingPoolCent(true),
-      onEvtMixingPoolPsi(true), fIsCINT7(false), fIsCMSL7(false),
-      fIsCMSH7(false), fIsCMUL7(false), fIsCMLL7(false),
-
-      fOutputList(NULL), fEventCounter(NULL),
-
-      fHistTrackPairPtBalance(NULL), fHistTrackPairLocalBoardPair(NULL),
-
-      fHistTrackThetaAbs(NULL), fHistTrackTriggerMatch(NULL),
-      fHistTrackPDCA(NULL), fHistTrackChiSquare(NULL),
-      fHistTriggerChiSquare(NULL),
-
-      fHistEventVtxZ(NULL), fHistEventCent(NULL), fHistEventMulti(NULL),
-      fHistEventVtxCont(NULL),
-
-      fTreeULSPair(NULL), fTreeLSppPair(NULL), fTreeLSmmPair(NULL),
-
-      fSparseULSPairMassPt(NULL), fSparseLSppPairMassPt(NULL),
-      fSparseLSmmPairMassPt(NULL),
-
-  fSparseNeutralK0sPair(NULL),
-fSparseNeutralNegativeK0sPair(NULL),
-fSparseNeutralPositiveK0sPair(NULL),
-fSparsePositiveK0sPair(NULL),
-fSparseNegativeK0sPair(NULL),
-fSparsePositiveNegativeK0sPair(NULL),
+AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE(),
   
-  fSparseULSPairMassPt_LeadingTrack(NULL),
-  fSparseULSPairMassPt_RejectKpmStar(NULL),
+  fEvent(NULL),
+  fPrimVtx(NULL),
   
-  fSparseULSPairMassPt_SideBandLeftRight(NULL),
-  fSparseULSPairMassPt_SideBandLeft(NULL),
-  fSparseULSPairMassPt_SideBandRight(NULL),
-  fSparseULSPairMassPt_SideBand(NULL),
-
-  fHistTrueK0sPtRapidity(NULL),
-  fHistRecTrueK0sPtRapidity(NULL),
-
-      fTreeULSPair_TightCut(NULL), fTreeLSppPair_TightCut(NULL),
-      fTreeLSmmPair_TightCut(NULL),
-
-      fTreeULSPair_ProngV0(NULL), fTreeLSppPair_ProngV0(NULL),
-      fTreeLSmmPair_ProngV0(NULL),
-
-      fTreeMixULSPair(NULL), fTreeMixLSppPair(NULL), fTreeMixLSmmPair(NULL),
-    
-      fHistULSPairMassPt(NULL), fHistLSppPairMassPt(NULL),
-      fHistLSmmPairMassPt(NULL),
-
-      fHistULSPairMassPt_TightCut(NULL), fHistLSppPairMassPt_TightCut(NULL),
-      fHistLSmmPairMassPt_TightCut(NULL),
-
-  fHistULSPairMassPt_ProngV0(NULL),
-  fHistLSppPairMassPt_ProngV0(NULL),
-      fHistLSmmPairMassPt_ProngV0(NULL),
-
-  fHistULSPairMassPt_ProngV0_TrueK0s(NULL),
-
-      fHistMixULSPairMassPt(NULL), fHistMixLSppPairMassPt(NULL),
-      fHistMixLSmmPairMassPt(NULL),
-
-      fSparseMixULSPairMassPt(NULL), fSparseMixLSppPairMassPt(NULL),
-      fSparseMixLSmmPairMassPt(NULL),
-
-  fSparseMixULSPairMassPt_LeadingTrack(NULL),
-  fSparseMixULSPairMassPt_RejectKpmStar(NULL),
-
-      fHistMassK0s1K0s2(NULL),
-  fHistKpmStarCandMass(NULL),
-  fHistPionPionCorrelationPlot(NULL),
-
-      fHistTPCdEdxP(NULL), fHistBetaP(NULL), fHistTPCSigmaElectron(NULL),
-      fHistTOFSigmaElectron(NULL), fHistTPCSigmaMuon(NULL),
-      fHistTOFSigmaMuon(NULL), fHistTPCSigmaPion(NULL), fHistTOFSigmaPion(NULL),
-      fHistTPCSigmaKaon(NULL), fHistTOFSigmaKaon(NULL),
-      fHistTPCSigmaProton(NULL), fHistTOFSigmaProton(NULL),
-
-      fHistSelTPCdEdxP(NULL), fHistSelBetaP(NULL),
-      fHistSelTPCSigmaElectron(NULL), fHistSelTOFSigmaElectron(NULL),
-      fHistSelTPCSigmaMuon(NULL), fHistSelTOFSigmaMuon(NULL),
-      fHistSelTPCSigmaPion(NULL), fHistSelTOFSigmaPion(NULL),
-      fHistSelTPCSigmaKaon(NULL), fHistSelTOFSigmaKaon(NULL),
-      fHistSelTPCSigmaProton(NULL), fHistSelTOFSigmaProton(NULL),
-
-      fHistTrackP(NULL), fHistTrackPt(NULL), fHistTrackEta(NULL),
-      fHistTPCNClusts(NULL), fHistSPDNClusts(NULL),
-      fHistTPCCrossRowsFindableRatio(NULL), fHistReducedChi2TPC(NULL),
-  fHistReducedChi2ITS(NULL), fHistDCAz(NULL), fHistDCAxyPt(NULL), fHistOpeningAngleP(NULL),fHistEnergyAsymmP(NULL),
+  fPoolMuonTrackMgrK0s(NULL),  
+  fPoolMuonTrackMgrPion(NULL),  
   
-  fHistArmenteros(NULL), fHistV0MassDecayLength(NULL),
-  fHistV0MassPointingAngle(NULL), fHistV0MassV0DCA(NULL),
-  fHistV0MassV0TrackDCA(NULL), fHistV0MassV0DecayRadius(NULL),
-  fHistV0MassV0PropLifeTime(NULL), 
+  fMultSelection(NULL),
+
+  fUtils(NULL),
   
-  fHistSelArmenteros(NULL), fHistSelV0MassDecayLength(NULL),
-  fHistSelV0MassPointingAngle(NULL), fHistSelV0MassV0DCA(NULL),
-  fHistSelV0MassV0TrackDCA(NULL), fHistSelV0MassV0DecayRadius(NULL),
-  fHistSelV0MassV0PropLifeTime(NULL),
-
-  fHistArmenteros_TrueK0s(NULL), fHistV0MassDecayLength_TrueK0s(NULL),
-  fHistV0MassPointingAngle_TrueK0s(NULL), fHistV0MassV0DCA_TrueK0s(NULL),
-  fHistV0MassV0TrackDCA_TrueK0s(NULL), fHistV0MassV0DecayRadius_TrueK0s(NULL),
-  fHistV0MassV0PropLifeTime_TrueK0s(NULL), 
+  fMCTrackArray(NULL),
+  fArrayK0s(NULL),
   
-  fHistSelArmenteros_TrueK0s(NULL), fHistSelV0MassDecayLength_TrueK0s(NULL),
-  fHistSelV0MassPointingAngle_TrueK0s(NULL), fHistSelV0MassV0DCA_TrueK0s(NULL),
-  fHistSelV0MassV0TrackDCA_TrueK0s(NULL), fHistSelV0MassV0DecayRadius_TrueK0s(NULL),
-  fHistSelV0MassV0PropLifeTime_TrueK0s(NULL),
+  fHistDecayLengthXYCut(NULL),
+  fHistPointingAngleXYCut(NULL),
+  fHistChi2Cut(NULL),
+  fHistDaughterPairDCAXYCut(NULL),
+  fHistDaughterTrackDistanceXYCut(NULL),
+  fHistDCAxyCut(NULL),
+  fHistLifeTimeCut(NULL),
   
-  fTreeK0s(NULL),
-  TrueMass(0.),
-  TrueRap(0.),
-  TruePhi(0.),
-  TruePt(0.),
-  RecV0DecayLength(0.),
-  RecV0Radius(0.),
-  RecMass(0.),
-  RecRap(0.),
-  RecPhi(0.),
-  RecPt(0.),
-  RecDcaV0Daughters(0.),
-  RecDcaV0ToPrimVertex(0.),
-  RecCosPointingAngle(0.),
-  RecLifetimeV0(0.),
-  RecDcaToPrimVertex1(0.),
-  RecDcaToPrimVertex2(0.),
-  isDetect(false),
+  fTrackDepth(100),
+  fPoolSize(100),
+
+  fReadyFraction(0.1),
   
-      RecPairPt(0.), RecPairRap(0.), RecPairMass(0.),
-      RecPairArmenterosArmPt(0.), RecPairArmenterosAlpha(0.), RecPairCent(0.),
-      RecPairDS(0.) {}
+  onVerbose(true),
 
-AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name)
-    : AliAnalysisTaskSE(name), fEvent(NULL), fPoolMuonTrackMgr(NULL),
-      fUtils(NULL), fMCTrackArray(NULL), fAODv0Array(NULL), fIsMC(false), fIsMidTrackAna(false),
-      fIsV0TrackPairAna(false), fIsPrimTrackPairAna(false),
-      fIsMixingAnalysis(false), fIsManualV0Analysis(true), fRunNumber(-99999), fTrackDepth(1),
-      fPoolSize(1), fReadyFraction(0.1),
-      fTriggerMaskForSame(AliVEvent::kMuonUnlikeLowPt7 |
-                          AliVEvent::kMuonLikeLowPt7),
-      fTriggerMaskForMixing(AliVEvent::kMuonSingleLowPt7),
-      onEvtMixingPoolVtxZ(true), onEvtMixingPoolCent(true),
-      onEvtMixingPoolPsi(true), fIsCINT7(false), fIsCMSL7(false),
-      fIsCMSH7(false), fIsCMUL7(false), fIsCMLL7(false),
+  onEvtMixingPoolVtxZ(true),
+  onEvtMixingPoolCent(true),
+  onEvtMixingPoolPsi(true),
+  
+  onDecayLengthXYCut(false),
+  onPointingAngleXYCut(true),
+  onChi2Cut(true),
+  onDaughterPairDCAXYCut(false),
+  onDaughterTrackDistanceXYCut(true),
+  onDCAXYCut(false),
+  onLifetimeCut(false),
+  
+  fIsMC(false),
+  fIsMixingAnalysis(false),
+  fIsManualV0Analysis(true),
 
-      fOutputList(NULL), fEventCounter(NULL),
+  fMinK0sRap(-0.5),
+  fMaxK0sRap(0.5),
+  fMinK0sPt(0.4),
+  fMaxK0sPt(99.),
 
-      fHistTrackPairPtBalance(NULL), fHistTrackPairLocalBoardPair(NULL),
+  fMethodCent("SPDTracklets"),
+  fPrimVtxPos(),
+  fCent(0.),
+  fPsi(0.),
 
-      fHistTrackThetaAbs(NULL), fHistTrackTriggerMatch(NULL),
-      fHistTrackPDCA(NULL), fHistTrackChiSquare(NULL),
-      fHistTriggerChiSquare(NULL),
+  fMinNContPrimVtx(2),
 
-      fHistEventVtxZ(NULL), fHistEventCent(NULL), fHistEventMulti(NULL),
-      fHistEventVtxCont(NULL),
+  ////////////////////////////////////////////////
+  // Output histos
+  ////////////////////////////////////////////////
 
-      fTreeULSPair(NULL), fTreeLSppPair(NULL), fTreeLSmmPair(NULL),
+  fOutputList(NULL),
+  
+  fHistEventVtxZ(NULL),
+  fHistEventCent(NULL),
+  fHistEventMulti(NULL),
+  fHistEventVtxCont(NULL),
+  
+  fSparseULSPionPair(NULL),
+  fSparseLSppPionPair(NULL),
+  fSparseLSmmPionPair(NULL),
 
-      fSparseULSPairMassPt(NULL), fSparseLSppPairMassPt(NULL),
-      fSparseLSmmPairMassPt(NULL),
+  fSparseMixULSPionPair(NULL),
+  fSparseMixLSppPionPair(NULL),
+  fSparseMixLSmmPionPair(NULL),
+  
+  fSparseULSPionPairBeforeCuts(NULL),
+  fSparseLSppPionPairBeforeCuts(NULL),
+  fSparseLSmmPionPairBeforeCuts(NULL),
+
+  fSparseULSPionPair_PassChi2perNDFCut(NULL),
+  fSparseULSPionPair_PassCPVXYCut(NULL),
+  fSparseULSPionPair_PassDecayLengthXYCut(NULL),
+  fSparseULSPionPair_PassDaughterDistanceXYCut(NULL),  
+  fSparseULSPionPair_PassDCAXYCut(NULL),
+  fSparseULSPionPair_PassLifetimeCut(NULL),
   
   fSparseNeutralK0sPair(NULL),
   fSparseNeutralNegativeK0sPair(NULL),
@@ -241,140 +162,435 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name)
   fSparseNegativeK0sPair(NULL),
   fSparsePositiveNegativeK0sPair(NULL),
 
-  fSparseULSPairMassPt_LeadingTrack(NULL),
-  fSparseULSPairMassPt_RejectKpmStar(NULL),
+  fSparseTrueK0s(NULL),
+  fSparseTrueK0sRecK0s(NULL),
 
-
-  fSparseULSPairMassPt_SideBandLeftRight(NULL),
-  fSparseULSPairMassPt_SideBandLeft(NULL),
-  fSparseULSPairMassPt_SideBandRight(NULL),
-  fSparseULSPairMassPt_SideBand(NULL),
-
-  fHistTrueK0sPtRapidity(NULL),
-  fHistRecTrueK0sPtRapidity(NULL),
-
-      fTreeULSPair_TightCut(NULL), fTreeLSppPair_TightCut(NULL),
-      fTreeLSmmPair_TightCut(NULL),
-
-      fTreeULSPair_ProngV0(NULL), fTreeLSppPair_ProngV0(NULL),
-      fTreeLSmmPair_ProngV0(NULL),
-
-      fTreeMixULSPair(NULL), fTreeMixLSppPair(NULL), fTreeMixLSmmPair(NULL),
-
-      fHistULSPairMassPt(NULL), fHistLSppPairMassPt(NULL),
-      fHistLSmmPairMassPt(NULL),
-
-      fHistULSPairMassPt_TightCut(NULL), fHistLSppPairMassPt_TightCut(NULL),
-      fHistLSmmPairMassPt_TightCut(NULL),
-
-      fHistULSPairMassPt_ProngV0(NULL), fHistLSppPairMassPt_ProngV0(NULL),
-      fHistLSmmPairMassPt_ProngV0(NULL),
-
-  fHistULSPairMassPt_ProngV0_TrueK0s(NULL),
-
-      fHistMixULSPairMassPt(NULL), fHistMixLSppPairMassPt(NULL),
-      fHistMixLSmmPairMassPt(NULL),
-
-      fSparseMixULSPairMassPt(NULL), fSparseMixLSppPairMassPt(NULL),
-      fSparseMixLSmmPairMassPt(NULL),  
-
-  fSparseMixULSPairMassPt_LeadingTrack(NULL),
-  fSparseMixULSPairMassPt_RejectKpmStar(NULL),
-
-      fHistMassK0s1K0s2(NULL),
-  fHistKpmStarCandMass(NULL),
-  fHistPionPionCorrelationPlot(NULL),
-
-      fHistTPCdEdxP(NULL), fHistBetaP(NULL), fHistTPCSigmaElectron(NULL),
-      fHistTOFSigmaElectron(NULL), fHistTPCSigmaMuon(NULL),
-      fHistTOFSigmaMuon(NULL), fHistTPCSigmaPion(NULL), fHistTOFSigmaPion(NULL),
-      fHistTPCSigmaKaon(NULL), fHistTOFSigmaKaon(NULL),
-      fHistTPCSigmaProton(NULL), fHistTOFSigmaProton(NULL),
-
-      fHistSelTPCdEdxP(NULL), fHistSelBetaP(NULL),
-      fHistSelTPCSigmaElectron(NULL), fHistSelTOFSigmaElectron(NULL),
-      fHistSelTPCSigmaMuon(NULL), fHistSelTOFSigmaMuon(NULL),
-      fHistSelTPCSigmaPion(NULL), fHistSelTOFSigmaPion(NULL),
-      fHistSelTPCSigmaKaon(NULL), fHistSelTOFSigmaKaon(NULL),
-      fHistSelTPCSigmaProton(NULL), fHistSelTOFSigmaProton(NULL),
-
-      fHistTrackP(NULL), fHistTrackPt(NULL), fHistTrackEta(NULL),
-      fHistTPCNClusts(NULL), fHistSPDNClusts(NULL),
-      fHistTPCCrossRowsFindableRatio(NULL), fHistReducedChi2TPC(NULL),
-  fHistReducedChi2ITS(NULL), fHistDCAz(NULL), fHistDCAxyPt(NULL), fHistOpeningAngleP(NULL),fHistEnergyAsymmP(NULL),
-
-  fHistArmenteros(NULL), fHistV0MassDecayLength(NULL),
-  fHistV0MassPointingAngle(NULL), fHistV0MassV0DCA(NULL),
-  fHistV0MassV0TrackDCA(NULL), fHistV0MassV0DecayRadius(NULL),
-  fHistV0MassV0PropLifeTime(NULL), 
+  fHistTPCdEdxP(NULL),
+  fHistTPCSigmaElectron(NULL),
+  fHistTPCSigmaMuon(NULL),
+  fHistTPCSigmaPion(NULL),
+  fHistTPCSigmaKaon(NULL),
+  fHistTPCSigmaProton(NULL),  
+  fHistBetaP(NULL),  
+  fHistTOFSigmaElectron(NULL),  
+  fHistTOFSigmaMuon(NULL),  
+  fHistTOFSigmaPion(NULL),
+  fHistTOFSigmaKaon(NULL),
+  fHistTOFSigmaProton(NULL),  
   
-  fHistSelArmenteros(NULL), fHistSelV0MassDecayLength(NULL),
-  fHistSelV0MassPointingAngle(NULL), fHistSelV0MassV0DCA(NULL),
-  fHistSelV0MassV0TrackDCA(NULL), fHistSelV0MassV0DecayRadius(NULL),
-  fHistSelV0MassV0PropLifeTime(NULL),
-
-  fHistArmenteros_TrueK0s(NULL), fHistV0MassDecayLength_TrueK0s(NULL),
-  fHistV0MassPointingAngle_TrueK0s(NULL), fHistV0MassV0DCA_TrueK0s(NULL),
-  fHistV0MassV0TrackDCA_TrueK0s(NULL), fHistV0MassV0DecayRadius_TrueK0s(NULL),
-  fHistV0MassV0PropLifeTime_TrueK0s(NULL), 
+  fHistSelTPCdEdxP(NULL),
+  fHistSelTPCSigmaElectron(NULL),
+  fHistSelTPCSigmaMuon(NULL),
+  fHistSelTPCSigmaPion(NULL),
+  fHistSelTPCSigmaKaon(NULL),
+  fHistSelTPCSigmaProton(NULL),  
+  fHistSelBetaP(NULL),  
+  fHistSelTOFSigmaElectron(NULL),  
+  fHistSelTOFSigmaMuon(NULL),  
+  fHistSelTOFSigmaPion(NULL),
+  fHistSelTOFSigmaKaon(NULL),
+  fHistSelTOFSigmaProton(NULL),
   
-  fHistSelArmenteros_TrueK0s(NULL), fHistSelV0MassDecayLength_TrueK0s(NULL),
-  fHistSelV0MassPointingAngle_TrueK0s(NULL), fHistSelV0MassV0DCA_TrueK0s(NULL),
-  fHistSelV0MassV0TrackDCA_TrueK0s(NULL), fHistSelV0MassV0DecayRadius_TrueK0s(NULL),
-  fHistSelV0MassV0PropLifeTime_TrueK0s(NULL),
+  fHistTPCNClusts(NULL),
+  fHistSPDNClusts(NULL),
+  fHistTPCCrossRowsFindableRatio(NULL),
+  fHistReducedChi2TPC(NULL),
+  fHistReducedChi2ITS(NULL),
+  fHistDCAz(NULL),
+  fHistDCAxyPt(NULL),
+  fHistTrackP(NULL),
+  fHistTrackPt(NULL),
+  fHistTrackEta(NULL),    
 
-  fTreeK0s(NULL),
-  TrueMass(0.),
-  TrueRap(0.),
-  TruePhi(0.),
-  TruePt(0.),
-  RecV0DecayLength(0.),
-  RecV0Radius(0.),
-  RecMass(0.),
-  RecRap(0.),
-  RecPhi(0.),
-  RecPt(0.),
-  RecDcaV0Daughters(0.),
-  RecDcaV0ToPrimVertex(0.),
-  RecCosPointingAngle(0.),
-  RecLifetimeV0(0.),
-  RecDcaToPrimVertex1(0.),
-  RecDcaToPrimVertex2(0.),
-   isDetect(false),
-       RecPairPt(0.), RecPairRap(0.), RecPairMass(0.),
-       RecPairArmenterosArmPt(0.), RecPairArmenterosAlpha(0.), RecPairCent(0.),
-       RecPairDS(0.) {
+  fHistV0PV0DecayLengthXY(NULL),
+  fHistV0PV0DecayLength(NULL),
+  fHistV0PV0PointingAngleXY(NULL),
+  fHistV0PV0PointingAngle(NULL),
+  fHistV0PV0DCAXY(NULL),
+  fHistV0PV0DCA(NULL),
+  fHistV0PV0TrackDistanceXY(NULL),
+  fHistV0PV0TrackDistance(NULL),
+  fHistV0PV0Chi2perNDF(NULL),
+  fHistV0PV0PropLifeTime(NULL),
+  fHistV0TrackDCAXY(NULL),
+  fHistV0TrackDCA(NULL),
 
+  fHistSelV0PV0DecayLengthXY(NULL),
+  fHistSelV0PV0DecayLength(NULL),
+  fHistSelV0PV0PointingAngleXY(NULL),
+  fHistSelV0PV0PointingAngle(NULL),
+  fHistSelV0PV0DCAXY(NULL),
+  fHistSelV0PV0DCA(NULL),
+  fHistSelV0PV0TrackDistanceXY(NULL),
+  fHistSelV0PV0TrackDistance(NULL),
+  fHistSelV0PV0Chi2perNDF(NULL),
+  fHistSelV0PV0PropLifeTime(NULL),
+  fHistSelV0TrackDCAXY(NULL),
+  fHistSelV0TrackDCA(NULL),
 
-   // Define input and output slots here
-   // Input slot #0 works with a TChain
-   DefineInput(0, TChain::Class());
-   // Output slot #0 id reserved by the base class for AOD
-   // Output slot #1 writes into a TH1 container
-   DefineOutput(1, TList::Class());
- }
+  fHistV0PV0DecayLengthXY_TrueK0s(NULL),
+  fHistV0PV0DecayLength_TrueK0s(NULL),
+  fHistV0PV0PointingAngleXY_TrueK0s(NULL),
+  fHistV0PV0PointingAngle_TrueK0s(NULL),
+  fHistV0PV0DCAXY_TrueK0s(NULL),
+  fHistV0PV0DCA_TrueK0s(NULL),
+  fHistV0PV0TrackDistanceXY_TrueK0s(NULL),
+  fHistV0PV0TrackDistance_TrueK0s(NULL),
+  fHistV0PV0Chi2perNDF_TrueK0s(NULL),
+  fHistV0PV0PropLifeTime_TrueK0s(NULL),
+  fHistV0TrackDCAXY_TrueK0s(NULL),
+  fHistV0TrackDCA_TrueK0s(NULL),
+
+  fHistSelV0PV0DecayLengthXY_TrueK0s(NULL),
+  fHistSelV0PV0DecayLength_TrueK0s(NULL),
+  fHistSelV0PV0PointingAngleXY_TrueK0s(NULL),
+  fHistSelV0PV0PointingAngle_TrueK0s(NULL),
+  fHistSelV0PV0DCAXY_TrueK0s(NULL),
+  fHistSelV0PV0DCA_TrueK0s(NULL),
+  fHistSelV0PV0TrackDistanceXY_TrueK0s(NULL),
+  fHistSelV0PV0TrackDistance_TrueK0s(NULL),
+  fHistSelV0PV0Chi2perNDF_TrueK0s(NULL),
+  fHistSelV0PV0PropLifeTime_TrueK0s(NULL),
+  fHistSelV0TrackDCAXY_TrueK0s(NULL),
+  fHistSelV0TrackDCA_TrueK0s(NULL),
+  
+  fHistLSV0PV0DecayLengthXY(NULL),
+  fHistLSV0PV0DecayLength(NULL),
+  fHistLSV0PV0PointingAngleXY(NULL),
+  fHistLSV0PV0PointingAngle(NULL),
+  fHistLSV0PV0DCAXY(NULL),
+  fHistLSV0PV0DCA(NULL),
+  fHistLSV0PV0TrackDistanceXY(NULL),
+  fHistLSV0PV0TrackDistance(NULL),
+  fHistLSV0PV0Chi2perNDF(NULL),
+  fHistLSV0PV0PropLifeTime(NULL),
+  fHistLSV0TrackDCAXY(NULL),
+  fHistLSV0TrackDCA(NULL),
+
+  fHistLSSelV0PV0DecayLengthXY(NULL),
+  fHistLSSelV0PV0DecayLength(NULL),
+  fHistLSSelV0PV0PointingAngleXY(NULL),
+  fHistLSSelV0PV0PointingAngle(NULL),
+  fHistLSSelV0PV0DCAXY(NULL),
+  fHistLSSelV0PV0DCA(NULL),
+  fHistLSSelV0PV0TrackDistanceXY(NULL),
+  fHistLSSelV0PV0TrackDistance(NULL),
+  fHistLSSelV0PV0Chi2perNDF(NULL),
+  fHistLSSelV0PV0PropLifeTime(NULL),
+  fHistLSSelV0TrackDCAXY(NULL),
+  fHistLSSelV0TrackDCA(NULL),
+
+  fHistLSV0PV0DecayLengthXY_TrueK0s(NULL),
+  fHistLSV0PV0DecayLength_TrueK0s(NULL),
+  fHistLSV0PV0PointingAngleXY_TrueK0s(NULL),
+  fHistLSV0PV0PointingAngle_TrueK0s(NULL),
+  fHistLSV0PV0DCAXY_TrueK0s(NULL),
+  fHistLSV0PV0DCA_TrueK0s(NULL),
+  fHistLSV0PV0TrackDistanceXY_TrueK0s(NULL),
+  fHistLSV0PV0TrackDistance_TrueK0s(NULL),
+  fHistLSV0PV0Chi2perNDF_TrueK0s(NULL),
+  fHistLSV0PV0PropLifeTime_TrueK0s(NULL),
+  fHistLSV0TrackDCAXY_TrueK0s(NULL),
+  fHistLSV0TrackDCA_TrueK0s(NULL),
+
+  fHistLSSelV0PV0DecayLengthXY_TrueK0s(NULL),
+  fHistLSSelV0PV0DecayLength_TrueK0s(NULL),
+  fHistLSSelV0PV0PointingAngleXY_TrueK0s(NULL),
+  fHistLSSelV0PV0PointingAngle_TrueK0s(NULL),
+  fHistLSSelV0PV0DCAXY_TrueK0s(NULL),
+  fHistLSSelV0PV0DCA_TrueK0s(NULL),
+  fHistLSSelV0PV0TrackDistanceXY_TrueK0s(NULL),
+  fHistLSSelV0PV0TrackDistance_TrueK0s(NULL),
+  fHistLSSelV0PV0Chi2perNDF_TrueK0s(NULL),
+  fHistLSSelV0PV0PropLifeTime_TrueK0s(NULL),
+  fHistLSSelV0TrackDCAXY_TrueK0s(NULL),
+  fHistLSSelV0TrackDCA_TrueK0s(NULL),
+
+  all(0),
+  abord(0)
+  
+{
+
+}
+
+AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : AliAnalysisTaskSE(name), 
+
+  fEvent(NULL),
+  fPrimVtx(NULL),
+  
+  fPoolMuonTrackMgrK0s(NULL),  
+  fPoolMuonTrackMgrPion(NULL),  
+  
+  fMultSelection(NULL),
+
+  fUtils(NULL),
+  
+  fMCTrackArray(NULL),
+  fArrayK0s(NULL),
+  
+  fHistDecayLengthXYCut(NULL),
+  fHistPointingAngleXYCut(NULL),
+  fHistChi2Cut(NULL),
+  fHistDaughterPairDCAXYCut(NULL),
+  fHistDaughterTrackDistanceXYCut(NULL),
+  fHistDCAxyCut(NULL),
+  fHistLifeTimeCut(NULL),
+
+  fTrackDepth(100),
+  fPoolSize(100),
+
+  fReadyFraction(0.1),
+  
+  onVerbose(true),
+
+  onEvtMixingPoolVtxZ(true),
+  onEvtMixingPoolCent(true),
+  onEvtMixingPoolPsi(true),
+
+  onDecayLengthXYCut(false),
+  onPointingAngleXYCut(true),
+  onChi2Cut(true),
+  onDaughterPairDCAXYCut(false),
+  onDaughterTrackDistanceXYCut(true),
+  onDCAXYCut(false),
+  onLifetimeCut(false),
+
+  fIsMC(false),
+  fIsMixingAnalysis(false),
+  fIsManualV0Analysis(true),
+
+  fMinK0sRap(-0.5),
+  fMaxK0sRap(0.5),
+  fMinK0sPt(0.4),
+  fMaxK0sPt(99.),
+
+  fMethodCent("SPDTracklets"),
+  fPrimVtxPos(),
+  fCent(0.),
+  fPsi(0.),
+
+  fMinNContPrimVtx(2),
+
+  ////////////////////////////////////////////////
+  // Output histos
+  ////////////////////////////////////////////////
+
+  fOutputList(NULL),
+  
+  fHistEventVtxZ(NULL),
+  fHistEventCent(NULL),
+  fHistEventMulti(NULL),
+  fHistEventVtxCont(NULL),
+  
+  fSparseULSPionPair(NULL),
+  fSparseLSppPionPair(NULL),
+  fSparseLSmmPionPair(NULL),
+
+  fSparseMixULSPionPair(NULL),
+  fSparseMixLSppPionPair(NULL),
+  fSparseMixLSmmPionPair(NULL),
+  
+  fSparseULSPionPairBeforeCuts(NULL),
+  fSparseLSppPionPairBeforeCuts(NULL),
+  fSparseLSmmPionPairBeforeCuts(NULL),
+
+  fSparseULSPionPair_PassChi2perNDFCut(NULL),
+  fSparseULSPionPair_PassCPVXYCut(NULL),
+  fSparseULSPionPair_PassDecayLengthXYCut(NULL),
+  fSparseULSPionPair_PassDaughterDistanceXYCut(NULL),  
+  fSparseULSPionPair_PassDCAXYCut(NULL),
+  fSparseULSPionPair_PassLifetimeCut(NULL),
+
+  fSparseNeutralK0sPair(NULL),
+  fSparseNeutralNegativeK0sPair(NULL),
+  fSparseNeutralPositiveK0sPair(NULL),
+  fSparsePositiveK0sPair(NULL),
+  fSparseNegativeK0sPair(NULL),
+  fSparsePositiveNegativeK0sPair(NULL),
+
+  fSparseTrueK0s(NULL),
+  fSparseTrueK0sRecK0s(NULL),
+
+  fHistTPCdEdxP(NULL),
+  fHistTPCSigmaElectron(NULL),
+  fHistTPCSigmaMuon(NULL),
+  fHistTPCSigmaPion(NULL),
+  fHistTPCSigmaKaon(NULL),
+  fHistTPCSigmaProton(NULL),  
+  fHistBetaP(NULL),  
+  fHistTOFSigmaElectron(NULL),  
+  fHistTOFSigmaMuon(NULL),  
+  fHistTOFSigmaPion(NULL),
+  fHistTOFSigmaKaon(NULL),
+  fHistTOFSigmaProton(NULL),  
+  
+  fHistSelTPCdEdxP(NULL),
+  fHistSelTPCSigmaElectron(NULL),
+  fHistSelTPCSigmaMuon(NULL),
+  fHistSelTPCSigmaPion(NULL),
+  fHistSelTPCSigmaKaon(NULL),
+  fHistSelTPCSigmaProton(NULL),  
+  fHistSelBetaP(NULL),  
+  fHistSelTOFSigmaElectron(NULL),  
+  fHistSelTOFSigmaMuon(NULL),  
+  fHistSelTOFSigmaPion(NULL),
+  fHistSelTOFSigmaKaon(NULL),
+  fHistSelTOFSigmaProton(NULL),
+  
+  fHistTPCNClusts(NULL),
+  fHistSPDNClusts(NULL),
+  fHistTPCCrossRowsFindableRatio(NULL),
+  fHistReducedChi2TPC(NULL),
+  fHistReducedChi2ITS(NULL),
+  fHistDCAz(NULL),
+  fHistDCAxyPt(NULL),
+  fHistTrackP(NULL),
+  fHistTrackPt(NULL),
+  fHistTrackEta(NULL),    
+
+  fHistV0PV0DecayLengthXY(NULL),
+  fHistV0PV0DecayLength(NULL),
+  fHistV0PV0PointingAngleXY(NULL),
+  fHistV0PV0PointingAngle(NULL),
+  fHistV0PV0DCAXY(NULL),
+  fHistV0PV0DCA(NULL),
+  fHistV0PV0TrackDistanceXY(NULL),
+  fHistV0PV0TrackDistance(NULL),
+  fHistV0PV0Chi2perNDF(NULL),
+  fHistV0PV0PropLifeTime(NULL),
+  fHistV0TrackDCAXY(NULL),
+  fHistV0TrackDCA(NULL),
+
+  fHistSelV0PV0DecayLengthXY(NULL),
+  fHistSelV0PV0DecayLength(NULL),
+  fHistSelV0PV0PointingAngleXY(NULL),
+  fHistSelV0PV0PointingAngle(NULL),
+  fHistSelV0PV0DCAXY(NULL),
+  fHistSelV0PV0DCA(NULL),
+  fHistSelV0PV0TrackDistanceXY(NULL),
+  fHistSelV0PV0TrackDistance(NULL),
+  fHistSelV0PV0Chi2perNDF(NULL),
+  fHistSelV0PV0PropLifeTime(NULL),
+  fHistSelV0TrackDCAXY(NULL),
+  fHistSelV0TrackDCA(NULL),
+
+  fHistV0PV0DecayLengthXY_TrueK0s(NULL),
+  fHistV0PV0DecayLength_TrueK0s(NULL),
+  fHistV0PV0PointingAngleXY_TrueK0s(NULL),
+  fHistV0PV0PointingAngle_TrueK0s(NULL),
+  fHistV0PV0DCAXY_TrueK0s(NULL),
+  fHistV0PV0DCA_TrueK0s(NULL),
+  fHistV0PV0TrackDistanceXY_TrueK0s(NULL),
+  fHistV0PV0TrackDistance_TrueK0s(NULL),
+  fHistV0PV0Chi2perNDF_TrueK0s(NULL),
+  fHistV0PV0PropLifeTime_TrueK0s(NULL),
+  fHistV0TrackDCAXY_TrueK0s(NULL),
+  fHistV0TrackDCA_TrueK0s(NULL),
+
+  fHistSelV0PV0DecayLengthXY_TrueK0s(NULL),
+  fHistSelV0PV0DecayLength_TrueK0s(NULL),
+  fHistSelV0PV0PointingAngleXY_TrueK0s(NULL),
+  fHistSelV0PV0PointingAngle_TrueK0s(NULL),
+  fHistSelV0PV0DCAXY_TrueK0s(NULL),
+  fHistSelV0PV0DCA_TrueK0s(NULL),
+  fHistSelV0PV0TrackDistanceXY_TrueK0s(NULL),
+  fHistSelV0PV0TrackDistance_TrueK0s(NULL),
+  fHistSelV0PV0Chi2perNDF_TrueK0s(NULL),
+  fHistSelV0PV0PropLifeTime_TrueK0s(NULL),
+  fHistSelV0TrackDCAXY_TrueK0s(NULL),
+  fHistSelV0TrackDCA_TrueK0s(NULL),
+  
+  fHistLSV0PV0DecayLengthXY(NULL),
+  fHistLSV0PV0DecayLength(NULL),
+  fHistLSV0PV0PointingAngleXY(NULL),
+  fHistLSV0PV0PointingAngle(NULL),
+  fHistLSV0PV0DCAXY(NULL),
+  fHistLSV0PV0DCA(NULL),
+  fHistLSV0PV0TrackDistanceXY(NULL),
+  fHistLSV0PV0TrackDistance(NULL),
+  fHistLSV0PV0Chi2perNDF(NULL),
+  fHistLSV0PV0PropLifeTime(NULL),
+  fHistLSV0TrackDCAXY(NULL),
+  fHistLSV0TrackDCA(NULL),
+
+  fHistLSSelV0PV0DecayLengthXY(NULL),
+  fHistLSSelV0PV0DecayLength(NULL),
+  fHistLSSelV0PV0PointingAngleXY(NULL),
+  fHistLSSelV0PV0PointingAngle(NULL),
+  fHistLSSelV0PV0DCAXY(NULL),
+  fHistLSSelV0PV0DCA(NULL),
+  fHistLSSelV0PV0TrackDistanceXY(NULL),
+  fHistLSSelV0PV0TrackDistance(NULL),
+  fHistLSSelV0PV0Chi2perNDF(NULL),
+  fHistLSSelV0PV0PropLifeTime(NULL),
+  fHistLSSelV0TrackDCAXY(NULL),
+  fHistLSSelV0TrackDCA(NULL),
+
+  fHistLSV0PV0DecayLengthXY_TrueK0s(NULL),
+  fHistLSV0PV0DecayLength_TrueK0s(NULL),
+  fHistLSV0PV0PointingAngleXY_TrueK0s(NULL),
+  fHistLSV0PV0PointingAngle_TrueK0s(NULL),
+  fHistLSV0PV0DCAXY_TrueK0s(NULL),
+  fHistLSV0PV0DCA_TrueK0s(NULL),
+  fHistLSV0PV0TrackDistanceXY_TrueK0s(NULL),
+  fHistLSV0PV0TrackDistance_TrueK0s(NULL),
+  fHistLSV0PV0Chi2perNDF_TrueK0s(NULL),
+  fHistLSV0PV0PropLifeTime_TrueK0s(NULL),
+  fHistLSV0TrackDCAXY_TrueK0s(NULL),
+  fHistLSV0TrackDCA_TrueK0s(NULL),
+
+  fHistLSSelV0PV0DecayLengthXY_TrueK0s(NULL),
+  fHistLSSelV0PV0DecayLength_TrueK0s(NULL),
+  fHistLSSelV0PV0PointingAngleXY_TrueK0s(NULL),
+  fHistLSSelV0PV0PointingAngle_TrueK0s(NULL),
+  fHistLSSelV0PV0DCAXY_TrueK0s(NULL),
+  fHistLSSelV0PV0DCA_TrueK0s(NULL),
+  fHistLSSelV0PV0TrackDistanceXY_TrueK0s(NULL),
+  fHistLSSelV0PV0TrackDistance_TrueK0s(NULL),
+  fHistLSSelV0PV0Chi2perNDF_TrueK0s(NULL),
+  fHistLSSelV0PV0PropLifeTime_TrueK0s(NULL),
+  fHistLSSelV0TrackDCAXY_TrueK0s(NULL),
+  fHistLSSelV0TrackDCA_TrueK0s(NULL),
+
+  all(0),
+  abord(0)
+  
+{
+
+  // Define input and output slots here
+  // Input slot #0 works with a TChain
+  DefineInput(0, TChain::Class());
+  // Output slot #0 id reserved by the base class for AOD
+  // Output slot #1 writes into a TH1 container
+  DefineOutput(1, TList::Class());
+}
 
  //________________________________________________________________________
  AliAnalysisTaskAODTrackPair::~AliAnalysisTaskAODTrackPair() {}
+
  //________________________________________________________________________
  void AliAnalysisTaskAODTrackPair::UserCreateOutputObjects() {
 
    double fCentBins[] = {0,1,5,10,20,40,60,100};
-   double fVtxBins[] = {-50, -10.5, -6, -2, 0, 2, 6, 10.5, 50};
-   double fPsiBins[] = {-10, -1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5, 10};
+   double fVtxBins[]  = {-50, -10.5, -6, -2, 0, 2, 6, 10.5, 50};
+   double fPsiBins[]  = {-10, -1.5, -1.0, -0.5, 0, 0.5, 1.0, 1.5, 10};
 
    int fNCentBins = sizeof(fCentBins) / sizeof(double) - 1;
    int fNVtxZBins = sizeof(fVtxBins) / sizeof(double) - 1;
-   int fNPsiBins = sizeof(fPsiBins) / sizeof(double) - 1;
+   int fNPsiBins  = sizeof(fPsiBins) / sizeof(double) - 1;
 
-   fPoolMuonTrackMgr = new AliEventPoolManager(fPoolSize, fTrackDepth, fNCentBins, (double *)fCentBins, fNVtxZBins,
-					       (double *)fVtxBins, fNPsiBins, (double *)fPsiBins);
-   fPoolMuonTrackMgr->SetTargetValues(fTrackDepth, (double)fReadyFraction,fPoolSize);
+   fPoolMuonTrackMgrK0s = new AliEventPoolManager(fPoolSize, fTrackDepth,
+					       fNCentBins, (double *)fCentBins,
+					       fNVtxZBins, (double *)fVtxBins,
+					       fNPsiBins, (double *)fPsiBins);
+   fPoolMuonTrackMgrK0s -> SetTargetValues(fTrackDepth, (double)fReadyFraction,fPoolSize);
 
-   //fAODv0Array = new TClonesArray();
-   //fAODv0Array = new TObjArray();
-   //fAODv0Array->SetOwner(true);
-
+   fPoolMuonTrackMgrPion = new AliEventPoolManager(fPoolSize, fTrackDepth,
+						   fNCentBins, (double *)fCentBins,
+						   fNVtxZBins, (double *)fVtxBins,
+						   fNPsiBins, (double *)fPsiBins);
+   fPoolMuonTrackMgrPion -> SetTargetValues(fTrackDepth, (double)fReadyFraction,fPoolSize);
+   
    // Create histograms
    // Called once
    fOutputList = new TList();
@@ -392,580 +608,392 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name)
    double max_rap = 0.8;
    double width_rap = 0.1;
 
+   double min_angle = 0;
+   double max_angle = 180.;
+   double width_angle = 60.;
+
    vector<double> bins_cent{0,1,5,10,20,40,60,80,100};
    int binnum_cent = bins_cent.size() - 1;
+   
+   int bins[4] = {int((max_mass - min_mass) / width_mass), int((max_pt - min_pt) / width_pt), binnum_cent,int((max_angle-min_angle)/width_angle)};
+   double min_bins[4] = {min_mass, min_pt, 0, min_angle};
+   double max_bins[4] = {max_mass, max_pt, 100, max_angle};   
 
-   vector<double> bins_event{0,60,120,180};
-   int binnum_event = bins_event.size() - 1;
+   fSparseULSPionPair  = new THnSparseF("fSparseULSPionPair", "", 4, bins,min_bins, max_bins);
+   fSparseLSppPionPair = new THnSparseF("fSparseLSppPionPair", "", 4,bins, min_bins, max_bins);
+   fSparseLSmmPionPair = new THnSparseF("fSparseLSmmPionPair", "", 4,bins, min_bins, max_bins);
+   fSparseULSPionPair  -> SetBinEdges(2,bins_cent.data());
+   fSparseLSppPionPair -> SetBinEdges(2,bins_cent.data());
+   fSparseLSmmPionPair -> SetBinEdges(2,bins_cent.data());
+   fOutputList -> Add(fSparseULSPionPair);
+   fOutputList -> Add(fSparseLSppPionPair);
+   fOutputList -> Add(fSparseLSmmPionPair);
 
-   if (!fIsMidTrackAna) {
-     double bins_event_hist[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-     int binnum_event_hist = sizeof(bins_event_hist) / sizeof(double) - 1;
+   fSparseMixULSPionPair  = new THnSparseF("fSparseMixULSPionPair", "", 4, bins,min_bins, max_bins);
+   fSparseMixLSppPionPair = new THnSparseF("fSparseMixLSppPionPair", "", 4,bins, min_bins, max_bins);
+   fSparseMixLSmmPionPair = new THnSparseF("fSparseMixLSmmPionPair", "", 4,bins, min_bins, max_bins);
+   fSparseMixULSPionPair  -> SetBinEdges(2,bins_cent.data());
+   fSparseMixLSppPionPair -> SetBinEdges(2,bins_cent.data());
+   fSparseMixLSmmPionPair -> SetBinEdges(2,bins_cent.data());
+   fOutputList -> Add(fSparseMixULSPionPair);
+   fOutputList -> Add(fSparseMixLSppPionPair);
+   fOutputList -> Add(fSparseMixLSmmPionPair);
 
-     std::string event_label[] = {"CMUL7",
-				  "CMLL7",
-				  "CMUL7orCMLL7",
-				  "CMUL7andCMLL7",
-				  "CMUL7withDS",
-				  "CMLL7withDS",
-				  "CMUL7orCMLL7withDS",
-				  "CMUL7andCMLL7withDS"};
-     fEventCounter = new TH2F("fEventCounter", "", 11, 0, 11, 200, 0, 200);
-     for (unsigned int iname = 0; iname < sizeof(event_label) / sizeof(std::string); ++iname) {
-       fEventCounter->GetXaxis()->SetBinLabel(iname + 1,event_label[iname].c_str());
-     }
-
-     fOutputList->Add(fEventCounter);
-
-     if (!fIsMixingAnalysis) {
-       fTreeULSPair = new TTree("fTreeULSPair", "");
-       fTreeULSPair->Branch("RecPairPt", &RecPairPt, "RecPairPt/F");
-       fTreeULSPair->Branch("RecPairRap", &RecPairRap, "RecPairRap/F");
-       fTreeULSPair->Branch("RecPairMass", &RecPairMass, "RecPairMass/F");
-       fTreeULSPair->Branch("RecPairCent", &RecPairCent, "RecPairCent/F");
-       fTreeULSPair->Branch("RecPairDS", &RecPairDS, "RecPairDS/F");
-       fOutputList->Add(fTreeULSPair);
-       fTreeLSppPair = new TTree("fTreeLSppPair", "");
-       fTreeLSppPair->Branch("RecPairPt", &RecPairPt, "RecPairPt/F");
-       fTreeLSppPair->Branch("RecPairRap", &RecPairRap, "RecPairRap/F");
-       fTreeLSppPair->Branch("RecPairMass", &RecPairMass, "RecPairMass/F");
-       fTreeLSppPair->Branch("RecPairCent", &RecPairCent, "RecPairCent/F");
-       fTreeLSppPair->Branch("RecPairDS", &RecPairDS, "RecPairDS/F");
-       fOutputList->Add(fTreeLSppPair);
-       fTreeLSmmPair = new TTree("fTreeLSmmPair", "");
-       fTreeLSmmPair->Branch("RecPairPt", &RecPairPt, "RecPairPt/F");
-       fTreeLSmmPair->Branch("RecPairRap", &RecPairRap, "RecPairRap/F");
-       fTreeLSmmPair->Branch("RecPairMass", &RecPairMass, "RecPairMass/F");
-       fTreeLSmmPair->Branch("RecPairCent", &RecPairCent, "RecPairCent/F");
-       fTreeLSmmPair->Branch("RecPairDS", &RecPairDS, "RecPairDS/F");
-       fOutputList->Add(fTreeLSmmPair);
-     } else {
-       fTreeMixULSPair = new TTree("fTreeMixULSPair", "");
-       fTreeMixULSPair->Branch("RecPairPt", &RecPairPt, "RecPairPt/F");
-       fTreeMixULSPair->Branch("RecPairRap", &RecPairRap, "RecPairRap/F");
-       fTreeMixULSPair->Branch("RecPairMass", &RecPairMass, "RecPairMass/F");
-       fTreeMixULSPair->Branch("RecPairCent", &RecPairCent, "RecPairCent/F");
-       fTreeMixULSPair->Branch("RecPairDS", &RecPairDS, "RecPairDS/F");
-       fOutputList->Add(fTreeMixULSPair);
-       fTreeMixLSppPair = new TTree("fTreeMixLSppPair", "");
-       fTreeMixLSppPair->Branch("RecPairPt", &RecPairPt, "RecPairPt/F");
-       fTreeMixLSppPair->Branch("RecPairRap", &RecPairRap, "RecPairRap/F");
-       fTreeMixLSppPair->Branch("RecPairMass", &RecPairMass, "RecPairMass/F");
-       fTreeMixLSppPair->Branch("RecPairCent", &RecPairCent, "RecPairCent/F");
-       fTreeMixLSppPair->Branch("RecPairDS", &RecPairDS, "RecPairDS/F");
-       fOutputList->Add(fTreeMixLSppPair);
-       fTreeMixLSmmPair = new TTree("fTreeMixLSmmPair", "");
-       fTreeMixLSmmPair->Branch("RecPairPt", &RecPairPt, "RecPairPt/F");
-       fTreeMixLSmmPair->Branch("RecPairRap", &RecPairRap, "RecPairRap/F");
-       fTreeMixLSmmPair->Branch("RecPairMass", &RecPairMass, "RecPairMass/F");
-       fTreeMixLSmmPair->Branch("RecPairCent", &RecPairCent, "RecPairCent/F");
-       fTreeMixLSmmPair->Branch("RecPairDS", &RecPairDS, "RecPairDS/F");
-       fOutputList->Add(fTreeMixLSmmPair);
-     }
-     fHistTrackPairPtBalance =
-	 new TH2F("fHistTrackPairPtBalance", "", 50, 0, 5, 50, 0, 5);
-     fHistTrackPairLocalBoardPair =
-	 new TH2F("fHistTrackPairLocalBoardPair", "", 240, 0, 240, 240, 0, 240);
-     fOutputList->Add(fHistTrackPairPtBalance);
-     fOutputList->Add(fHistTrackPairLocalBoardPair);
-
-     fHistTrackEta = new TH1F("fHistTrackEta", "", 30, 2.0,5.0);    
-     fHistTrackThetaAbs =
-	 new TH2F("fHistTrackThetaAbs", "", 20, 0, 10, 60, 0, 15);
-     fHistTrackTriggerMatch =
-	 new TH2F("fHistTrackTriggerMatch", "", 20, 0, 10, 5, 0, 5);
-     fHistTrackPDCA = new TH2F("fHistTrackPDCA", "", 20, 0, 10, 200, 0, 20);
-     fHistTrackChiSquare =
-	 new TH2F("fHistTrackChiSquare", "", 20, 0, 10, 100, 0, 10);
-     fHistTriggerChiSquare =
-	 new TH2F("fHistTriggerChiSquare", "", 20, 0, 10, 100, 0, 10);
-     fOutputList->Add(fHistTrackEta);
-     fOutputList->Add(fHistTrackThetaAbs);
-     fOutputList->Add(fHistTrackTriggerMatch);
-     fOutputList->Add(fHistTrackPDCA);
-     fOutputList->Add(fHistTrackChiSquare);
-     fOutputList->Add(fHistTriggerChiSquare);
-   } else {
-     if (!fIsMixingAnalysis) {
-
-       int bins[3] = {int((max_mass - min_mass) / width_mass),
-		      int((max_pt - min_pt) / width_pt), binnum_cent};
-       double min_bins[3] = {min_mass, min_pt, 0};
-       double max_bins[3] = {max_mass, max_pt, 100};      
-
-       fSparseULSPairMassPt = new THnSparseF("fSparseULSPairMassPt", "", 3, bins,
-					     min_bins, max_bins);
-       fSparseLSppPairMassPt = new THnSparseF("fSparseLSppPairMassPt", "", 3,
-					      bins, min_bins, max_bins);
-       fSparseLSmmPairMassPt = new THnSparseF("fSparseLSmmPairMassPt", "", 3,
-					      bins, min_bins, max_bins);
-       fSparseULSPairMassPt->SetBinEdges(2,bins_cent.data());
-       fSparseLSppPairMassPt->SetBinEdges(2,bins_cent.data());
-       fSparseLSmmPairMassPt->SetBinEdges(2,bins_cent.data());
-       fOutputList->Add(fSparseULSPairMassPt);
-       fOutputList->Add(fSparseLSppPairMassPt);
-       fOutputList->Add(fSparseLSmmPairMassPt);
-
-       fSparseNeutralK0sPair          = new THnSparseF("fSparseNeutralK0sPair", "", 3, bins,min_bins, max_bins);
-       fSparseNeutralNegativeK0sPair  = new THnSparseF("fSparseNeutralNegativeK0sPair", "", 3, bins,min_bins, max_bins);
-       fSparseNeutralPositiveK0sPair  = new THnSparseF("fSparseNeutralPositiveK0sPair", "", 3, bins,min_bins, max_bins);
-       fSparsePositiveK0sPair         = new THnSparseF("fSparsePositiveK0sPair", "", 3, bins,min_bins, max_bins);
-       fSparseNegativeK0sPair         = new THnSparseF("fSparseNegativeK0sPair", "", 3, bins,min_bins, max_bins);
-       fSparsePositiveNegativeK0sPair = new THnSparseF("fSparsePositiveNegativeK0sPair", "", 3, bins,min_bins, max_bins);
-       fSparseNeutralK0sPair->SetBinEdges(2,bins_cent.data());
-       fSparseNeutralNegativeK0sPair->SetBinEdges(2,bins_cent.data());
-       fSparseNeutralPositiveK0sPair->SetBinEdges(2,bins_cent.data());
-       fSparsePositiveK0sPair->SetBinEdges(2,bins_cent.data());
-       fSparseNegativeK0sPair->SetBinEdges(2,bins_cent.data());
-       fSparsePositiveNegativeK0sPair->SetBinEdges(2,bins_cent.data());
-       fOutputList->Add(fSparseNeutralK0sPair);
-       fOutputList->Add(fSparseNeutralNegativeK0sPair);
-       fOutputList->Add(fSparseNeutralPositiveK0sPair);
-       fOutputList->Add(fSparsePositiveK0sPair);
-       fOutputList->Add(fSparseNegativeK0sPair);
-       fOutputList->Add(fSparsePositiveNegativeK0sPair);
-
-       fSparseULSPairMassPt_RejectKpmStar = new THnSparseF("fSparseULSPairMassPt_RejectKpmStar", "", 3, bins,
-							   min_bins, max_bins);
-       fSparseULSPairMassPt_RejectKpmStar->SetBinEdges(2,bins_cent.data());
-       fOutputList->Add(fSparseULSPairMassPt_RejectKpmStar);
-
-       fSparseULSPairMassPt_SideBandLeftRight = new THnSparseF("fSparseULSPairMassPt_SideBandLeftRight", "", 3, bins,
-							  min_bins, max_bins);
-       fSparseULSPairMassPt_SideBandLeft = new THnSparseF("fSparseULSPairMassPt_SideBandLeft", "", 3, bins,
-							  min_bins, max_bins);
-       fSparseULSPairMassPt_SideBandRight = new THnSparseF("fSparseULSPairMassPt_SideBandRight", "", 3, bins,
-							  min_bins, max_bins);
-       fSparseULSPairMassPt_SideBand = new THnSparseF("fSparseULSPairMassPt_SideBand", "", 3, bins,
-						      min_bins, max_bins);
-       fSparseULSPairMassPt_SideBandLeftRight->SetBinEdges(2,bins_cent.data());
-       fSparseULSPairMassPt_SideBandLeft->SetBinEdges(2,bins_cent.data());
-       fSparseULSPairMassPt_SideBandRight->SetBinEdges(2,bins_cent.data());
-       fSparseULSPairMassPt_SideBand->SetBinEdges(2,bins_cent.data());
-       fOutputList->Add(fSparseULSPairMassPt_SideBandLeftRight);
-       fOutputList->Add(fSparseULSPairMassPt_SideBandLeft);
-       fOutputList->Add(fSparseULSPairMassPt_SideBandRight);
-       fOutputList->Add(fSparseULSPairMassPt_SideBand);
-
-       int bins_leading[3] = {int((max_mass - min_mass) / width_mass),
-			      int((max_pt - min_pt) / width_pt), binnum_event};
-       double min_bins_leading[3] = {min_mass, min_pt, 0};
-       double max_bins_leading[3] = {max_mass, max_pt, 360};      
-
-       fSparseULSPairMassPt_LeadingTrack  = new THnSparseF("fSparseULSPairMassPt_LeadingTrack", "",
-									     3, bins_leading,min_bins_leading, max_bins_leading);
-       fSparseULSPairMassPt_LeadingTrack->SetBinEdges(2,bins_event.data());
-       fOutputList->Add(fSparseULSPairMassPt_LeadingTrack);
-     }
-     if (fIsMixingAnalysis) {
-       fHistMixULSPairMassPt =
-	   new TH2F("fHistMixULSPairMassPt", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    int((max_pt - min_pt) / width_pt), min_pt, max_pt);
-       fOutputList->Add(fHistMixULSPairMassPt);
-
-       int bins[3] = {int((max_mass - min_mass) / width_mass),
-		      int((max_pt - min_pt) / width_pt), binnum_cent};
-       double min_bins[3] = {min_mass, min_pt, 0};
-       double max_bins[3] = {max_mass, max_pt, 100};
-       fSparseMixULSPairMassPt = new THnSparseF("fSparseMixULSPairMassPt", "", 3,
-						bins, min_bins, max_bins);
-       fSparseMixLSppPairMassPt = new THnSparseF("fSparseMixLSppPairMassPt", "",
-						 3, bins, min_bins, max_bins);
-       fSparseMixLSmmPairMassPt = new THnSparseF("fSparseMixLSmmPairMassPt", "",
-						 3, bins, min_bins, max_bins);      
-       fSparseMixULSPairMassPt->SetBinEdges(2,bins_cent.data());
-       fSparseMixLSppPairMassPt->SetBinEdges(2,bins_cent.data());
-       fSparseMixLSmmPairMassPt->SetBinEdges(2,bins_cent.data());      
-       fOutputList->Add(fSparseMixULSPairMassPt);
-       fOutputList->Add(fSparseMixLSppPairMassPt);
-       fOutputList->Add(fSparseMixLSmmPairMassPt);
-
-       fSparseMixULSPairMassPt_RejectKpmStar = new THnSparseF("fSparseMixULSPairMassPt_RejectKpmStar", "", 3, bins,
-							      min_bins, max_bins);
-       fSparseMixULSPairMassPt_RejectKpmStar->SetBinEdges(2,bins_cent.data());
-       fOutputList->Add(fSparseMixULSPairMassPt_RejectKpmStar);
-
-       int bins_leading[3] = {int((max_mass - min_mass) / width_mass),
-			      int((max_pt - min_pt) / width_pt), binnum_event};
-       double min_bins_leading[3] = {min_mass, min_pt, 0};
-       double max_bins_leading[3] = {max_mass, max_pt, 360};      
-
-       fSparseMixULSPairMassPt_LeadingTrack  = new THnSparseF("fSparseMixULSPairMassPt_LeadingTrack", "",
-									     3, bins_leading,min_bins_leading, max_bins_leading);
-       fSparseMixULSPairMassPt_LeadingTrack->SetBinEdges(2,bins_event.data());
-       fOutputList->Add(fSparseMixULSPairMassPt_LeadingTrack);
-     }
-
-     if (fIsV0TrackPairAna) {
-
-       fHistPionPionCorrelationPlot = new TH2F("fHistPionPionCorrelationPlot", "",
-				  int((max_mass - min_mass)/width_mass),min_mass,max_mass,
-				  int((max_mass - min_mass)/width_mass),min_mass,max_mass);
-       fOutputList->Add(fHistPionPionCorrelationPlot);
-
-       min_mass = 0.45;
-       max_mass = 0.55;
-       width_mass = 0.001;
-
-       fHistULSPairMassPt_ProngV0 =
-	   new TH2F("fHistULSPairMassPt_ProngV0", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    int((max_pt - min_pt) / width_pt), min_pt, max_pt);
-       fOutputList->Add(fHistULSPairMassPt_ProngV0);
-
-       fHistMassK0s1K0s2 =
-	 new TH2F("fHistMassK0s1K0s2", "",
-		  int((max_mass - min_mass)/width_mass),min_mass,max_mass,
-		  int((max_mass - min_mass)/width_mass),min_mass,max_mass);
-       fOutputList->Add(fHistMassK0s1K0s2);
-
-       fHistKpmStarCandMass = new TH1F("fHistKpsStarCandMass","",400,0.7,1.1);
-       fOutputList->Add(fHistKpmStarCandMass);
-
-       fHistArmenteros =
-	   new TH2F("fHistArmenteros", "", 200, -1, 1, 400, 0, 0.4);
-       fHistV0MassDecayLength = new TH2F("fHistV0MassDecayLength", "",
-					 int((max_mass - min_mass) / width_mass),
-					 min_mass, max_mass, 500, 0., 100.);
-       fHistV0MassPointingAngle =
-	   new TH2F("fHistV0MassPointingAngle", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0.95, 1.0);
-       fHistV0MassV0DCA = new TH2F("fHistV0MassV0DCA", "",
-				   int((max_mass - min_mass) / width_mass),
-				   min_mass, max_mass, 400, 0., 80.);
-       fHistV0MassV0TrackDCA = new TH2F("fHistV0MassV0TrackDCA", "",
-					int((max_mass - min_mass) / width_mass),
-					min_mass, max_mass, 100, 0, 10);
-       fHistV0MassV0DecayRadius =
-	   new TH2F("fHistV0MassV0DecayRadius", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0., 100.);
-       fHistV0MassV0PropLifeTime =
-	   new TH2F("fHistV0MassV0PropLifeTime", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    250, 0, 50.);
-       fOutputList->Add(fHistArmenteros);     
-       fOutputList->Add(fHistV0MassDecayLength);
-       fOutputList->Add(fHistV0MassPointingAngle);
-       fOutputList->Add(fHistV0MassV0DCA);
-       fOutputList->Add(fHistV0MassV0TrackDCA);
-       fOutputList->Add(fHistV0MassV0DecayRadius);
-       fOutputList->Add(fHistV0MassV0PropLifeTime);
-
-       fHistSelArmenteros =
-	   new TH2F("fHistSelArmenteros", "", 200, -1, 1, 400, 0, 0.4);
-       fHistSelV0MassDecayLength =
-	   new TH2F("fHistSelV0MassDecayLength", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0., 100.);
-       fHistSelV0MassPointingAngle =
-	   new TH2F("fHistSelV0MassPointingAngle", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0.95, 1.0);
-       fHistSelV0MassV0DCA = new TH2F("fHistSelV0MassV0DCA", "",
-				      int((max_mass - min_mass) / width_mass),
-				      min_mass, max_mass, 400, 0., 80.);
-       fHistSelV0MassV0TrackDCA =
-	   new TH2F("fHistSelV0MassV0TrackDCA", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    100, 0, 10);
-       fHistSelV0MassV0DecayRadius =
-	   new TH2F("fHistSelV0MassV0DecayRadius", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0., 100.);
-       fHistSelV0MassV0PropLifeTime =
-	   new TH2F("fHistSelV0MassV0PropLifeTime", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    250, 0, 50.);
-       fOutputList->Add(fHistSelArmenteros);
-       fOutputList->Add(fHistSelV0MassDecayLength);
-       fOutputList->Add(fHistSelV0MassPointingAngle);
-       fOutputList->Add(fHistSelV0MassV0DCA);
-       fOutputList->Add(fHistSelV0MassV0TrackDCA);
-       fOutputList->Add(fHistSelV0MassV0DecayRadius);
-       fOutputList->Add(fHistSelV0MassV0PropLifeTime);
-
-       if (fIsMC) {
-
-	 fHistTrueK0sPtRapidity = new TH2F("fHistTrueK0sPtRapidity", "",
-					      int((max_rap - min_rap) / width_rap), min_rap, max_rap,
-					      int((max_pt - min_pt) / width_pt), min_pt, max_pt);	
-	 fOutputList->Add(fHistTrueK0sPtRapidity);      
-
-	 fHistRecTrueK0sPtRapidity = new TH2F("fHistRecTrueK0sPtRapidity", "",
-					      int((max_rap - min_rap) / width_rap), min_rap, max_rap,
-					      int((max_pt - min_pt) / width_pt), min_pt, max_pt);	
-	 fOutputList->Add(fHistRecTrueK0sPtRapidity);      
+   fSparseULSPionPairBeforeCuts  = new THnSparseF("fSparseULSPionPairBeforeCuts", "", 4, bins,min_bins, max_bins);
+   fSparseLSppPionPairBeforeCuts = new THnSparseF("fSparseLSppPionPairBeforeCuts", "", 4,bins, min_bins, max_bins);
+   fSparseLSmmPionPairBeforeCuts = new THnSparseF("fSparseLSmmPionPairBeforeCuts", "", 4,bins, min_bins, max_bins);
+   fSparseULSPionPairBeforeCuts  -> SetBinEdges(2,bins_cent.data());
+   fSparseLSppPionPairBeforeCuts -> SetBinEdges(2,bins_cent.data());
+   fSparseLSmmPionPairBeforeCuts -> SetBinEdges(2,bins_cent.data());
+   fOutputList -> Add(fSparseULSPionPairBeforeCuts);
+   fOutputList -> Add(fSparseLSppPionPairBeforeCuts);
+   fOutputList -> Add(fSparseLSmmPionPairBeforeCuts);
+   
+   fSparseULSPionPair_PassChi2perNDFCut         = new THnSparseF("fSparseULSPionPair_PassChi2perNDFCut", "", 4, bins,min_bins, max_bins);
+   fSparseULSPionPair_PassCPVXYCut              = new THnSparseF("fSparseULSPionPair_PassCPVXYCut", "", 4, bins,min_bins, max_bins);
+   fSparseULSPionPair_PassDecayLengthXYCut      = new THnSparseF("fSparseULSPionPair_PassDecayLengthXYCut", "", 4, bins,min_bins, max_bins);
+   fSparseULSPionPair_PassDaughterDistanceXYCut = new THnSparseF("fSparseULSPionPair_PassDaughterDistanceXYCut", "", 4, bins,min_bins, max_bins);  
+   fSparseULSPionPair_PassDCAXYCut              = new THnSparseF("fSparseULSPionPair_PassDCAXYCut", "", 4, bins,min_bins, max_bins);
+   fSparseULSPionPair_PassLifetimeCut           = new THnSparseF("fSparseULSPionPair_PassLifetimeCut", "", 4, bins,min_bins, max_bins);
+   fOutputList -> Add(fSparseULSPionPair_PassChi2perNDFCut);
+   fOutputList -> Add(fSparseULSPionPair_PassCPVXYCut);
+   fOutputList -> Add(fSparseULSPionPair_PassDecayLengthXYCut);
+   fOutputList -> Add(fSparseULSPionPair_PassDaughterDistanceXYCut);
+   fOutputList -> Add(fSparseULSPionPair_PassDCAXYCut);
+   fOutputList -> Add(fSparseULSPionPair_PassLifetimeCut);
 
 
-	 fHistULSPairMassPt_ProngV0_TrueK0s =
-	   new TH2F("fHistULSPairMassPt_ProngV0_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    int((max_pt - min_pt) / width_pt), min_pt, max_pt);
-	 fOutputList->Add(fHistULSPairMassPt_ProngV0_TrueK0s);      
+   fSparseNeutralK0sPair          = new THnSparseF("fSparseNeutralK0sPair", "", 4, bins,min_bins, max_bins);
+   fSparseNeutralNegativeK0sPair  = new THnSparseF("fSparseNeutralNegativeK0sPair", "", 4, bins,min_bins, max_bins);
+   fSparseNeutralPositiveK0sPair  = new THnSparseF("fSparseNeutralPositiveK0sPair", "", 4, bins,min_bins, max_bins);
+   fSparsePositiveK0sPair         = new THnSparseF("fSparsePositiveK0sPair", "", 4, bins,min_bins, max_bins);
+   fSparseNegativeK0sPair         = new THnSparseF("fSparseNegativeK0sPair", "", 4, bins,min_bins, max_bins);
+   fSparsePositiveNegativeK0sPair = new THnSparseF("fSparsePositiveNegativeK0sPair", "", 4, bins,min_bins, max_bins);
+   fSparseNeutralK0sPair         -> SetBinEdges(2,bins_cent.data());
+   fSparseNeutralNegativeK0sPair -> SetBinEdges(2,bins_cent.data());
+   fSparseNeutralPositiveK0sPair -> SetBinEdges(2,bins_cent.data());
+   fSparsePositiveK0sPair        -> SetBinEdges(2,bins_cent.data());
+   fSparseNegativeK0sPair        -> SetBinEdges(2,bins_cent.data());
+   fSparsePositiveNegativeK0sPair->SetBinEdges(2,bins_cent.data());
+   fOutputList -> Add(fSparseNeutralK0sPair);
+   fOutputList -> Add(fSparseNeutralNegativeK0sPair);
+   fOutputList -> Add(fSparseNeutralPositiveK0sPair);
+   fOutputList -> Add(fSparsePositiveK0sPair);
+   fOutputList -> Add(fSparseNegativeK0sPair);
+   fOutputList -> Add(fSparsePositiveNegativeK0sPair);
+      
+   fSparseTrueK0s = new THnSparseF("fSparseTrueK0s", "", 4, bins,min_bins, max_bins);
+   fSparseTrueK0s -> SetBinEdges(2,bins_cent.data());
+   fOutputList    -> Add(fSparseTrueK0s);
+   
+   int bins_K0sParams[4]        = {10, 400, 400, 600};
+   double min_bins_K0sParams[4] = {0,    0,   0,  -1};
+   double max_bins_K0sParams[4] = {10,   2,   2,   2};
+   
+   fSparseTrueK0sRecK0s = new THnSparseF("fSparseTrueK0sRecK0s", "", 4, bins_K0sParams, min_bins_K0sParams, max_bins_K0sParams);
+   fOutputList -> Add(fSparseTrueK0sRecK0s);
+   
+   width_pt = 0.1;
+   
+   fHistV0PV0DecayLengthXY   = new TH2F("fHistV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+   fHistV0PV0DecayLength     = new TH2F("fHistV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+   fHistV0PV0PointingAngleXY = new TH2F("fHistV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+   fHistV0PV0PointingAngle   = new TH2F("fHistV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+   fHistV0PV0DCAXY           = new TH2F("fHistV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistV0PV0DCA             = new TH2F("fHistV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistV0PV0TrackDistanceXY = new TH2F("fHistV0PV0TrackDistanceXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+   fHistV0PV0TrackDistance   = new TH2F("fHistV0PV0TrackDistance", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+   fHistV0PV0Chi2perNDF      = new TH2F("fHistV0PV0Chi2perNDF", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
+   fHistV0PV0PropLifeTime    = new TH2F("fHistV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
+   fHistV0TrackDCAXY         = new TH2F("fHistV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fHistV0TrackDCA           = new TH2F("fHistV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fOutputList -> Add(fHistV0PV0DecayLengthXY);
+   fOutputList -> Add(fHistV0PV0DecayLength);
+   fOutputList -> Add(fHistV0PV0PointingAngleXY);
+   fOutputList -> Add(fHistV0PV0PointingAngle);
+   fOutputList -> Add(fHistV0PV0DCAXY);
+   fOutputList -> Add(fHistV0PV0DCA);
+   fOutputList -> Add(fHistV0PV0TrackDistanceXY);
+   fOutputList -> Add(fHistV0PV0TrackDistance);
+   fOutputList -> Add(fHistV0PV0Chi2perNDF);
+   fOutputList -> Add(fHistV0PV0PropLifeTime);
+   fOutputList -> Add(fHistV0TrackDCAXY);
+   fOutputList -> Add(fHistV0TrackDCA);
 
-	 fHistArmenteros_TrueK0s =
-	   new TH2F("fHistArmenteros_TrueK0s", "", 200, -1, 1, 400, 0, 0.4);
-	 fHistV0MassDecayLength_TrueK0s =
-	   new TH2F("fHistV0MassDecayLength_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0., 100.);
-	 fHistV0MassPointingAngle_TrueK0s =
-	   new TH2F("fHistV0MassPointingAngle_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0.95, 1.0);
-	 fHistV0MassV0DCA_TrueK0s = new TH2F("fHistV0MassV0DCA_TrueK0s", "",
-					     int((max_mass - min_mass) / width_mass),
-					     min_mass, max_mass, 400, 0., 80.);
-	 fHistV0MassV0TrackDCA_TrueK0s =
-	   new TH2F("fHistV0MassV0TrackDCA_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    100, 0, 10);
-	 fHistV0MassV0DecayRadius_TrueK0s =
-	   new TH2F("fHistV0MassV0DecayRadius_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0., 100.);
-	 fHistV0MassV0PropLifeTime_TrueK0s =
-	   new TH2F("fHistV0MassV0PropLifeTime_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    250, 0, 50.);
-	 fOutputList->Add(fHistArmenteros_TrueK0s);
-	 fOutputList->Add(fHistV0MassDecayLength_TrueK0s);
-	 fOutputList->Add(fHistV0MassPointingAngle_TrueK0s);
-	 fOutputList->Add(fHistV0MassV0DCA_TrueK0s);
-	 fOutputList->Add(fHistV0MassV0TrackDCA_TrueK0s);
-	 fOutputList->Add(fHistV0MassV0DecayRadius_TrueK0s);
-	 fOutputList->Add(fHistV0MassV0PropLifeTime_TrueK0s);
+   fHistSelV0PV0DecayLengthXY   = new TH2F("fHistSelV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+   fHistSelV0PV0DecayLength     = new TH2F("fHistSelV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+   fHistSelV0PV0PointingAngleXY = new TH2F("fHistSelV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+   fHistSelV0PV0PointingAngle   = new TH2F("fHistSelV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+   fHistSelV0PV0DCAXY           = new TH2F("fHistSelV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistSelV0PV0DCA             = new TH2F("fHistSelV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistSelV0PV0TrackDistanceXY = new TH2F("fHistSelV0PV0TrackDistanceXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+   fHistSelV0PV0TrackDistance   = new TH2F("fHistSelV0PV0TrackDistance", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+   fHistSelV0PV0Chi2perNDF      = new TH2F("fHistSelV0PV0Chi2perNDF", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
+   fHistSelV0PV0PropLifeTime    = new TH2F("fHistSelV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
+   fHistSelV0TrackDCAXY         = new TH2F("fHistSelV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fHistSelV0TrackDCA           = new TH2F("fHistSelV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fOutputList -> Add(fHistSelV0PV0DecayLengthXY);
+   fOutputList -> Add(fHistSelV0PV0DecayLength);
+   fOutputList -> Add(fHistSelV0PV0PointingAngleXY);
+   fOutputList -> Add(fHistSelV0PV0PointingAngle);
+   fOutputList -> Add(fHistSelV0PV0DCAXY);
+   fOutputList -> Add(fHistSelV0PV0DCA);
+   fOutputList -> Add(fHistSelV0PV0TrackDistanceXY);
+   fOutputList -> Add(fHistSelV0PV0TrackDistance);
+   fOutputList -> Add(fHistSelV0PV0Chi2perNDF);
+   fOutputList -> Add(fHistSelV0PV0PropLifeTime);
+   fOutputList -> Add(fHistSelV0TrackDCAXY);
+   fOutputList -> Add(fHistSelV0TrackDCA);
 
-	 fHistSelArmenteros_TrueK0s =
-	   new TH2F("fHistSelArmenteros_TrueK0s", "", 200, -1, 1, 400, 0, 0.4);
-	 fHistSelV0MassDecayLength_TrueK0s =
-	   new TH2F("fHistSelV0MassDecayLength_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0., 100.);
-	 fHistSelV0MassPointingAngle_TrueK0s =
-	   new TH2F("fHistSelV0MassPointingAngle_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0.95, 1.0);
-	 fHistSelV0MassV0DCA_TrueK0s = new TH2F("fHistSelV0MassV0DCA_TrueK0s", "",
-					     int((max_mass - min_mass) / width_mass),
-					     min_mass, max_mass, 400, 0., 80.);
-	 fHistSelV0MassV0TrackDCA_TrueK0s =
-	   new TH2F("fHistSelV0MassV0TrackDCA_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    100, 0, 10);
-	 fHistSelV0MassV0DecayRadius_TrueK0s =
-	   new TH2F("fHistSelV0MassV0DecayRadius_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    500, 0., 100.);
-	 fHistSelV0MassV0PropLifeTime_TrueK0s =
-	   new TH2F("fHistSelV0MassV0PropLifeTime_TrueK0s", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    250, 0, 50.);
-	 fOutputList->Add(fHistSelArmenteros_TrueK0s);
-	 fOutputList->Add(fHistSelV0MassDecayLength_TrueK0s);
-	 fOutputList->Add(fHistSelV0MassPointingAngle_TrueK0s);
-	 fOutputList->Add(fHistSelV0MassV0DCA_TrueK0s);
-	 fOutputList->Add(fHistSelV0MassV0TrackDCA_TrueK0s);
-	 fOutputList->Add(fHistSelV0MassV0DecayRadius_TrueK0s);
-	 fOutputList->Add(fHistSelV0MassV0PropLifeTime_TrueK0s);
+   fHistLSV0PV0DecayLengthXY   = new TH2F("fHistLSV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+   fHistLSV0PV0DecayLength     = new TH2F("fHistLSV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+   fHistLSV0PV0PointingAngleXY = new TH2F("fHistLSV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+   fHistLSV0PV0PointingAngle   = new TH2F("fHistLSV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+   fHistLSV0PV0DCAXY           = new TH2F("fHistLSV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistLSV0PV0DCA             = new TH2F("fHistLSV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistLSV0PV0TrackDistanceXY = new TH2F("fHistLSV0PV0TrackDistanceXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+   fHistLSV0PV0TrackDistance   = new TH2F("fHistLSV0PV0TrackDistance", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+   fHistLSV0PV0Chi2perNDF      = new TH2F("fHistLSV0PV0Chi2perNDF", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
+   fHistLSV0PV0PropLifeTime    = new TH2F("fHistLSV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
+   fHistLSV0TrackDCAXY         = new TH2F("fHistLSV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fHistLSV0TrackDCA           = new TH2F("fHistLSV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fOutputList -> Add(fHistLSV0PV0DecayLengthXY);
+   fOutputList -> Add(fHistLSV0PV0DecayLength);
+   fOutputList -> Add(fHistLSV0PV0PointingAngleXY);
+   fOutputList -> Add(fHistLSV0PV0PointingAngle);
+   fOutputList -> Add(fHistLSV0PV0DCAXY);
+   fOutputList -> Add(fHistLSV0PV0DCA);
+   fOutputList -> Add(fHistLSV0PV0TrackDistanceXY);
+   fOutputList -> Add(fHistLSV0PV0TrackDistance);
+   fOutputList -> Add(fHistLSV0PV0Chi2perNDF);
+   fOutputList -> Add(fHistLSV0PV0PropLifeTime);
+   fOutputList -> Add(fHistLSV0TrackDCAXY);
+   fOutputList -> Add(fHistLSV0TrackDCA);
 
-	 fTreeK0s = new TTree("fTreeK0s","");
-	 fTreeK0s->Branch("TrueMass",&TrueMass,"TrueMass/D");
-	 fTreeK0s->Branch("TrueRap",&TrueRap,"TrueRap/D");
-	 fTreeK0s->Branch("TruePhi",&TruePhi,"TruePhi/D");
-	 fTreeK0s->Branch("TruePt",&TruePt,"TruePt/D");
-	 fTreeK0s->Branch("RecMass",&RecMass,"RecMass/D");
-	 fTreeK0s->Branch("RecRap",&RecRap,"RecRap/D");
-	 fTreeK0s->Branch("RecPhi",&RecPhi,"RecPhi/D");
-	 fTreeK0s->Branch("RecPt",&RecPt,"RecPt/D");
-	 fTreeK0s->Branch("isDetect",&isDetect,"isDetect/O");
-	 
-	 fTreeK0s->Branch("RecV0DecayLength",&RecV0DecayLength,"RecV0DecayLength/D");
-	 fTreeK0s->Branch("RecV0Radius",&RecV0Radius,"RecV0Radius/D");	 
-	 fTreeK0s->Branch("RecDcaV0Daughters",&RecDcaV0Daughters,"RecDcaV0Daughters/D");
-	 fTreeK0s->Branch("RecDcaV0ToPrimVertex",&RecDcaV0ToPrimVertex,"RecDcaV0ToPrimVertex/D");
-	 fTreeK0s->Branch("RecCosPointingAngle",&RecCosPointingAngle,"RecCosPointingAngle/D");
-	 fTreeK0s->Branch("RecLifetimeV0",&RecLifetimeV0,"RecLifetimeV0/D");
-	 fTreeK0s->Branch("RecDcaToPrimVertex1",&RecDcaToPrimVertex1,"RecDcaToPrimVertex1/D");
-	 fTreeK0s->Branch("RecDcaToPrimVertex2",&RecDcaToPrimVertex2,"RecDcaToPrimVertex2/D");
-	 fOutputList->Add(fTreeK0s);
+   fHistLSSelV0PV0DecayLengthXY   = new TH2F("fHistLSSelV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+   fHistLSSelV0PV0DecayLength     = new TH2F("fHistLSSelV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+   fHistLSSelV0PV0PointingAngleXY = new TH2F("fHistLSSelV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+   fHistLSSelV0PV0PointingAngle   = new TH2F("fHistLSSelV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+   fHistLSSelV0PV0DCAXY           = new TH2F("fHistLSSelV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistLSSelV0PV0DCA             = new TH2F("fHistLSSelV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistLSSelV0PV0TrackDistanceXY = new TH2F("fHistLSSelV0PV0TrackDistanceXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+   fHistLSSelV0PV0TrackDistance   = new TH2F("fHistLSSelV0PV0TrackDistance", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+   fHistLSSelV0PV0Chi2perNDF      = new TH2F("fHistLSSelV0PV0Chi2perNDF", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
+   fHistLSSelV0PV0PropLifeTime    = new TH2F("fHistLSSelV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
+   fHistLSSelV0TrackDCAXY         = new TH2F("fHistLSSelV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fHistLSSelV0TrackDCA           = new TH2F("fHistLSSelV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fOutputList -> Add(fHistLSSelV0PV0DecayLengthXY);
+   fOutputList -> Add(fHistLSSelV0PV0DecayLength);
+   fOutputList -> Add(fHistLSSelV0PV0PointingAngleXY);
+   fOutputList -> Add(fHistLSSelV0PV0PointingAngle);
+   fOutputList -> Add(fHistLSSelV0PV0DCAXY);
+   fOutputList -> Add(fHistLSSelV0PV0DCA);
+   fOutputList -> Add(fHistLSSelV0PV0TrackDistanceXY);
+   fOutputList -> Add(fHistLSSelV0PV0TrackDistance);
+   fOutputList -> Add(fHistLSSelV0PV0Chi2perNDF);
+   fOutputList -> Add(fHistLSSelV0PV0PropLifeTime);
+   fOutputList -> Add(fHistLSSelV0TrackDCAXY);
+   fOutputList -> Add(fHistLSSelV0TrackDCA);
 
-       }
-     }
-     if (fIsPrimTrackPairAna) {
-       fHistULSPairMassPt_TightCut =
-	   new TH2F("fHistULSPairMassPt_TightCut", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    int((max_pt - min_pt) / width_pt), min_pt, max_pt);
-       fOutputList->Add(fHistULSPairMassPt_TightCut);
-       fHistLSppPairMassPt_TightCut =
-	   new TH2F("fHistLSppPairMassPt_TightCut", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    int((max_pt - min_pt) / width_pt), min_pt, max_pt);
-       fOutputList->Add(fHistLSppPairMassPt_TightCut);
-       fHistLSmmPairMassPt_TightCut =
-	   new TH2F("fHistLSmmPairMassPt_TightCut", "",
-		    int((max_mass - min_mass) / width_mass), min_mass, max_mass,
-		    int((max_pt - min_pt) / width_pt), min_pt, max_pt);
-       fOutputList->Add(fHistLSmmPairMassPt_TightCut);
-     }
+   if (fIsMC) {
+     fHistV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+     fHistV0PV0DecayLength_TrueK0s     = new TH2F("fHistV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+     fHistV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+     fHistV0PV0PointingAngle_TrueK0s   = new TH2F("fHistV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+     fHistV0PV0DCAXY_TrueK0s           = new TH2F("fHistV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistV0PV0DCA_TrueK0s             = new TH2F("fHistV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistV0PV0TrackDistanceXY_TrueK0s = new TH2F("fHistV0PV0TrackDistanceXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+     fHistV0PV0TrackDistance_TrueK0s   = new TH2F("fHistV0PV0TrackDistance_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+     fHistV0PV0Chi2perNDF_TrueK0s      = new TH2F("fHistV0PV0Chi2perNDF_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
+     fHistV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
+     fHistV0TrackDCAXY_TrueK0s         = new TH2F("fHistV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fHistV0TrackDCA_TrueK0s           = new TH2F("fHistV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fOutputList -> Add(fHistV0PV0DecayLengthXY_TrueK0s);
+     fOutputList -> Add(fHistV0PV0DecayLength_TrueK0s);
+     fOutputList -> Add(fHistV0PV0PointingAngleXY_TrueK0s);
+     fOutputList -> Add(fHistV0PV0PointingAngle_TrueK0s);
+     fOutputList -> Add(fHistV0PV0DCAXY_TrueK0s);
+     fOutputList -> Add(fHistV0PV0DCA_TrueK0s);
+     fOutputList -> Add(fHistV0PV0TrackDistanceXY_TrueK0s);
+     fOutputList -> Add(fHistV0PV0TrackDistance_TrueK0s);
+     fOutputList -> Add(fHistV0PV0Chi2perNDF_TrueK0s);
+     fOutputList -> Add(fHistV0PV0PropLifeTime_TrueK0s);
+     fOutputList -> Add(fHistV0TrackDCAXY_TrueK0s);
+     fOutputList -> Add(fHistV0TrackDCA_TrueK0s);
 
-     fHistTrackP = new TH1F("fHistTrackP", "", 100, 0, 10);
-     fHistTrackPt = new TH1F("fHistTrackPt", "", 100, 0, 10);
-     fHistTrackEta = new TH1F("fHistTrackEta", "", 20, -1, 1);
-     fHistTPCNClusts = new TH1F("fHistTPCNClusts", "", 160, 0, 160);
-     fHistSPDNClusts = new TH1F("fHistSPDNClusts", "", 6, 0, 6);
-     fHistTPCCrossRowsFindableRatio =
-	 new TH1F("fHistTPCCrossRowsFindableRatio", "", 200, 0, 2);
-     fHistReducedChi2TPC = new TH1F("fHistReducedChi2TPC", "", 100, 0, 10);
-     fHistReducedChi2ITS = new TH1F("fHistReducedChi2ITS", "", 250, 0, 50);
-     fHistDCAz = new TH1F("fHistDCAz", "", 100, 0, 10);
-     fHistDCAxyPt = new TH2F("fHistDCAxyPt", "", 200, -1, 1, 100, 0, 10);
+     fHistSelV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistSelV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+     fHistSelV0PV0DecayLength_TrueK0s     = new TH2F("fHistSelV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+     fHistSelV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistSelV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+     fHistSelV0PV0PointingAngle_TrueK0s   = new TH2F("fHistSelV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+     fHistSelV0PV0DCAXY_TrueK0s           = new TH2F("fHistSelV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistSelV0PV0DCA_TrueK0s             = new TH2F("fHistSelV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistSelV0PV0TrackDistanceXY_TrueK0s = new TH2F("fHistSelV0PV0TrackDistanceXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+     fHistSelV0PV0TrackDistance_TrueK0s   = new TH2F("fHistSelV0PV0TrackDistance_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+     fHistSelV0PV0Chi2perNDF_TrueK0s      = new TH2F("fHistSelV0PV0Chi2perNDF_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
+     fHistSelV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistSelV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
+     fHistSelV0TrackDCAXY_TrueK0s         = new TH2F("fHistSelV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fHistSelV0TrackDCA_TrueK0s           = new TH2F("fHistSelV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fOutputList -> Add(fHistSelV0PV0DecayLengthXY_TrueK0s);
+     fOutputList -> Add(fHistSelV0PV0DecayLength_TrueK0s);
+     fOutputList -> Add(fHistSelV0PV0PointingAngleXY_TrueK0s);
+     fOutputList -> Add(fHistSelV0PV0PointingAngle_TrueK0s);
+     fOutputList -> Add(fHistSelV0PV0DCAXY_TrueK0s);
+     fOutputList -> Add(fHistSelV0PV0DCA_TrueK0s);
+     fOutputList -> Add(fHistSelV0PV0TrackDistanceXY_TrueK0s);
+     fOutputList -> Add(fHistSelV0PV0TrackDistance_TrueK0s);
+     fOutputList -> Add(fHistSelV0PV0Chi2perNDF_TrueK0s);
+     fOutputList -> Add(fHistSelV0PV0PropLifeTime_TrueK0s);
+     fOutputList -> Add(fHistSelV0TrackDCAXY_TrueK0s);
+     fOutputList -> Add(fHistSelV0TrackDCA_TrueK0s);
 
-     fHistOpeningAngleP = new TH2F("fHistOpeningAngleP","",100,0,TMath::TwoPi(),200,0,20);
-     fHistEnergyAsymmP = new TH2F("fHistEnergyAsymmP","",100,-1,1,200,0,20);
 
-     fOutputList->Add(fHistTrackP);
-     fOutputList->Add(fHistTrackPt);
-     fOutputList->Add(fHistTrackEta);
-     fOutputList->Add(fHistTPCNClusts);
-     fOutputList->Add(fHistSPDNClusts);
-     fOutputList->Add(fHistTPCCrossRowsFindableRatio);
-     fOutputList->Add(fHistReducedChi2TPC);
-     fOutputList->Add(fHistReducedChi2ITS);
-     fOutputList->Add(fHistDCAz);
-     fOutputList->Add(fHistDCAxyPt);
-     fOutputList->Add(fHistOpeningAngleP);
-     fOutputList->Add(fHistEnergyAsymmP);
+     fHistLSV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistLSV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+     fHistLSV0PV0DecayLength_TrueK0s     = new TH2F("fHistLSV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+     fHistLSV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistLSV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+     fHistLSV0PV0PointingAngle_TrueK0s   = new TH2F("fHistLSV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+     fHistLSV0PV0DCAXY_TrueK0s           = new TH2F("fHistLSV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistLSV0PV0DCA_TrueK0s             = new TH2F("fHistLSV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistLSV0PV0TrackDistanceXY_TrueK0s = new TH2F("fHistLSV0PV0TrackDistanceXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+     fHistLSV0PV0TrackDistance_TrueK0s   = new TH2F("fHistLSV0PV0TrackDistance_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+     fHistLSV0PV0Chi2perNDF_TrueK0s      = new TH2F("fHistLSV0PV0Chi2perNDF_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
+     fHistLSV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistLSV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
+     fHistLSV0TrackDCAXY_TrueK0s         = new TH2F("fHistLSV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fHistLSV0TrackDCA_TrueK0s           = new TH2F("fHistLSV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fOutputList -> Add(fHistLSV0PV0DecayLengthXY_TrueK0s);
+     fOutputList -> Add(fHistLSV0PV0DecayLength_TrueK0s);
+     fOutputList -> Add(fHistLSV0PV0PointingAngleXY_TrueK0s);
+     fOutputList -> Add(fHistLSV0PV0PointingAngle_TrueK0s);
+     fOutputList -> Add(fHistLSV0PV0DCAXY_TrueK0s);
+     fOutputList -> Add(fHistLSV0PV0DCA_TrueK0s);
+     fOutputList -> Add(fHistLSV0PV0TrackDistanceXY_TrueK0s);
+     fOutputList -> Add(fHistLSV0PV0TrackDistance_TrueK0s);
+     fOutputList -> Add(fHistLSV0PV0Chi2perNDF_TrueK0s);
+     fOutputList -> Add(fHistLSV0PV0PropLifeTime_TrueK0s);
+     fOutputList -> Add(fHistLSV0TrackDCAXY_TrueK0s);
+     fOutputList -> Add(fHistLSV0TrackDCA_TrueK0s);
 
-     double min_dEdx = 0.;
-     double max_dEdx = 300.;
-     double width_dEdx = 0.1;
-
-     double min_beta = 0.;
-     double max_beta = 1.2;
-     double width_beta = 0.01;
-
-     double min_p = 0.;
-     double max_p = 5.;
-     double width_p = 0.1;
-
-     double min_sigma = -10;
-     double max_sigma = +10;
-     double width_sigma = 0.1;
-
-     fHistTPCdEdxP =
-	 new TH2F("fHistTPCdEdxP", "", (max_p - min_p) / width_p, min_p, max_p,
-		  (max_dEdx - min_dEdx) / width_dEdx, min_dEdx, max_dEdx);
-     fHistBetaP =
-	 new TH2F("fHistBetaP", "", (max_p - min_p) / width_p, min_p, max_p,
-		  (max_beta - min_beta) / width_beta, min_beta, max_beta);
-     fHistTPCSigmaElectron = new TH2F(
-	 "fHistTPCSigmaElectron", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistTOFSigmaElectron = new TH2F(
-	 "fHistTOFSigmaElectron", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistTPCSigmaMuon = new TH2F(
-	 "fHistTPCSigmaMuon", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistTOFSigmaMuon = new TH2F(
-	 "fHistTOFSigmaMuon", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistTPCSigmaPion = new TH2F(
-	 "fHistTPCSigmaPion", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistTOFSigmaPion = new TH2F(
-	 "fHistTOFSigmaPion", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistTPCSigmaKaon = new TH2F(
-	 "fHistTPCSigmaKaon", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistTOFSigmaKaon = new TH2F(
-	 "fHistTOFSigmaKaon", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistTPCSigmaProton = new TH2F(
-	 "fHistTPCSigmaProton", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistTOFSigmaProton = new TH2F(
-	 "fHistTOFSigmaProton", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-
-     fHistSelTPCdEdxP =
-	 new TH2F("fHistSelTPCdEdxP", "", (max_p - min_p) / width_p, min_p,
-		  max_p, (max_dEdx - min_dEdx) / width_dEdx, min_dEdx, max_dEdx);
-     fHistSelBetaP =
-	 new TH2F("fHistSelBetaP", "", (max_p - min_p) / width_p, min_p, max_p,
-		  (max_beta - min_beta) / width_beta, min_beta, max_beta);
-     fHistSelTPCSigmaElectron = new TH2F(
-	 "fHistSelTPCSigmaElectron", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistSelTOFSigmaElectron = new TH2F(
-	 "fHistSelTOFSigmaElectron", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistSelTPCSigmaMuon = new TH2F(
-	 "fHistSelTPCSigmaMuon", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistSelTOFSigmaMuon = new TH2F(
-	 "fHistSelTOFSigmaMuon", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistSelTPCSigmaPion = new TH2F(
-	 "fHistSelTPCSigmaPion", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistSelTOFSigmaPion = new TH2F(
-	 "fHistSelTOFSigmaPion", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistSelTPCSigmaKaon = new TH2F(
-	 "fHistSelTPCSigmaKaon", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistSelTOFSigmaKaon = new TH2F(
-	 "fHistSelTOFSigmaKaon", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistSelTPCSigmaProton = new TH2F(
-	 "fHistSelTPCSigmaProton", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-     fHistSelTOFSigmaProton = new TH2F(
-	 "fHistSelTOFSigmaProton", "", (max_p - min_p) / width_p, min_p, max_p,
-	 (max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
-
-     fOutputList->Add(fHistTPCdEdxP);
-     fOutputList->Add(fHistBetaP);
-     fOutputList->Add(fHistTPCSigmaElectron);
-     fOutputList->Add(fHistTOFSigmaElectron);
-     fOutputList->Add(fHistTPCSigmaMuon);
-     fOutputList->Add(fHistTOFSigmaMuon);
-     fOutputList->Add(fHistTPCSigmaPion);
-     fOutputList->Add(fHistTOFSigmaPion);
-     fOutputList->Add(fHistTPCSigmaKaon);
-     fOutputList->Add(fHistTOFSigmaKaon);
-     fOutputList->Add(fHistTPCSigmaProton);
-     fOutputList->Add(fHistTOFSigmaProton);
-
-     fOutputList->Add(fHistSelTPCdEdxP);
-     fOutputList->Add(fHistSelBetaP);
-     fOutputList->Add(fHistSelTPCSigmaElectron);
-     fOutputList->Add(fHistSelTOFSigmaElectron);
-     fOutputList->Add(fHistSelTPCSigmaMuon);
-     fOutputList->Add(fHistSelTOFSigmaMuon);
-     fOutputList->Add(fHistSelTPCSigmaPion);
-     fOutputList->Add(fHistSelTOFSigmaPion);
-     fOutputList->Add(fHistSelTPCSigmaKaon);
-     fOutputList->Add(fHistSelTOFSigmaKaon);
-     fOutputList->Add(fHistSelTPCSigmaProton);
-     fOutputList->Add(fHistSelTOFSigmaProton);
+     fHistLSSelV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistLSSelV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+     fHistLSSelV0PV0DecayLength_TrueK0s     = new TH2F("fHistLSSelV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
+     fHistLSSelV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistLSSelV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+     fHistLSSelV0PV0PointingAngle_TrueK0s   = new TH2F("fHistLSSelV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
+     fHistLSSelV0PV0DCAXY_TrueK0s           = new TH2F("fHistLSSelV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistLSSelV0PV0DCA_TrueK0s             = new TH2F("fHistLSSelV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistLSSelV0PV0TrackDistanceXY_TrueK0s = new TH2F("fHistLSSelV0PV0TrackDistanceXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+     fHistLSSelV0PV0TrackDistance_TrueK0s   = new TH2F("fHistLSSelV0PV0TrackDistance_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
+     fHistLSSelV0PV0Chi2perNDF_TrueK0s      = new TH2F("fHistLSSelV0PV0Chi2perNDF_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
+     fHistLSSelV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistLSSelV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
+     fHistLSSelV0TrackDCAXY_TrueK0s         = new TH2F("fHistLSSelV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fHistLSSelV0TrackDCA_TrueK0s           = new TH2F("fHistLSSelV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fOutputList -> Add(fHistLSSelV0PV0DecayLengthXY_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0PV0DecayLength_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0PV0PointingAngleXY_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0PV0PointingAngle_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0PV0DCAXY_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0PV0DCA_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0PV0TrackDistanceXY_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0PV0TrackDistance_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0PV0Chi2perNDF_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0PV0PropLifeTime_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0TrackDCAXY_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0TrackDCA_TrueK0s);
    }
+   
+   fHistTrackP                    = new TH1F("fHistTrackP", "", 100, 0, 10);
+   fHistTrackPt                   = new TH1F("fHistTrackPt", "", 100, 0, 10);
+   fHistTrackEta                  = new TH1F("fHistTrackEta", "", 20, -1, 1);   
+   fHistTPCNClusts                = new TH1F("fHistTPCNClusts", "", 160, 0, 160);
+   fHistSPDNClusts                = new TH1F("fHistSPDNClusts", "", 6, 0, 6);
+   fHistTPCCrossRowsFindableRatio = new TH1F("fHistTPCCrossRowsFindableRatio", "", 200, 0, 2);
+   fHistReducedChi2TPC            = new TH1F("fHistReducedChi2TPC", "", 100, 0, 10);
+   fHistReducedChi2ITS            = new TH1F("fHistReducedChi2ITS", "", 250, 0, 50);
+   fHistDCAz                      = new TH1F("fHistDCAz", "", 100, 0, 10);
+   fHistDCAxyPt                   = new TH2F("fHistDCAxyPt", "", 200, -1, 1, 100, 0, 10);
+   
+   fOutputList->Add(fHistTrackP);
+   fOutputList->Add(fHistTrackPt);
+   fOutputList->Add(fHistTrackEta);
+   fOutputList->Add(fHistTPCNClusts);
+   fOutputList->Add(fHistSPDNClusts);
+   fOutputList->Add(fHistTPCCrossRowsFindableRatio);
+   fOutputList->Add(fHistReducedChi2TPC);
+   fOutputList->Add(fHistReducedChi2ITS);
+   fOutputList->Add(fHistDCAz);
+   fOutputList->Add(fHistDCAxyPt);
+   
+   double min_dEdx = 0.;
+   double max_dEdx = 300.;
+   double width_dEdx = 0.1;
+   
+   double min_beta = 0.;
+   double max_beta = 1.2;
+   double width_beta = 0.01;
 
-   fHistEventVtxZ = new TH1F("fHistEventVtxZ", "", 60, -30, 30);
-   fHistEventCent = new TH1F("fHistEventCent", "", 100, 0, 100);
-   fHistEventMulti = new TH1F("fHistEventMulti", "", 200, 0, 200);
+   double min_p = 0.;
+   double max_p = 5.;
+   double width_p = 0.1;
+
+   double min_sigma = -10;
+   double max_sigma = +10;
+   double width_sigma = 0.1;
+
+   fHistTPCdEdxP         = new TH2F("fHistTPCdEdxP", "", (max_p-min_p)/width_p,min_p,max_p,(max_dEdx - min_dEdx) / width_dEdx, min_dEdx, max_dEdx);
+   fHistBetaP            = new TH2F("fHistBetaP", "", (max_p-min_p)/width_p,min_p,max_p,(max_beta - min_beta) / width_beta, min_beta, max_beta);
+   fHistTPCSigmaElectron = new TH2F("fHistTPCSigmaElectron", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistTOFSigmaElectron = new TH2F("fHistTOFSigmaElectron", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistTPCSigmaMuon     = new TH2F("fHistTPCSigmaMuon", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistTOFSigmaMuon     = new TH2F("fHistTOFSigmaMuon", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistTPCSigmaPion     = new TH2F("fHistTPCSigmaPion", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistTOFSigmaPion     = new TH2F("fHistTOFSigmaPion", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistTPCSigmaKaon     = new TH2F("fHistTPCSigmaKaon", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistTOFSigmaKaon     = new TH2F("fHistTOFSigmaKaon", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistTPCSigmaProton   = new TH2F("fHistTPCSigmaProton", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistTOFSigmaProton   = new TH2F("fHistTOFSigmaProton", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fOutputList -> Add(fHistTPCdEdxP);
+   fOutputList -> Add(fHistBetaP);
+   fOutputList -> Add(fHistTPCSigmaElectron);
+   fOutputList -> Add(fHistTOFSigmaElectron);
+   fOutputList -> Add(fHistTPCSigmaMuon);
+   fOutputList -> Add(fHistTOFSigmaMuon);
+   fOutputList -> Add(fHistTPCSigmaPion);
+   fOutputList -> Add(fHistTOFSigmaPion);
+   fOutputList -> Add(fHistTPCSigmaKaon);
+   fOutputList -> Add(fHistTOFSigmaKaon);
+   fOutputList -> Add(fHistTPCSigmaProton);
+   fOutputList -> Add(fHistTOFSigmaProton);
+
+   fHistSelTPCdEdxP         = new TH2F("fHistSelTPCdEdxP", "", (max_p-min_p)/width_p,min_p,max_p,(max_dEdx - min_dEdx) / width_dEdx, min_dEdx, max_dEdx);
+   fHistSelBetaP            = new TH2F("fHistSelBetaP", "", (max_p-min_p)/width_p,min_p,max_p,(max_beta - min_beta) / width_beta, min_beta, max_beta);
+   fHistSelTPCSigmaElectron = new TH2F("fHistSelTPCSigmaElectron", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistSelTOFSigmaElectron = new TH2F("fHistSelTOFSigmaElectron", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistSelTPCSigmaMuon     = new TH2F("fHistSelTPCSigmaMuon", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistSelTOFSigmaMuon     = new TH2F("fHistSelTOFSigmaMuon", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistSelTPCSigmaPion     = new TH2F("fHistSelTPCSigmaPion", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistSelTOFSigmaPion     = new TH2F("fHistSelTOFSigmaPion", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistSelTPCSigmaKaon     = new TH2F("fHistSelTPCSigmaKaon", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistSelTOFSigmaKaon     = new TH2F("fHistSelTOFSigmaKaon", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistSelTPCSigmaProton   = new TH2F("fHistSelTPCSigmaProton", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fHistSelTOFSigmaProton   = new TH2F("fHistSelTOFSigmaProton", "", (max_p-min_p)/width_p,min_p,max_p,(max_sigma - min_sigma) / width_sigma, min_sigma, max_sigma);
+   fOutputList -> Add(fHistSelTPCdEdxP);
+   fOutputList -> Add(fHistSelBetaP);
+   fOutputList -> Add(fHistSelTPCSigmaElectron);
+   fOutputList -> Add(fHistSelTOFSigmaElectron);
+   fOutputList -> Add(fHistSelTPCSigmaMuon);
+   fOutputList -> Add(fHistSelTOFSigmaMuon);
+   fOutputList -> Add(fHistSelTPCSigmaPion);
+   fOutputList -> Add(fHistSelTOFSigmaPion);
+   fOutputList -> Add(fHistSelTPCSigmaKaon);
+   fOutputList -> Add(fHistSelTOFSigmaKaon);
+   fOutputList -> Add(fHistSelTPCSigmaProton);
+   fOutputList -> Add(fHistSelTOFSigmaProton);
+
+   fHistEventVtxZ    = new TH1F("fHistEventVtxZ", "", 60, -30, 30);
+   fHistEventCent    = new TH1F("fHistEventCent", "", 100, 0, 100);
+   fHistEventMulti   = new TH1F("fHistEventMulti", "", 200, 0, 200);
    fHistEventVtxCont = new TH1F("fHistEventVtxCont", "", 100, 0, 100);
-   fOutputList->Add(fHistEventVtxZ);
-   fOutputList->Add(fHistEventCent);
-   fOutputList->Add(fHistEventMulti);
-   fOutputList->Add(fHistEventVtxCont);
+   fOutputList -> Add(fHistEventVtxZ);
+   fOutputList -> Add(fHistEventCent);
+   fOutputList -> Add(fHistEventMulti);
+   fOutputList -> Add(fHistEventVtxCont);
 
    PostData(1, fOutputList);
  }
@@ -974,712 +1002,335 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name)
 
  void AliAnalysisTaskAODTrackPair::UserExec(Option_t *) {
    
-   fAODv0Array = new TObjArray();
-   fAODv0Array->SetOwner(true);
+   fArrayK0s = new TObjArray();
+   fArrayK0s -> SetOwner(true);
    
-   if (!Initialize()) {
-     return;
-   }
-   if (!fUtils->isAcceptEvent()) {
-     return;
-   }
-
-   EventQA();
-
-   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   //Fwd muon
-   ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   if (!fIsMidTrackAna) {
-     if (fIsMixingAnalysis) {
-       FwdMuonPairAnalysisEveMixing();
-     } else {
-       FwdMuonPairAnalysis();
-     }
+   if (!Initialize())            return ;
+   if (!fUtils->isAcceptEvent()) return ;
+   if (!fIsMixingAnalysis) {
+     AddK0sArray(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
+     K0sPairAnalysis(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
    } else {
-     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-     //Mid rapidity analysis
-     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-     if (!fIsMixingAnalysis) {
-       if (fIsV0TrackPairAna) {
-	 AddV0ToArray(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
-	 MidV0Analysis(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
-       } else if (fIsPrimTrackPairAna) {
-	 MidPairAnalysis(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
-       }
-     } else if (fIsMixingAnalysis) {
-       if (fIsV0TrackPairAna) {
-	 MidV0AnalysisEventMixing(fUtils->getPairTargetPIDs(0),
-				  fUtils->getPairTargetPIDs(1));
-       } else if (fIsPrimTrackPairAna) {
-	 MidPairAnalysisEventMixing(fUtils->getPairTargetPIDs(0),
-				    fUtils->getPairTargetPIDs(1));
-       }
-     }
+     //K0sPairAnalysisEventMixing(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
    }
-
    if(fIsMC){
      ProcessMC();
    }
+   if (fArrayK0s) delete fArrayK0s;
    
-   if (fAODv0Array) delete fAODv0Array;
-
+   cout<<abord<<"  outof "<<all<<endl;
+   
  }
 
  bool AliAnalysisTaskAODTrackPair::Initialize() {
+   
    fEvent = dynamic_cast<AliAODEvent *>(InputEvent());
+   
+   if (!fUtils->setEvent(fEvent, fInputHandler)) return false;
+   
+   fPrimVtx = (AliAODVertex*)fEvent->GetPrimaryVertex();
+   
+   if (!fPrimVtx)                                       return false;   
+   if (fPrimVtx->GetNContributors() < fMinNContPrimVtx) return false;
 
-   if (!fUtils->setEvent(fEvent, fInputHandler)) {
-     return false;
-   }
+   fPrimVtx->GetXYZ(fPrimVtxPos);
+   
+   fMultSelection = (AliMultSelection *)fEvent->FindListObject("MultSelection");
+   
+   if (!fMultSelection) return false;
 
-   if (fRunNumber != fEvent->GetRunNumber()) {
-     fRunNumber = fUtils->getRunnumber();
-     if (!fIsMidTrackAna) {
-       AliMuonTrackCuts *trackCut = fUtils->getMuonTrackCuts();
-       trackCut->SetRun(fInputHandler);
-     }
-   }
-
-   if (!fIsMidTrackAna) {
-     fUtils->getTriggerInfo(fIsCINT7, fIsCMSL7, fIsCMSH7, fIsCMUL7, fIsCMLL7);
-   }
-
+   fCent = fMultSelection->GetMultiplicityPercentile(fMethodCent.c_str(), false);
+   
+   fHistEventVtxZ    -> Fill(fPrimVtxPos[2]);
+   fHistEventCent    -> Fill(fCent);
+   fHistEventMulti   -> Fill(fUtils->getNCorrSPDTrkInfo(1));
+   fHistEventVtxCont -> Fill(fPrimVtx->GetNContributors());
+   
    if ( fIsMC ) {
-
+     
      fMCTrackArray = dynamic_cast<TClonesArray *>(fEvent->FindListObject(AliAODMCParticle::StdBranchName()));
-
-     if (!fMCTrackArray) {
-       return false;
-     }
-
+     
+     if (!fMCTrackArray) return false;     
+     
      fUtils->setMCArray(fMCTrackArray);
-
-     AliAODMCHeader *mcHeader = (AliAODMCHeader *)fEvent->GetList()->FindObject(AliAODMCHeader::StdBranchName());
-
-     if (!mcHeader){
-       return false;
-     }
-
-     TList *headerList = mcHeader->GetCocktailHeaders();
-
-     if (!headerList){
-       return false;
-     }
-
-     for (Int_t i = 0; i < headerList->GetEntries(); i++) {
-       AliGenEventHeader *eventHeader2 = (AliGenEventHeader *)headerList->At(i);
-       TString name = eventHeader2->GetName();
-       if (name.Contains("EtaDalitz")) {
-	 fUtils->setDalitzProd(true);
-       } else if (name.Contains("EtaDirect")) {
-	 fUtils->set2BodyProd(true);
-       } else if (name.Contains("OmegaDalitz")) {
-	 fUtils->setDalitzProd(true);
-       } else if (name.Contains("OmegaDirect")) {
-	 fUtils->set2BodyProd(true);
-       } else if (name.Contains("EtaPrimeDalitz")) {
-	 fUtils->setDalitzProd(true);
-       } else if (name.Contains("PhiDirect")) {
-	 fUtils->set2BodyProd(true);
-       } else if (name.Contains("RhoDirect")) {
-	 fUtils->set2BodyProd(true);
-       } else {
-	 fUtils->setDalitzProd(false);
-	 fUtils->set2BodyProd(false);
-       }
-     }
-
-   }
-
+     
+   }   
    return true;
  }
 
- bool AliAnalysisTaskAODTrackPair::EventQA() {
-   fHistEventVtxZ->Fill(fUtils->getVtxZ());
-   fHistEventCent->Fill(fUtils->getCentClass());
-   fHistEventMulti->Fill(fUtils->getNCorrSPDTrkInfo(1));
-   fHistEventVtxCont->Fill(fUtils->getVtxCont());
-   return true;
- }
-
- bool AliAnalysisTaskAODTrackPair::FwdMuonTrackQA(AliAODTrack *track) {
-   fHistTrackEta->Fill(track->Pt(), fabs(track->Eta()));  
-   fHistTrackThetaAbs->Fill(track->Pt(),AliAnalysisMuonUtility::GetThetaAbsDeg(track));  
-   fHistTrackTriggerMatch->Fill(track->Pt(),AliAnalysisMuonUtility::GetMatchTrigger(track));  
-   fHistTrackChiSquare->Fill(track->Pt(), AliAnalysisMuonUtility::GetChi2perNDFtracker(track));  
-   fHistTriggerChiSquare->Fill(track->Pt(), AliAnalysisMuonUtility::GetChi2MatchTrigger(track));
-
-   return true;
- }
-
- bool AliAnalysisTaskAODTrackPair::FwdMuonPairQA(AliAODDimuon *dimuon) {
-
-   AliAODTrack *track1 = dynamic_cast<AliAODTrack *>(dimuon->GetMu(0));
-   AliAODTrack *track2 = dynamic_cast<AliAODTrack *>(dimuon->GetMu(1));
-
-   int triggerLB1 = AliAnalysisMuonUtility::GetLoCircuit(track1);
-   int triggerLB2 = AliAnalysisMuonUtility::GetLoCircuit(track2);
-
-   double pt_max = track1->Pt();
-   double pt_min = track2->Pt();
-
-   if (track1->Pt() > track2->Pt()) {
-     pt_max = track1->Pt();
-     pt_min = track2->Pt();
-   } else {
-     pt_max = track2->Pt();
-     pt_min = track1->Pt();
-   }
-
-   fHistTrackPairPtBalance->Fill(pt_max, pt_min);
-   fHistTrackPairLocalBoardPair->Fill(triggerLB1, triggerLB2);
-
-   return true;
- }
-
- bool AliAnalysisTaskAODTrackPair::FwdMuonPairAnalysisEveMixing() {
-
-   if (!(fInputHandler->IsEventSelected() & fTriggerMaskForMixing))
-     return false;
-
-   TObjArray *fTrackArray = new TObjArray();
-   fTrackArray->SetOwner();
-
-   double poolCent = 0.;
-   double poolVtxZ = 0.;
-   double poolPsi = 0.;
-
-   if (onEvtMixingPoolVtxZ) {
-     poolVtxZ = fUtils->getVtxZ();
-   }
-   if (onEvtMixingPoolCent) {
-     poolCent = fUtils->getCentClass();
-   }
-   if (onEvtMixingPoolPsi) {
-     poolPsi = fUtils->getPsi();
-   }
-
-   AliEventPool *pool = (AliEventPool *)fPoolMuonTrackMgr->GetEventPool(
-									poolCent, poolVtxZ, poolPsi);
-
-   Int_t nTrack = fEvent->GetNumberOfTracks();
-
-   for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
-
-     AliAODTrack *track1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
-
-     if (!fUtils->isAcceptFwdMuonTrack(track1))
-       continue;
-
-     if (pool->IsReady()) {
-
-       for (Int_t iMixEvt = 0; iMixEvt < pool->GetCurrentNEvents(); iMixEvt++) {
-
-	 TObjArray *poolTracks = (TObjArray *)pool->GetEvent(iMixEvt);
-
-	 for (Int_t iTrack2 = 0; iTrack2 < poolTracks->GetEntriesFast();
-	      ++iTrack2) {
-
-	   AliAODTrack *__track2__ = (AliAODTrack *)poolTracks->At(iTrack2);
-
-	   AliAODTrack *track2 = (AliAODTrack *)__track2__->Clone();
-
-	          if (!fUtils->isAcceptFwdMuonTrack(track2))
-            continue;
-
-          AliAODDimuon *dimuon = new AliAODDimuon();
-          dimuon->SetMuons(track1, track2);
-
-          if (!fUtils->isAcceptFwdDimuon(dimuon))
-            continue;
-
-          RecPairPt = dimuon->Pt();
-          RecPairRap = fabs(dimuon->Y());
-          RecPairMass = dimuon->M();
-          RecPairCent = fUtils->getCentClass();
-          RecPairDS = fUtils->getDS();
-
-          string fFiredTrigName = string(fEvent->GetFiredTriggerClasses());
-
-          if (dimuon->Charge() == 0) {
-            fTreeMixULSPair->Fill();
-          } else if (dimuon->Charge() > 0) {
-            fTreeMixLSppPair->Fill();
-          } else {
-            fTreeMixLSmmPair->Fill();
-          }
-
-          delete track2;
-          delete dimuon;
-
-        } // end of loop track2
-      }   // end of loop iMixEvt
-    }     // poolPion->IsReady()
-
-     fTrackArray->Add(track1);
-
-  } // end of loop track1
-
-  TObjArray *fTrackArrayClone = (TObjArray *)fTrackArray->Clone();
-  fTrackArrayClone->SetOwner();
+bool AliAnalysisTaskAODTrackPair::TrackPIDChecker(AliAODTrack *track, AliPID::EParticleType pid, bool isSel) {
   
-  if (fTrackArrayClone->GetEntriesFast() > 0) {
-    pool->UpdatePool(fTrackArrayClone);
-  }
-
-  return true;
-}
-
-bool AliAnalysisTaskAODTrackPair::FwdMuonPairAnalysis() {
-
-  if (!fIsMC && !(fInputHandler->IsEventSelected() & fTriggerMaskForSame)) {
-    return false;
-  }
+  double p      = track->P();
+  double sigTOF = track->GetTOFsignal();
+  double length = track->GetIntegratedLength();
+  double beta   = sigTOF > 0 ? length / (2.99792457999999984e-02 * sigTOF) : -999;
+  double dEdx   = track->GetTPCsignal();
   
-  if (fIsCMUL7) {
-    fEventCounter->Fill(0., fUtils->getNCorrSPDTrkInfo(1));
-    fEventCounter->Fill(4., fUtils->getNCorrSPDTrkInfo(1),
-                        (double)1. / fUtils->getDS());
-  }
-  if (fIsCMLL7) {
-    fEventCounter->Fill(1., fUtils->getNCorrSPDTrkInfo(1));
-    fEventCounter->Fill(5., fUtils->getNCorrSPDTrkInfo(1),
-                        (double)1. / fUtils->getDS());
-  }
-  if (fIsCMUL7 || fIsCMLL7) {
-    fEventCounter->Fill(2., fUtils->getNCorrSPDTrkInfo(1));
-    fEventCounter->Fill(6., fUtils->getNCorrSPDTrkInfo(1),
-                        (double)1. / fUtils->getDS());
-  }
-  if (fIsCMUL7 && fIsCMLL7) {
-    fEventCounter->Fill(3., fUtils->getNCorrSPDTrkInfo(1));
-    fEventCounter->Fill(7., fUtils->getNCorrSPDTrkInfo(1),
-                        (double)1. / fUtils->getDS());
-  }
-
-  
-  Int_t nTrack = fEvent->GetNumberOfTracks();
-
-  AliAODTrack *track1;
-  AliAODTrack *track2;
-
-  AliAODDimuon *dimuon;
-
-  for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
-    
-    track1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
-
-    if (!fUtils->isAcceptFwdMuonTrack(track1)){
-      continue;
+  if (isSel) {
+    fHistSelTPCdEdxP         -> Fill(p, dEdx);
+    fHistSelTPCSigmaElectron -> Fill(p, fUtils->getTPCSigma(track, AliPID::kElectron));
+    fHistSelTPCSigmaMuon     -> Fill(p, fUtils->getTPCSigma(track, AliPID::kMuon));
+    fHistSelTPCSigmaPion     -> Fill(p, fUtils->getTPCSigma(track, AliPID::kPion));
+    fHistSelTPCSigmaKaon     -> Fill(p, fUtils->getTPCSigma(track, AliPID::kKaon));
+    fHistSelTPCSigmaProton   -> Fill(p, fUtils->getTPCSigma(track, AliPID::kProton));
+    if (beta > 0.) {
+      fHistSelBetaP            -> Fill(p, beta);
+      fHistSelTOFSigmaElectron -> Fill(p, fUtils->getTOFSigma(track, AliPID::kElectron));
+      fHistSelTOFSigmaMuon     -> Fill(p, fUtils->getTOFSigma(track, AliPID::kMuon));
+      fHistSelTOFSigmaPion     -> Fill(p, fUtils->getTOFSigma(track, AliPID::kPion));
+      fHistSelTOFSigmaKaon     -> Fill(p, fUtils->getTOFSigma(track, AliPID::kKaon));
+      fHistSelTOFSigmaProton   -> Fill(p, fUtils->getTOFSigma(track, AliPID::kProton));
     }
-    
-    FwdMuonTrackQA(track1);
+  } else {
+    fHistTPCdEdxP         -> Fill(p, dEdx);
+    fHistTPCSigmaElectron -> Fill(p, fUtils->getTPCSigma(track, AliPID::kElectron));
+    fHistTPCSigmaMuon     -> Fill(p, fUtils->getTPCSigma(track, AliPID::kMuon));
+    fHistTPCSigmaPion     -> Fill(p, fUtils->getTPCSigma(track, AliPID::kPion));
+    fHistTPCSigmaKaon     -> Fill(p, fUtils->getTPCSigma(track, AliPID::kKaon));
+    fHistTPCSigmaProton   -> Fill(p, fUtils->getTPCSigma(track, AliPID::kProton));
+    if (beta > 0.) {
+      fHistBetaP            -> Fill(p, beta);
+      fHistTOFSigmaElectron -> Fill(p, fUtils->getTOFSigma(track, AliPID::kElectron));
+      fHistTOFSigmaMuon     -> Fill(p, fUtils->getTOFSigma(track, AliPID::kMuon));
+      fHistTOFSigmaPion     -> Fill(p, fUtils->getTOFSigma(track, AliPID::kPion));
+      fHistTOFSigmaKaon     -> Fill(p, fUtils->getTOFSigma(track, AliPID::kKaon));
+      fHistTOFSigmaProton   -> Fill(p, fUtils->getTOFSigma(track, AliPID::kProton));
+    }
+  }
 
-    for (Int_t iTrack2 = iTrack1 + 1; iTrack2 < nTrack; ++iTrack2) {
-      
-      track2 = (AliAODTrack *)fEvent->GetTrack(iTrack2);
-      
-      if (!fUtils->isAcceptFwdMuonTrack(track2)){
-        continue;
-      }
-      
-      dimuon = new AliAODDimuon();
-      dimuon->SetMuons(track1, track2);
-
-      if (!fUtils->isAcceptFwdDimuon(dimuon)){
-        continue;
-      }
-      
-      FwdMuonPairQA(dimuon);
-
-      RecPairPt = dimuon->Pt();
-      RecPairRap = fabs(dimuon->Y());
-      RecPairMass = dimuon->M();
-      RecPairCent = fUtils->getCentClass();
-      RecPairDS = fUtils->getDS();
-
-      if (dimuon->Charge() == 0) {
-        fTreeULSPair->Fill();
-      } else if (dimuon->Charge() > 0) {
-        fTreeLSppPair->Fill();
-      } else {
-        fTreeLSmmPair->Fill();
-      }
-
-      delete dimuon;
-
-    } // end of loop track2
-  }   // end of loop track1
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MidTrackQualityChecker(AliAODTrack *track) {
+bool AliAnalysisTaskAODTrackPair::TrackQualityChecker(AliAODTrack *track) {
 
   fHistTPCNClusts->Fill(track->GetTPCNcls());
 
   int nSPD = 0;
 
-  if (track->HasPointOnITSLayer(0)) {
-    ++nSPD;
-  }
-  if (track->HasPointOnITSLayer(1)) {
-    ++nSPD;
-  }
+  if (track->HasPointOnITSLayer(0)) ++nSPD;
+  if (track->HasPointOnITSLayer(1)) ++nSPD;
+
   fHistSPDNClusts->Fill(nSPD);
-  fHistTPCCrossRowsFindableRatio->Fill(track->GetTPCNclsF() /
-                                       track->GetTPCCrossedRows());
-  fHistReducedChi2TPC->Fill(track->GetTPCchi2() / track->GetTPCNcls());
+  
+  double fr       = track->GetTPCCrossedRows() > 0 ? track->GetTPCNclsF() / track->GetTPCCrossedRows() : 0;
+  double rchi2tpc = track->GetTPCNcls() > 0 ? track->GetTPCchi2() / track->GetTPCNcls() : 0;
+  double rchi2its = track->GetITSNcls() > 0 ? track->GetITSchi2() / track->GetITSNcls() : 0;
+  
+  fHistTPCCrossRowsFindableRatio -> Fill(fr);
+  fHistReducedChi2TPC            -> Fill(rchi2tpc);
+  fHistReducedChi2ITS            -> Fill(rchi2its);
+  
+  double dca_xy, dca_z;
 
-  if (track->GetITSNcls() > 0) {
-    fHistReducedChi2ITS->Fill(track->GetITSchi2() / track->GetITSNcls());
-  }
-
-  float dca_xy = 9999;
-  float dca_z = 9999;
-  track->GetImpactParameters(dca_xy, dca_z);
-
-  fHistDCAz->Fill(dca_z);
-  fHistDCAxyPt->Fill(dca_xy, track->Pt());
-
-  fHistTrackP->Fill(track->P());
-  fHistTrackPt->Fill(track->Pt());
-  fHistTrackEta->Fill(track->Eta());
+  fHistDCAz    -> Fill(dca_z);
+  fHistDCAxyPt -> Fill(dca_xy, track->Pt());  
+  fHistTrackP   -> Fill(track->P());
+  fHistTrackPt  -> Fill(track->Pt());
+  fHistTrackEta -> Fill(track->Eta());
 
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MidV0Checker(AliAODv0 *v0, bool isSel) {
+bool AliAnalysisTaskAODTrackPair::V0QualityChecker(K0sContainer *v0, bool isSel) {
+    
+  double p  = v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2] > 0 ? 
+    sqrt(v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2]) : 0;
+  
+  double DCApairXY = v0->dDcaXY[0]*v0->dDcaXY[0] + v0->dDcaXY[1]*v0->dDcaXY[1] > 0 ?
+    sqrt(v0->dDcaXY[0]*v0->dDcaXY[0] + v0->dDcaXY[1]*v0->dDcaXY[1]) : 999;
+  double DCApair   = v0->dDcaXYZ[0]*v0->dDcaXYZ[0] + v0->dDcaXYZ[1]*v0->dDcaXYZ[1] > 0 ?
+    sqrt(v0->dDcaXYZ[0]*v0->dDcaXYZ[0] + v0->dDcaXYZ[1]*v0->dDcaXYZ[1]) : 999;
 
-  if(!v0) {
-    return false;
-  }
+  if (isSel) {    
+    
+    fHistSelV0PV0DecayLengthXY   -> Fill(p, v0->DecayLengthXY);
+    fHistSelV0PV0DecayLength     -> Fill(p, v0->DecayLengthXYZ);
+    fHistSelV0PV0PointingAngleXY -> Fill(p, v0->CpvXY);
+    fHistSelV0PV0PointingAngle   -> Fill(p, v0->CpvXYZ);
+    fHistSelV0PV0DCAXY           -> Fill(p, v0->DcaXY);
+    fHistSelV0PV0DCA             -> Fill(p, v0->DcaXYZ);
+    fHistSelV0PV0TrackDistanceXY -> Fill(p, v0->DcaDaughtersXY);
+    fHistSelV0PV0TrackDistance    -> Fill(p, v0->DcaDaughtersXYZ);
+    fHistSelV0PV0Chi2perNDF      -> Fill(p, v0->rChi2V0);
+    fHistSelV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+    fHistSelV0TrackDCAXY         -> Fill(p, DCApairXY);
+    fHistSelV0TrackDCA           -> Fill(p, DCApair);
 
-  double vtx[] = {fUtils->getVtxX(), fUtils->getVtxY(), fUtils->getVtxZ()};
+    if (fabs(v0->Charge) > 0) {
+      fHistLSSelV0PV0DecayLengthXY   -> Fill(p, v0->DecayLengthXY);
+      fHistLSSelV0PV0DecayLength     -> Fill(p, v0->DecayLengthXYZ);
+      fHistLSSelV0PV0PointingAngleXY -> Fill(p, v0->CpvXY);
+      fHistLSSelV0PV0PointingAngle   -> Fill(p, v0->CpvXYZ);
+      fHistLSSelV0PV0DCAXY           -> Fill(p, v0->DcaXY);
+      fHistLSSelV0PV0DCA             -> Fill(p, v0->DcaXYZ);
+      fHistLSSelV0PV0TrackDistanceXY -> Fill(p, v0->DcaDaughtersXY);
+      fHistLSSelV0PV0TrackDistance    -> Fill(p, v0->DcaDaughtersXYZ);
+      fHistLSSelV0PV0Chi2perNDF      -> Fill(p, v0->rChi2V0);
+      fHistLSSelV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+      fHistLSSelV0TrackDCAXY         -> Fill(p, DCApairXY);
+      fHistLSSelV0TrackDCA           -> Fill(p, DCApair);
+    }
 
-  if (isSel) {
-    fHistULSPairMassPt_ProngV0->Fill(v0->MassK0Short(),v0->Pt());
-    fHistSelArmenteros->Fill(v0->Alpha(), v0->PtArmV0());
-    fHistSelV0MassDecayLength->Fill(v0->MassK0Short(), v0->DecayLengthV0(vtx));
-    fHistSelV0MassPointingAngle->Fill(v0->MassK0Short(),v0->CosPointingAngle(vtx));
-    fHistSelV0MassV0DCA->Fill(v0->MassK0Short(), v0->DcaV0ToPrimVertex());
-    fHistSelV0MassV0TrackDCA->Fill(v0->MassK0Short(), v0->DcaV0Daughters());
-    fHistSelV0MassV0DecayRadius->Fill(v0->MassK0Short(), v0->RadiusV0());
-    fHistSelV0MassV0PropLifeTime->Fill(v0->MassK0Short(), fUtils->fPdgK0sMass * v0->DecayLengthV0(vtx) / v0->P());
     if(fIsMC && 
-       fUtils->isSameMotherPair((AliAODTrack *)v0->GetDaughter(0),(AliAODTrack *)v0->GetDaughter(1)) &&
-       fUtils->getMotherPdgCode((AliAODTrack *)v0->GetDaughter(0)) == 310){
-      fHistULSPairMassPt_ProngV0_TrueK0s->Fill(v0->MassK0Short(),v0->Pt());
-      fHistSelArmenteros_TrueK0s->Fill(v0->Alpha(), v0->PtArmV0());
-      fHistSelV0MassDecayLength_TrueK0s->Fill(v0->MassK0Short(), v0->DecayLengthV0(vtx));
-      fHistSelV0MassPointingAngle_TrueK0s->Fill(v0->MassK0Short(),v0->CosPointingAngle(vtx));
-      fHistSelV0MassV0DCA_TrueK0s->Fill(v0->MassK0Short(), v0->DcaV0ToPrimVertex());
-      fHistSelV0MassV0TrackDCA_TrueK0s->Fill(v0->MassK0Short(), v0->DcaV0Daughters());
-      fHistSelV0MassV0DecayRadius_TrueK0s->Fill(v0->MassK0Short(), v0->RadiusV0());
-      fHistSelV0MassV0PropLifeTime_TrueK0s->Fill(v0->MassK0Short(), fUtils->fPdgK0sMass * v0->DecayLengthV0(vtx) / v0->P());      
-    }
-  } else {
-    fHistArmenteros->Fill(v0->Alpha(), v0->PtArmV0());
-    fHistV0MassDecayLength->Fill(v0->MassK0Short(), v0->DecayLengthV0(vtx));
-    fHistV0MassPointingAngle->Fill(v0->MassK0Short(),
-                                   v0->CosPointingAngle(vtx));
-    fHistV0MassV0DCA->Fill(v0->MassK0Short(), v0->DcaV0ToPrimVertex());
-    fHistV0MassV0TrackDCA->Fill(v0->MassK0Short(), v0->DcaV0Daughters());
-    fHistV0MassV0DecayRadius->Fill(v0->MassK0Short(), v0->RadiusV0());
-    fHistV0MassV0PropLifeTime->Fill(v0->MassK0Short(),
-                                    fUtils->fPdgK0sMass *
-				    v0->DecayLengthV0(vtx) / v0->P());
-    if(fIsMC && 
-       fUtils->isSameMotherPair((AliAODTrack *)v0->GetDaughter(0),(AliAODTrack *)v0->GetDaughter(1)) &&
-       fUtils->getMotherPdgCode((AliAODTrack *)v0->GetDaughter(0)) == 310){
-      fHistArmenteros_TrueK0s->Fill(v0->Alpha(), v0->PtArmV0());
-      fHistV0MassDecayLength_TrueK0s->Fill(v0->MassK0Short(), v0->DecayLengthV0(vtx));
-      fHistV0MassPointingAngle_TrueK0s->Fill(v0->MassK0Short(),v0->CosPointingAngle(vtx));
-      fHistV0MassV0DCA_TrueK0s->Fill(v0->MassK0Short(), v0->DcaV0ToPrimVertex());
-      fHistV0MassV0TrackDCA_TrueK0s->Fill(v0->MassK0Short(), v0->DcaV0Daughters());
-      fHistV0MassV0DecayRadius_TrueK0s->Fill(v0->MassK0Short(), v0->RadiusV0());
-      fHistV0MassV0PropLifeTime_TrueK0s->Fill(v0->MassK0Short(), fUtils->fPdgK0sMass * v0->DecayLengthV0(vtx) / v0->P());      
-    }
-  }
-
-  return true;
-}
-
-bool AliAnalysisTaskAODTrackPair::MidTrackPIDChecker(AliAODTrack *track,
-                                                     AliPID::EParticleType pid,
-                                                     bool isSel) {
-  
-  double p = track->P();
-  double sigTOF = track->GetTOFsignal();
-  double length = track->GetIntegratedLength();
-  double beta =
-      (sigTOF > 0) ? (double)length / (2.99792457999999984e-02 * sigTOF) : -999;
-  double dEdx = track->GetTPCsignal();
-  
-  if (isSel) {
-    fHistSelTPCdEdxP->Fill(p, dEdx);
-    fHistSelTPCSigmaElectron->Fill(p, fUtils->getTPCSigma(track, AliPID::kElectron));
-    fHistSelTPCSigmaMuon->Fill(p, fUtils->getTPCSigma(track, AliPID::kMuon));
-    fHistSelTPCSigmaPion->Fill(p, fUtils->getTPCSigma(track, AliPID::kPion));
-    fHistSelTPCSigmaKaon->Fill(p, fUtils->getTPCSigma(track, AliPID::kKaon));
-    fHistSelTPCSigmaProton->Fill(p, fUtils->getTPCSigma(track, AliPID::kProton));
-    if (beta > 0.) {
-      fHistSelBetaP->Fill(p, beta);
-      fHistSelTOFSigmaElectron->Fill(p, fUtils->getTOFSigma(track, AliPID::kElectron));
-      fHistSelTOFSigmaMuon->Fill(p, fUtils->getTOFSigma(track, AliPID::kMuon));
-      fHistSelTOFSigmaPion->Fill(p, fUtils->getTOFSigma(track, AliPID::kPion));
-      fHistSelTOFSigmaKaon->Fill(p, fUtils->getTOFSigma(track, AliPID::kKaon));
-      fHistSelTOFSigmaProton->Fill(p, fUtils->getTOFSigma(track, AliPID::kProton));
-    }
-  } else {
-    fHistTPCdEdxP->Fill(p, dEdx);
-    fHistTPCSigmaElectron->Fill(p, fUtils->getTPCSigma(track, AliPID::kElectron));
-    fHistTPCSigmaMuon->Fill(p, fUtils->getTPCSigma(track, AliPID::kMuon));
-    fHistTPCSigmaPion->Fill(p, fUtils->getTPCSigma(track, AliPID::kPion));
-    fHistTPCSigmaKaon->Fill(p, fUtils->getTPCSigma(track, AliPID::kKaon));
-    fHistTPCSigmaProton->Fill(p, fUtils->getTPCSigma(track, AliPID::kProton));
-    if (beta > 0.) {
-      fHistBetaP->Fill(p, beta);
-      fHistTOFSigmaElectron->Fill(p, fUtils->getTOFSigma(track, AliPID::kElectron));
-      fHistTOFSigmaMuon->Fill(p, fUtils->getTOFSigma(track, AliPID::kMuon));
-      fHistTOFSigmaPion->Fill(p, fUtils->getTOFSigma(track, AliPID::kPion));
-      fHistTOFSigmaKaon->Fill(p, fUtils->getTOFSigma(track, AliPID::kKaon));
-      fHistTOFSigmaProton->Fill(p, fUtils->getTOFSigma(track, AliPID::kProton));
-    }
-  }
-
-  return true;
-}
-
-bool AliAnalysisTaskAODTrackPair::AddV0ToArray(AliPID::EParticleType pid1,AliPID::EParticleType pid2) {  
-
-  int nTrack = fEvent->GetNumberOfTracks();
+       fUtils->isSameMotherPair(v0->dLabel[0],v0->dLabel[1]) &&
+       fUtils->getMotherPdgCode(v0->dLabel[0]) == 310 &&
+       fUtils->getGrandMotherLabel(v0->dLabel[0]) == -1){      
     
-  if ( fIsManualV0Analysis ) {
-    
-    for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
-      
-      AliAODTrack* aodTrack1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
+      fHistSelV0PV0DecayLengthXY_TrueK0s   -> Fill(p, v0->DecayLengthXY);
+      fHistSelV0PV0DecayLength_TrueK0s     -> Fill(p, v0->DecayLengthXYZ);
+      fHistSelV0PV0PointingAngleXY_TrueK0s -> Fill(p, v0->CpvXY);
+      fHistSelV0PV0PointingAngle_TrueK0s   -> Fill(p, v0->CpvXYZ);
+      fHistSelV0PV0DCAXY_TrueK0s           -> Fill(p, v0->DcaXY);
+      fHistSelV0PV0DCA_TrueK0s             -> Fill(p, v0->DcaXYZ);
+      fHistSelV0PV0TrackDistanceXY_TrueK0s -> Fill(p, v0->DcaDaughtersXY);
+      fHistSelV0PV0TrackDistance_TrueK0s   -> Fill(p, v0->DcaDaughtersXYZ);
+      fHistSelV0PV0Chi2perNDF_TrueK0s      -> Fill(p, v0->rChi2V0);
+      fHistSelV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+      fHistSelV0TrackDCAXY_TrueK0s         -> Fill(p, DCApairXY);
+      fHistSelV0TrackDCA_TrueK0s           -> Fill(p, DCApair);      
 
-      MidTrackPIDChecker(aodTrack1, pid1, false);
-
-      if ( !fUtils->isAcceptTrackKinematics(aodTrack1) ) continue;
-      if ( !fUtils->isAcceptV0TrackQuality(aodTrack1) )  continue;
-      if ( !fUtils->isAcceptMidPid(aodTrack1,pid1) )     continue;
-      
-      MidTrackQualityChecker(aodTrack1);
-      MidTrackPIDChecker(aodTrack1, pid1, true);
-        
-      for (Int_t iTrack2 = iTrack1+1; iTrack2 < nTrack; ++iTrack2) {
-	
-	AliAODTrack* aodTrack2 = (AliAODTrack *)fEvent->GetTrack(iTrack2);
-	
-	if ( !fUtils->isAcceptTrackKinematics(aodTrack2) ) continue;
-	if ( !fUtils->isAcceptV0TrackQuality(aodTrack2) )  continue;
-	if ( !fUtils->isAcceptMidPid(aodTrack2,pid2) )     continue;
-	
-	AliAODv0* v0 = calcAODv0(aodTrack1,aodTrack2);
-	
-	MidV0Checker(v0, false);
-	
-	if ( !fUtils->isAcceptV0Kinematics(v0) )               continue;
-	if ( !fUtils->isAcceptK0s(v0) )                        continue;	
-	//if (0.3>v0->MassK0Short() || v0->MassK0Short() > 0.7)  continue;
-	
-	MidV0Checker(v0, true);
-	
-	unique_ptr<TLorentzVector> lv(new TLorentzVector());
-	lv->SetPtEtaPhiM(v0->Pt(), v0->Eta(), v0->Phi(), v0->MassK0Short());
-	
-	double fill[] = {lv->M(), lv->Pt(), fUtils->getCentClass()};
-	
-	if ( v0->Charge() == 0 )     fSparseULSPairMassPt->Fill(fill);
-	else if ( v0->Charge() > 0 ) fSparseLSppPairMassPt->Fill(fill);
-	else if ( v0->Charge() < 0 ) fSparseLSmmPairMassPt->Fill(fill);
-	
-	fAODv0Array->Add(v0);	
-      }      
-    }
-  
-  } else {
-    
-    Int_t nV0 = fEvent->GetNumberOfV0s();
-    
-    for (int iV0 = 0; iV0 < nV0; ++iV0) {
-      
-      AliAODv0* _v0_ = (AliAODv0 *)fEvent->GetV0(iV0);
-      
-      AliAODTrack *aodTrack1 = (AliAODTrack *)_v0_ -> GetDaughter(0);
-      AliAODTrack *aodTrack2 = (AliAODTrack *)_v0_ -> GetDaughter(1);      
-
-      MidTrackPIDChecker(aodTrack1, pid1,false);
-      
-      if ( !fUtils->isAcceptTrackKinematics(aodTrack1) ) continue;
-      if ( !fUtils->isAcceptV0TrackQuality(aodTrack1) )  continue;
-      if ( !fUtils->isAcceptMidPid(aodTrack1,pid1) )     continue;
-      
-      MidTrackQualityChecker(aodTrack1);
-      MidTrackPIDChecker(aodTrack1, pid1, true);
-
-      if ( !fUtils->isAcceptTrackKinematics(aodTrack2) ) continue;
-      if ( !fUtils->isAcceptV0TrackQuality(aodTrack2) )  continue;
-      if ( !fUtils->isAcceptMidPid(aodTrack2,pid2) )     continue;
-
-      AliAODVertex *primeVtx = new AliAODVertex();
-      primeVtx->SetPosition(fUtils->getVtxX(),fUtils->getVtxY(),fUtils->getVtxZ());
-      
-      double Mom1[] = {aodTrack1->Px(),aodTrack1->Py(),aodTrack1->Pz()};
-      double Mom2[] = {aodTrack2->Px(),aodTrack2->Py(),aodTrack2->Pz()};
-      
-      double rDcaDaughterToPrimVertex[] = {0,0};
-      double rDcaV0ToPrimVertex = _v0_->DcaV0ToPrimVertex();
-      
-      AliAODVertex *secondVtx = new AliAODVertex();
-      secondVtx->SetPosition(_v0_->Xv(),_v0_->Yv(),_v0_->Zv());
-      secondVtx->AddDaughter(aodTrack1);
-      secondVtx->AddDaughter(aodTrack2);
-      
-      AliAODv0* v0=(AliAODv0*)_v0_->Clone();      
-      v0->SetCharge(aodTrack1->Charge() + aodTrack2->Charge());
-      v0->SetSecondaryVtx(secondVtx);
-      /*
-      if(!updateAODv0(v0)) {
-	continue;
-      }
-      */
-      MidV0Checker(v0, false);
-      /*
-      if ( !fUtils->isAcceptV0Kinematics(v0) )               continue;
-      if ( !fUtils->isAcceptK0s(v0) )                        continue;	
-      if (0.3>v0->MassK0Short() || v0->MassK0Short() > 0.7)  continue;
-      */
-      MidV0Checker(v0, true);
-
-      if(v0->Charge() == 0){
-	cout<<"("<<iV0<<")     "<<_v0_->MassK0Short()<<"    "<<aodTrack1->Pt()<<"   "<<aodTrack2->Pt()<<endl;
+      if (fabs(v0->Charge) > 0) {
+	fHistLSSelV0PV0DecayLengthXY_TrueK0s   -> Fill(p, v0->DecayLengthXY);
+	fHistLSSelV0PV0DecayLength_TrueK0s     -> Fill(p, v0->DecayLengthXYZ);
+	fHistLSSelV0PV0PointingAngleXY_TrueK0s -> Fill(p, v0->CpvXY);
+	fHistLSSelV0PV0PointingAngle_TrueK0s   -> Fill(p, v0->CpvXYZ);
+	fHistLSSelV0PV0DCAXY_TrueK0s           -> Fill(p, v0->DcaXY);
+	fHistLSSelV0PV0DCA_TrueK0s             -> Fill(p, v0->DcaXYZ);
+	fHistLSSelV0PV0TrackDistanceXY_TrueK0s -> Fill(p, v0->DcaDaughtersXY);
+	fHistLSSelV0PV0TrackDistance_TrueK0s    -> Fill(p, v0->DcaDaughtersXYZ);
+	fHistLSSelV0PV0Chi2perNDF_TrueK0s      -> Fill(p, v0->rChi2V0);
+	fHistLSSelV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+	fHistLSSelV0TrackDCAXY_TrueK0s         -> Fill(p, DCApairXY);
+	fHistLSSelV0TrackDCA_TrueK0s           -> Fill(p, DCApair);
       }
 
-      unique_ptr<TLorentzVector> lv(new TLorentzVector());
-      lv->SetPtEtaPhiM(v0->Pt(), v0->Eta(), v0->Phi(), v0->MassK0Short());
-      
-      double fill[] = {lv->M(), lv->Pt(), fUtils->getCentClass()};
-      
-      if ( v0->Charge() == 0 )     fSparseULSPairMassPt->Fill(fill);
-      else if ( v0->Charge() > 0 ) fSparseLSppPairMassPt->Fill(fill);
-      else if ( v0->Charge() < 0 ) fSparseLSmmPairMassPt->Fill(fill);
-      
-      fAODv0Array->Add(v0);
-            
-    }//end of loop iV0
-   
-  }
-  
-  return true;
+    }    
+  } else {
+    
+    fHistV0PV0DecayLengthXY   -> Fill(p, v0->DecayLengthXY);
+    fHistV0PV0DecayLength     -> Fill(p, v0->DecayLengthXYZ);
+    fHistV0PV0PointingAngleXY -> Fill(p, v0->CpvXY);
+    fHistV0PV0PointingAngle   -> Fill(p, v0->CpvXYZ);
+    fHistV0PV0DCAXY           -> Fill(p, v0->DcaXY);
+    fHistV0PV0DCA             -> Fill(p, v0->DcaXYZ);
+    fHistV0PV0TrackDistanceXY -> Fill(p, v0->DcaDaughtersXY);
+    fHistV0PV0TrackDistance   -> Fill(p, v0->DcaDaughtersXYZ);
+    fHistV0PV0Chi2perNDF      -> Fill(p, v0->rChi2V0);
+    fHistV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+    fHistV0TrackDCAXY         -> Fill(p, DCApairXY);
+    fHistV0TrackDCA           -> Fill(p, DCApair);
 
+    if (fabs(v0->Charge) > 0) {
+      fHistLSV0PV0DecayLengthXY   -> Fill(p, v0->DecayLengthXY);
+      fHistLSV0PV0DecayLength     -> Fill(p, v0->DecayLengthXYZ);
+      fHistLSV0PV0PointingAngleXY -> Fill(p, v0->CpvXY);
+      fHistLSV0PV0PointingAngle   -> Fill(p, v0->CpvXYZ);
+      fHistLSV0PV0DCAXY           -> Fill(p, v0->DcaXY);
+      fHistLSV0PV0DCA             -> Fill(p, v0->DcaXYZ);
+      fHistLSV0PV0TrackDistanceXY -> Fill(p, v0->DcaDaughtersXY);
+      fHistLSV0PV0TrackDistance    -> Fill(p, v0->DcaDaughtersXYZ);
+      fHistLSV0PV0Chi2perNDF      -> Fill(p, v0->rChi2V0);
+      fHistLSV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+      fHistLSV0TrackDCAXY         -> Fill(p, DCApairXY);
+      fHistLSV0TrackDCA           -> Fill(p, DCApair);
+    }
+
+    if(fIsMC && 
+       fUtils->isSameMotherPair(v0->dLabel[0],v0->dLabel[1]) &&
+       fUtils->getMotherPdgCode(v0->dLabel[0]) == 310 &&
+       fUtils->getGrandMotherLabel(v0->dLabel[0]) == -1){      
+    
+      fHistV0PV0DecayLengthXY_TrueK0s   -> Fill(p, v0->DecayLengthXY);
+      fHistV0PV0DecayLength_TrueK0s     -> Fill(p, v0->DecayLengthXYZ);
+      fHistV0PV0PointingAngleXY_TrueK0s -> Fill(p, v0->CpvXY);
+      fHistV0PV0PointingAngle_TrueK0s   -> Fill(p, v0->CpvXYZ);
+      fHistV0PV0DCAXY_TrueK0s           -> Fill(p, v0->DcaXY);
+      fHistV0PV0DCA_TrueK0s             -> Fill(p, v0->DcaXYZ);
+      fHistV0PV0TrackDistanceXY_TrueK0s -> Fill(p, v0->DcaDaughtersXY);
+      fHistV0PV0TrackDistance_TrueK0s   -> Fill(p, v0->DcaDaughtersXYZ);
+      fHistV0PV0Chi2perNDF_TrueK0s      -> Fill(p, v0->rChi2V0);
+      fHistV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+      fHistV0TrackDCAXY_TrueK0s         -> Fill(p, DCApairXY);
+      fHistV0TrackDCA_TrueK0s           -> Fill(p, DCApair);      
+
+      if (fabs(v0->Charge) > 0) {
+	fHistLSV0PV0DecayLengthXY_TrueK0s   -> Fill(p, v0->DecayLengthXY);
+	fHistLSV0PV0DecayLength_TrueK0s     -> Fill(p, v0->DecayLengthXYZ);
+	fHistLSV0PV0PointingAngleXY_TrueK0s -> Fill(p, v0->CpvXY);
+	fHistLSV0PV0PointingAngle_TrueK0s   -> Fill(p, v0->CpvXYZ);
+	fHistLSV0PV0DCAXY_TrueK0s           -> Fill(p, v0->DcaXY);
+	fHistLSV0PV0DCA_TrueK0s             -> Fill(p, v0->DcaXYZ);
+	fHistLSV0PV0TrackDistanceXY_TrueK0s -> Fill(p, v0->DcaDaughtersXY);
+	fHistLSV0PV0TrackDistance_TrueK0s    -> Fill(p, v0->DcaDaughtersXYZ);
+	fHistLSV0PV0Chi2perNDF_TrueK0s      -> Fill(p, v0->rChi2V0);
+	fHistLSV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+	fHistLSV0TrackDCAXY_TrueK0s         -> Fill(p, DCApairXY);
+	fHistLSV0TrackDCA_TrueK0s           -> Fill(p, DCApair);
+      }
+
+    }    
+  }
+
+  return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MidV0Analysis(AliPID::EParticleType pid1,
-                                                AliPID::EParticleType pid2) {  
+bool AliAnalysisTaskAODTrackPair::K0sPairAnalysis(AliPID::EParticleType pid1,AliPID::EParticleType pid2) {  
   
-  
-  Int_t nV0 = fAODv0Array->GetEntriesFast();
-  
-  TLorentzVector lv1, lv2, lv12, lv_leading;
+
+  Int_t nV0 = fArrayK0s->GetEntriesFast();
   
   int iLeading = -1;  
-  AliAODTrack *leadingTrack = 0x0;  
-   if (fUtils->getLeadingTrack(iLeading)) {  
-     leadingTrack = (AliAODTrack*)fEvent->GetTrack(iLeading);     
-     lv_leading.SetPtEtaPhiM(leadingTrack->Pt(),leadingTrack->Eta(),leadingTrack->Phi(),leadingTrack->M());
-   }
-   
-   for (int iV0_1 = 0; iV0_1 < nV0; ++iV0_1) {
-     
-     AliAODv0* v0_1 = static_cast<AliAODv0*>(fAODv0Array->At(iV0_1));
-  
-     bool isKmpCand1 = false;
-     double MKpm = 0;
-     
-     if (fUtils->isAcceptedK0sFromKpmStar(v0_1,MKpm))  isKmpCand1 = true;
 
-     for (int iV0_2 = iV0_1 + 1; iV0_2 < nV0; ++iV0_2) {
-       
-       AliAODv0 *v0_2 = static_cast<AliAODv0*>(fAODv0Array->At(iV0_2));
-       
-       bool isKmpCand2 = false;
-       if (fUtils->isAcceptedK0sFromKpmStar(v0_2,MKpm))  isKmpCand2 = true;
-       
-       fHistMassK0s1K0s2->Fill(v0_1->MassK0Short(), v0_2->MassK0Short());
-       
-       if (fIsManualV0Analysis && !fUtils->isAcceptNotSharingTracks(v0_1,v0_2)) continue;
-       if (!fUtils->isAcceptEnergyAsym(v0_1,v0_2))                              continue;
-       
-       lv1.SetPtEtaPhiM(v0_1->Pt(), v0_1->Eta(), v0_1->Phi(), TDatabasePDG::Instance()->GetParticle(310)->Mass());
-       lv2.SetPtEtaPhiM(v0_2->Pt(), v0_2->Eta(), v0_2->Phi(), TDatabasePDG::Instance()->GetParticle(310)->Mass());
-       
-       lv12 = lv1 + lv2;
-       
-       double angle = lv1.Angle(lv2.Vect());
-       
-       double fill[] = {lv12.M(), lv12.Pt(), fUtils->getCentClass()};
-       
-       if (fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short()) && fUtils->isAcceptK0sCandidateMassRange(v0_2->MassK0Short())) {
-	 
-	 if ( v0_1->Charge() == 0 && v0_2->Charge() == 0 ) {
-	   fSparseNeutralK0sPair->Fill(fill);
-	 } else if ( (v0_1->Charge() == 0 && v0_2->Charge() < 0) || (v0_1->Charge() < 0 && v0_2->Charge() == 0) ) {
-	   fSparseNeutralNegativeK0sPair->Fill(fill);
-	 } else if ( (v0_1->Charge() == 0 && v0_2->Charge() > 0) || (v0_1->Charge() > 0 && v0_2->Charge() == 0) ) {
-	   fSparseNeutralPositiveK0sPair->Fill(fill);
-	 } else if ( v0_1->Charge() > 0 && v0_2->Charge() > 0 ) {
-	   fSparsePositiveK0sPair->Fill(fill);
-	 } else if ( v0_1->Charge() < 0 && v0_2->Charge() < 0 ) {
-	   fSparseNegativeK0sPair->Fill(fill);
-	 } else if ( (v0_1->Charge() < 0 && v0_2->Charge() > 0) || (v0_1->Charge() > 0 && v0_2->Charge() < 0) ) {
-	   fSparsePositiveNegativeK0sPair->Fill(fill);
-	 }
+  for (int iV0_1 = 0; iV0_1 < nV0; ++iV0_1) {
 
-	 if (!isKmpCand1 && !isKmpCand2) {
-	   fSparseULSPairMassPt_RejectKpmStar->Fill(fill);
-	 }
-	 
-	 double asymm = (lv1.E() - lv2.E()) / (lv1.E() + lv2.E());
-	 
-	 fHistOpeningAngleP->Fill(angle,lv12.P());
-	 fHistEnergyAsymmP->Fill(asymm,lv12.P());
+    K0sContainer* v0_1 = static_cast<K0sContainer*>(fArrayK0s->At(iV0_1));
 
-	 if (iLeading>0) {	   
-	   double leading_angle = lv_leading.Angle(lv12.Vect()) * 180./TMath::Pi();
-	   double fill_leading[] = {RecPairMass, RecPairPt, leading_angle};	   
-	   fSparseULSPairMassPt_LeadingTrack->Fill(fill_leading);
-	 }
-       } else { 
-	 if (fUtils->isAcceptK0sCandidateSideBandRight(v0_1->MassK0Short()) && 
-	     fUtils->isAcceptK0sCandidateSideBandRight(v0_2->MassK0Short())) {
-	   fSparseULSPairMassPt_SideBandRight->Fill(fill);
-	 } else if (fUtils->isAcceptK0sCandidateSideBandLeft(v0_1->MassK0Short()) && 
-		    fUtils->isAcceptK0sCandidateSideBandLeft(v0_2->MassK0Short())) {
-	   fSparseULSPairMassPt_SideBandLeft->Fill(fill);
-	 } else if ((fUtils->isAcceptK0sCandidateSideBandLeft(v0_1->MassK0Short()) && 
-		     fUtils->isAcceptK0sCandidateSideBandRight(v0_2->MassK0Short())) || 
-		    (fUtils->isAcceptK0sCandidateSideBandRight(v0_1->MassK0Short()) &&
-		     fUtils->isAcceptK0sCandidateSideBandLeft(v0_2->MassK0Short()))) {
-	   fSparseULSPairMassPt_SideBandLeftRight->Fill(fill);
-	 } 
-	 if ((fUtils->isAcceptK0sCandidateSideBandRight(v0_1->MassK0Short()) || 
-	      fUtils->isAcceptK0sCandidateSideBandLeft(v0_1->MassK0Short())) && 
-	     (fUtils->isAcceptK0sCandidateSideBandRight(v0_2->MassK0Short()) ||
-	      fUtils->isAcceptK0sCandidateSideBandLeft(v0_2->MassK0Short()))) {	    
-	   fSparseULSPairMassPt_SideBand->Fill(fill);
-	 }
-       }
-     }
+    unique_ptr<TVector3> vec1(new TVector3());
+    vec1->SetXYZ(v0_1->P[0],v0_1->P[1],v0_1->P[2]);
 
-   }
-   return true;
+    unique_ptr<TLorentzVector> lv1(new TLorentzVector());    
+    lv1->SetPtEtaPhiM(vec1->Pt(), vec1->PseudoRapidity(), vec1->Phi(), TDatabasePDG::Instance()->GetParticle(310)->Mass());
+    
+    for (int iV0_2 = iV0_1 + 1; iV0_2 < nV0; ++iV0_2) {
+      
+      K0sContainer *v0_2 = static_cast<K0sContainer*>(fArrayK0s->At(iV0_2));
+      
+      if (!isAcceptK0sPair(v0_1,v0_2)) continue; 
+      
+      unique_ptr<TVector3> vec2(new TVector3());
+      vec2->SetXYZ(v0_2->P[0],v0_2->P[1],v0_2->P[2]);
+      
+      unique_ptr<TLorentzVector> lv2(new TLorentzVector());
+      lv2->SetPtEtaPhiM(vec2->Pt(), vec2->PseudoRapidity(), vec2->Phi(), TDatabasePDG::Instance()->GetParticle(310)->Mass());
+      
+      unique_ptr<TLorentzVector> lv12(new TLorentzVector(lv1->Vect()+lv2->Vect(),lv1->T()+lv2->T()));
+      
+      double fill[] = {lv12->M(), lv12->Pt(), fCent};      
+      
+      if (fUtils->isAcceptK0sCandidateMassRange(v0_1->Mass) && fUtils->isAcceptK0sCandidateMassRange(v0_2->Mass)) {
+	
+	if ( v0_1->Charge == 0 && v0_2->Charge == 0 ) {
+	  fSparseNeutralK0sPair->Fill(fill);
+	} else if ( (v0_1->Charge == 0 && v0_2->Charge < 0) || (v0_1->Charge < 0 && v0_2->Charge == 0) ) {
+	  fSparseNeutralNegativeK0sPair->Fill(fill);
+	} else if ( (v0_1->Charge == 0 && v0_2->Charge > 0) || (v0_1->Charge > 0 && v0_2->Charge == 0) ) {
+	  fSparseNeutralPositiveK0sPair->Fill(fill);
+	} else if ( v0_1->Charge > 0 && v0_2->Charge > 0 ) {
+	  fSparsePositiveK0sPair->Fill(fill);
+	} else if ( v0_1->Charge < 0 && v0_2->Charge < 0 ) {
+	  fSparseNegativeK0sPair->Fill(fill);
+	} else if ( (v0_1->Charge < 0 && v0_2->Charge > 0) || (v0_1->Charge > 0 && v0_2->Charge < 0) ) {
+	  fSparsePositiveNegativeK0sPair->Fill(fill);
+	}
+      
+      }
+    }
+  }
+
+  return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
-    AliPID::EParticleType pid1, AliPID::EParticleType pid2) {
+bool AliAnalysisTaskAODTrackPair::K0sPairAnalysisEventMixing(AliPID::EParticleType pid1, AliPID::EParticleType pid2) {
   
   TObjArray *fTrackArray = new TObjArray();
   fTrackArray->SetOwner(true);
@@ -1714,7 +1365,7 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
     poolPsi = fUtils->getPsi();
   }
   
-  AliEventPool *pool = (AliEventPool *)fPoolMuonTrackMgr->GetEventPool(poolCent, poolVtxZ, poolPsi);
+  AliEventPool *pool = (AliEventPool *)fPoolMuonTrackMgrK0s->GetEventPool(poolCent, poolVtxZ, poolPsi);
   
   Int_t nV0 = fEvent->GetNumberOfV0s();
 
@@ -1725,50 +1376,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
     
     v0_1 = static_cast<AliAODv0 *>(fEvent->GetV0(iV0_1));
     
-    if (!fUtils->isAcceptV0Kinematics(v0_1)) {
-      continue;
-    }
-    
-    RecPairPt = v0_1->Pt();
-    RecPairMass = v0_1->MassK0Short();
-    RecPairRap = v0_1->RapK0Short();
-
-    AliAODTrack *pTrack = (AliAODTrack *)v0_1->GetDaughter(0);
-    AliAODTrack *nTrack = (AliAODTrack *)v0_1->GetDaughter(1);
-
-    if (fUtils->isAcceptV0Basic(v0_1, 0)) {
-      MidV0Checker(v0_1, false);    
-      MidTrackPIDChecker(pTrack, pid1, false);
-      MidTrackPIDChecker(nTrack, pid2, false);
-    }
-
-    if (0.4 > RecPairMass || RecPairMass > 0.6) {
-      continue;
-    }
-    if (!fUtils->isAcceptK0s(v0_1)) {
-      continue;
-    }
-    
-    bool isKmpCand1 = false;
-    double MKpm = 0;
-    if (fUtils->isAcceptedK0sFromKpmStar(v0_1,MKpm)) {
-      fHistKpmStarCandMass->Fill(MKpm);
-      isKmpCand1 = true;
-    }
-    
-    MidV0Checker(v0_1, true);
-
-    MidTrackQualityChecker(pTrack);
-    MidTrackQualityChecker(nTrack);
-    
-    if (!fUtils->isAcceptK0sCandidateMassRange(v0_1->MassK0Short())) {
-      continue;
-    }
-    
-    v0_1->SetOnFlyStatus(isKmpCand1);
-    MidTrackPIDChecker(pTrack, pid1, true);
-    MidTrackPIDChecker(nTrack, pid2, true);
-    
     if (pool->IsReady()) {
       
       for (Int_t iMixEvt = 0; iMixEvt < pool->GetCurrentNEvents(); iMixEvt++) {
@@ -1777,51 +1384,6 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
 	
         for (int iV0_2 = 0; iV0_2 < poolTracks->GetEntriesFast(); ++iV0_2) {
 	  
-	  v0_2 = static_cast<AliAODv0 *>(poolTracks->At(iV0_2));
-	  
-	  if (!fUtils->isAcceptK0sK0sOpeningAngle(v0_1,v0_2)){
-	    //continue;
-	  }
-	  if (!fUtils->isAcceptEnergyAsym(v0_1,v0_2)){
-	    continue;
-	  }
-
-	  bool isKmpCand2 = false;	  
-	  if (v0_2->GetOnFlyStatus()) {
-	    isKmpCand2 = true;
-	  }
-	  
-          lv1.SetPtEtaPhiM(v0_1->Pt(), v0_1->Eta(), v0_1->Phi(),
-                           TDatabasePDG::Instance()->GetParticle(310)->Mass());
-	  lv2.SetPtEtaPhiM(v0_2->Pt(), v0_2->Eta(), v0_2->Phi(),
-                           TDatabasePDG::Instance()->GetParticle(310)->Mass());
-          lv12 = lv1 + lv2;
-	  
-	  double angle = lv1.Angle(lv2.Vect());
-
-          RecPairPt = lv12.Pt();
-          RecPairMass = lv12.M();
-          RecPairRap = lv12.Rapidity();
-
-          double fill[] = {RecPairMass, RecPairPt, fUtils->getCentClass()};
-	  
-	  double asymm = (lv1.E() - lv2.E()) / (lv1.E() + lv2.E());
-	 
-
-	  fSparseMixULSPairMassPt->Fill(fill);
-	  if (!isKmpCand1 && !isKmpCand2) {
-	    fSparseMixULSPairMassPt_RejectKpmStar->Fill(fill);
-	  }
-	  
-	  fHistOpeningAngleP->Fill(angle,lv12.P());
-	  fHistEnergyAsymmP->Fill(asymm,lv12.P());
-	  
-	  if (iLeading>0) {
-	    double leading_angle = lv_leading.Angle(lv12.Vect()) * 180./TMath::Pi();
-	    double fill_leading[] = {RecPairMass, RecPairPt, leading_angle};	   
-	    fSparseMixULSPairMassPt_LeadingTrack->Fill(fill_leading);
-	  }
-	    	  
         }
       }
     }
@@ -1830,229 +1392,532 @@ bool AliAnalysisTaskAODTrackPair::MidV0AnalysisEventMixing(
   }
 
   TObjArray *fTrackArrayClone = (TObjArray *)fTrackArray->Clone();
-  fTrackArrayClone->SetOwner();
+  fTrackArrayClone->SetOwner(true);
   if (fTrackArrayClone->GetEntriesFast() > 0) {
     pool->UpdatePool(fTrackArrayClone);
   }
 
-  return true;
-}
-
-bool AliAnalysisTaskAODTrackPair::MidPairAnalysis(AliPID::EParticleType pid1,
-                                                  AliPID::EParticleType pid2) {
+  //delete fTrackArray;
   
-  Int_t nTrack = fEvent->GetNumberOfTracks();
-
-  AliAODTrack *track1;
-  AliAODTrack *track2;
-
-  TLorentzVector lv1, lv2, lv12;
-
-  for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
-
-    track1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
-
-    if (!fUtils->isAcceptTrackKinematics(track1)) {
-      continue;
-    }
-    if (!fUtils->isAcceptMidPrimTrackQuality(track1)) {
-      continue;
-    }
-    
-    MidTrackPIDChecker(track1, pid1, false);
-
-    if (!fUtils->isAcceptMidPid(track1, pid1)) {
-      continue;
-    }
-
-    MidTrackPIDChecker(track1, pid1, true);
-    MidTrackQualityChecker(track1);
-
-    double mass1 = 0;
-    
-    if (pid1 == AliPID::kElectron) {
-      mass1 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
-    } else if (pid1 == AliPID::kPion) {
-      mass1 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
-    } else if (pid1 == AliPID::kKaon) {
-      mass1 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
-    } else if (pid1 == AliPID::kProton) {
-      mass1 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
-    } else if (pid1 == AliPID::kMuon) {
-      mass1 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
-    } else {
-      continue;
-    }
-    
-    for (Int_t iTrack2 = iTrack1 + 1; iTrack2 < nTrack; ++iTrack2) {
-
-      track2 = (AliAODTrack *)fEvent->GetTrack(iTrack2);
-
-      if (!fUtils->isAcceptTrackKinematics(track2)) {
-	continue;
-      }
-      if (!fUtils->isAcceptMidPrimTrackQuality(track2)) {
-	continue;
-      }
-      if (!fUtils->isAcceptMidPid(track2, pid2)) {
-	continue;
-      }
-
-      double mass2 = 0;
-    
-      if (pid2 == AliPID::kElectron) {
-	mass2 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
-      } else if (pid2 == AliPID::kPion) {
-	mass2 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
-      } else if (pid2 == AliPID::kKaon) {
-	mass2 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
-      } else if (pid2 == AliPID::kProton) {
-	mass2 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
-      } else if (pid2 == AliPID::kMuon) {
-	mass2 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
-      } else {
-	continue;
-      }
-      	    
-      lv1.SetPtEtaPhiM(track1->Pt(),track1->Eta(),track1->Phi(),mass1);
-      lv2.SetPtEtaPhiM(track2->Pt(),track2->Eta(),track2->Phi(),mass2);
-      
-      lv12 = lv1 + lv2;
-
-      double angle = lv1.Angle(lv2.Vect());
-
-      double fill[] = {lv12.M(), lv12.Pt(), fUtils->getCentClass()};
-
-      if (track1->Charge() + track2->Charge() == 0){
-	fSparseULSPairMassPt->Fill(fill);
-      } else if (track1->Charge() + track2->Charge() > 0){
-	fSparseLSppPairMassPt->Fill(fill);
-      } else {
-	fSparseLSmmPairMassPt->Fill(fill);
-      }
-      
-    } // end of loop track2
-  }   // end of loop track1
-
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::MidPairAnalysisEventMixing(AliPID::EParticleType pid1, AliPID::EParticleType pid2) {
-  //cout<<"MidPairAnalysisEventMixing"<<endl;
-  double mass1 = 0;
-  double mass2 = 0;
-
-  if (pid1 == AliPID::kElectron) {
-    mass1 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
-  } else if (pid1 == AliPID::kPion) {
-    mass1 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
-  } else if (pid1 == AliPID::kKaon) {
-    mass1 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
-  } else if (pid1 == AliPID::kProton) {
-    mass1 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
-  } else if (pid1 == AliPID::kMuon) {
-    mass1 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
-  } 
-
-  if (pid2 == AliPID::kElectron) {
-    mass2 = TDatabasePDG::Instance()->GetParticle(11)->Mass();
-  } else if (pid2 == AliPID::kPion) {
-    mass2 = TDatabasePDG::Instance()->GetParticle(211)->Mass();
-  } else if (pid2 == AliPID::kKaon) {
-    mass2 = TDatabasePDG::Instance()->GetParticle(321)->Mass();
-  } else if (pid2 == AliPID::kProton) {
-    mass2 = TDatabasePDG::Instance()->GetParticle(2212)->Mass();
-  } else if (pid2 == AliPID::kMuon) {
-    mass2 = TDatabasePDG::Instance()->GetParticle(13)->Mass();
-  } 
-
+bool AliAnalysisTaskAODTrackPair::AddK0sArray(AliPID::EParticleType pid1,AliPID::EParticleType pid2) {  
+  
   TObjArray *fTrackArray = new TObjArray();
-  fTrackArray->SetOwner();
+  fTrackArray->SetOwner(true);
 
   double poolCent = 0.;
   double poolVtxZ = 0.;
-  double poolPsi = 0.;
-
-  if (onEvtMixingPoolVtxZ) {
-    poolVtxZ = fUtils->getVtxZ();
-  }
-  if (onEvtMixingPoolCent) {
-    poolCent = fUtils->getCentClass();
-  }
-  if (onEvtMixingPoolPsi) {
-    poolPsi = fUtils->getPsi();
-  }
-
-  AliEventPool *pool = (AliEventPool*)fPoolMuonTrackMgr->GetEventPool(poolCent, poolVtxZ, poolPsi);
-
-  Int_t nTrack = fEvent->GetNumberOfTracks();
-
-  AliAODTrack *track1;
-  AliAODTrack *track2;
+  double poolPsi  = 0.;
   
-  TLorentzVector lv1, lv2, lv12;
-
-  for (int iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
+  if (onEvtMixingPoolVtxZ) poolVtxZ = fPrimVtxPos[2];
+  if (onEvtMixingPoolCent) poolCent = fCent;
+  if (onEvtMixingPoolPsi)  poolPsi  = fPsi;
+ 
+  AliEventPool *pool = (AliEventPool *)fPoolMuonTrackMgrPion->GetEventPool(poolCent, poolVtxZ, poolPsi);
+   
+  int nTrack = fEvent->GetNumberOfTracks();
+  
+  if ( fIsManualV0Analysis ) {
     
-    track1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
+    for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
+      
+      AliAODTrack* aodTrack1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
+      if(!aodTrack1) continue;
 
-    if (!fUtils->isAcceptMidPrimTrackQuality(track1)) {
-      continue;
-    }
-    if (!fUtils->isAcceptTrackKinematics(track1)) {
-      continue;
-    }
-    
-    MidTrackPIDChecker(track1, pid1, false);
-    
-    if (!fUtils->isAcceptMidPid(track1, pid1)) {
-      continue;
-    }
-
-    MidTrackPIDChecker(track1, pid1, true);
-    MidTrackQualityChecker(track1);
-
-    if (pool->IsReady()) {
-
-      for (Int_t iMixEvt = 0; iMixEvt < pool->GetCurrentNEvents(); iMixEvt++) {
+      TrackPIDChecker(aodTrack1, pid1, false);
+      
+      if ( !fUtils->isAcceptTrackKinematics(aodTrack1) ) continue;
+      if ( !fUtils->isAcceptV0TrackQuality(aodTrack1) )  continue;
+      if ( !fUtils->isAcceptMidPid(aodTrack1,pid1) )     continue;
+      
+      TrackQualityChecker(aodTrack1);      
+      TrackPIDChecker(aodTrack1, pid1, true);
+      
+      for (Int_t iTrack2 = iTrack1+1; iTrack2 < nTrack; ++iTrack2) {
 	
-        TObjArray *poolTracks = (TObjArray *)pool->GetEvent(iMixEvt);
+	AliAODTrack* aodTrack2 = (AliAODTrack *)fEvent->GetTrack(iTrack2);
+	if(!aodTrack2) continue;
 
-        for (int iTrack2 = 0; iTrack2 < poolTracks->GetEntriesFast(); iTrack2++) {
-
-	  track2 = (AliAODTrack *)poolTracks->At(iTrack2);	  
-
-          lv1.SetPtEtaPhiM(track1->Pt(), track1->Eta(), track1->Phi(),mass1);
-	  lv2.SetPtEtaPhiM(track2->Pt(), track2->Eta(), track2->Phi(),mass2);
-	  
-          lv12 = lv1 + lv2;
-	  
-	  double angle = lv1.Angle(lv2.Vect());
-
-          double fill[] = {lv12.M(), lv12.Pt(), fUtils->getCentClass()};
-	  
-	  if (track1->Charge() + track2->Charge() == 0){
-	    fSparseMixULSPairMassPt->Fill(fill);
-	  } else if (track1->Charge() + track2->Charge() > 0){
-	    fSparseMixLSppPairMassPt->Fill(fill);
-	  } else {
-	    fSparseMixLSmmPairMassPt->Fill(fill);
+	if ( !fUtils->isAcceptTrackKinematics(aodTrack2) ) continue;
+	if ( !fUtils->isAcceptV0TrackQuality(aodTrack2) )  continue;
+	if ( !fUtils->isAcceptMidPid(aodTrack2,pid2) )     continue;
+	
+	
+	bool isSignalFlag = false;;	
+	if (fUtils->isSameMotherPair(aodTrack1,aodTrack2)){
+	  if(fUtils->getMotherPdgCode(aodTrack1) == 310){	 
+	    isSignalFlag = true;
 	  }
-	  
-        }
+	}
+	
+	aodTrack1->SetID(iTrack1);
+	aodTrack2->SetID(iTrack2);
+	
+	K0sContainer* v0 = calcK0sFromTracks(aodTrack1,aodTrack2);	
+	if (!v0) continue;
+	
+	V0QualityChecker(v0, false);	
+	
+	unique_ptr<TVector3> vec(new TVector3());
+	vec->SetXYZ(v0->P[0],v0->P[1],v0->P[2]);
+	
+	unique_ptr<TLorentzVector> lv(new TLorentzVector());
+	lv->SetPtEtaPhiM(vec->Pt(), vec->PseudoRapidity(), vec->Phi(), v0->Mass);
+	
+	double fill[] = {lv->M(), lv->Pt(), fCent, 0};
+	
+	if ( !isAcceptK0sKinematics(v0) )              continue;	
+	
+	if ( v0->Charge == 0 )     fSparseULSPionPairBeforeCuts  -> Fill(fill);
+	else if ( v0->Charge > 0 ) fSparseLSppPionPairBeforeCuts -> Fill(fill);
+	else if ( v0->Charge < 0 ) fSparseLSmmPionPairBeforeCuts -> Fill(fill);
+	
+	bool *isAcceptCuts = new bool[6];
+	
+	isAcceptV0QualityCuts(v0,isAcceptCuts);
+	
+	/*
+	if ( v0->Charge == 0 ) {
+	  if (isAcceptCuts[0]) fSparseULSPionPair_PassChi2perNDFCut         -> Fill(fill);
+	  if (isAcceptCuts[1]) fSparseULSPionPair_PassCPVXYCut              -> Fill(fill);
+	  if (isAcceptCuts[2]) fSparseULSPionPair_PassDecayLengthXYCut      -> Fill(fill);
+	  if (isAcceptCuts[3]) fSparseULSPionPair_PassDaughterDistanceXYCut -> Fill(fill);
+	  if (isAcceptCuts[4]) fSparseULSPionPair_PassDCAXYCut              -> Fill(fill);
+	  if (isAcceptCuts[5]) fSparseULSPionPair_PassLifetimeCut           -> Fill(fill);
+	}
+	*/
+	
+	//if ( !isAcceptV0QualityCuts(v0,isAcceptCuts) ) continue;
+	
+	V0QualityChecker(v0, true);
+	
+	delete [] isAcceptCuts;
+	
+	if ( v0->Charge == 0 )     fSparseULSPionPair  -> Fill(fill);
+	else if ( v0->Charge > 0 ) fSparseLSppPionPair -> Fill(fill);
+	else if ( v0->Charge < 0 ) fSparseLSmmPionPair -> Fill(fill);
+
+	fArrayK0s->Add(v0);
       }
-    }    
+      
+      if (pool->IsReady()) {
+	continue;
+	for (Int_t iMixEvt = 0; iMixEvt < pool->GetCurrentNEvents(); iMixEvt++) {
+	
+	  TObjArray *poolTracks = (TObjArray *)pool->GetEvent(iMixEvt);
+	  
+	  for (int iTrack2 = 0; iTrack2 < poolTracks->GetEntriesFast(); ++iTrack2) {
+	    
+	    AliAODTrack* aodTrack2 = dynamic_cast<AliAODTrack*>(poolTracks->At(iTrack2));
+	    
+	    K0sContainer* v0 = calcK0sFromTracks(aodTrack1,aodTrack2);
+	    
+	    unique_ptr<TVector3> vec(new TVector3());
+	    vec->SetXYZ(v0->P[0],v0->P[1],v0->P[2]);
+	    
+	    double pt = v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] > 0 ? sqrt(v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1]) : 0;
+	    
+	    unique_ptr<TLorentzVector> lv(new TLorentzVector());
+	    lv->SetPtEtaPhiM(pt, vec->PseudoRapidity(), vec->Phi(), v0->Mass);
+	    
+	    double fill[] = {lv->M(), lv->Pt(), fUtils->getCentClass(), 0};
+	
+	    if ( v0->Charge == 0 )     fSparseMixULSPionPair->Fill(fill);
+	    else if ( v0->Charge > 0 ) fSparseMixLSppPionPair->Fill(fill);
+	    else if ( v0->Charge < 0 ) fSparseMixLSmmPionPair->Fill(fill);
+	    
+	  }//end of loop iTrack2
+	}//end of loop iMixEvt	  	
+      }
+      fTrackArray->Add(aodTrack1);
+    }//end of loop iTrack1
+  
+  } else {
+    
+    Int_t nV0 = fEvent->GetNumberOfV0s();
+    
+    for (int iV0 = 0; iV0 < nV0; ++iV0) {
+      /*
+      AliAODv0* _v0_ = (AliAODv0 *)fEvent->GetV0(iV0);
+      
+      AliAODTrack *aodTrack1 = (AliAODTrack *)_v0_ -> GetDaughter(0);
+      AliAODTrack *aodTrack2 = (AliAODTrack *)_v0_ -> GetDaughter(1);      
+      
+      TrackPIDChecker(aodTrack1, pid1,false);
+      
+      if ( !fUtils->isAcceptTrackKinematics(aodTrack1) ) continue;
+      if ( !fUtils->isAcceptV0TrackQuality(aodTrack1) )  continue;
+      if ( !fUtils->isAcceptMidPid(aodTrack1,pid1) )     continue;
+      
+      TrackQualityChecker(aodTrack1);
+      TrackPIDChecker(aodTrack1, pid1, true);
 
-    fTrackArray->Add(track1);
+      if ( !fUtils->isAcceptTrackKinematics(aodTrack2) ) continue;
+      if ( !fUtils->isAcceptV0TrackQuality(aodTrack2) )  continue;
+      if ( !fUtils->isAcceptMidPid(aodTrack2,pid2) )     continue;
+
+      AliAODVertex *primeVtx = new AliAODVertex();
+      primeVtx->SetPosition(fUtils->getVtxX(),fUtils->getVtxY(),fUtils->getVtxZ());
+      
+      double Mom1[] = {aodTrack1->Px(),aodTrack1->Py(),aodTrack1->Pz()};
+      double Mom2[] = {aodTrack2->Px(),aodTrack2->Py(),aodTrack2->Pz()};
+      
+      double rDcaDaughterToPrimVertex[] = {0,0};
+      double rDcaV0ToPrimVertex = _v0_->DcaV0ToPrimVertex();
+      
+      AliAODVertex *secondVtx = new AliAODVertex();
+      secondVtx->SetPosition(_v0_->Xv(),_v0_->Yv(),_v0_->Zv());
+      secondVtx->AddDaughter(aodTrack1);
+      secondVtx->AddDaughter(aodTrack2);
+      
+      AliAODv0* v0=(AliAODv0*)_v0_->Clone();      
+      v0->SetCharge(aodTrack1->Charge() + aodTrack2->Charge());
+      v0->SetSecondaryVtx(secondVtx);
+      */
+      /*
+      if(!updateAODv0(v0)) {
+	continue;
+      }
+      */
+      
+    }//end of loop iV0
+   
   }
-
+  ///*
   TObjArray *fTrackArrayClone = (TObjArray *)fTrackArray->Clone();
-  fTrackArrayClone->SetOwner();
+  fTrackArrayClone->SetOwner(true);
   if (fTrackArrayClone->GetEntriesFast() > 0) {
     pool->UpdatePool(fTrackArrayClone);
   }
+  //*/
 
   return true;
+
+}
+
+K0sContainer* AliAnalysisTaskAODTrackPair::calcK0sFromTracks(AliAODTrack* aodTrack1,AliAODTrack* aodTrack2){
+  cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"<<endl;
+  bool isSignalFlag = false;
+  if(fUtils->getMotherPdgCode(aodTrack1) == 310){
+    if (fUtils->isSameMotherPair(aodTrack1,aodTrack2)){
+      all++;
+      cout<<"============================================================================================================"<<endl;
+      isSignalFlag = true;
+    }
+  }
+  
+  double MagF = fEvent->GetMagneticField();
+  AliKFParticle::SetField(MagF);
+
+  KFPVertex kfVtxPrimeVertex;
+  double fPrimVtxCov[6]={};
+  fPrimVtx->GetCovarianceMatrix(fPrimVtxCov);
+  
+  float fPrimVtxPosF[3],fPrimVtxCovF[6];    
+  for(int iEl = 0; iEl < 3; iEl++)
+    fPrimVtxPosF[iEl] = (float)fPrimVtxPos[iEl];
+  for(int iEl = 0; iEl < 6; iEl++)
+    fPrimVtxCovF[iEl] = (float)fPrimVtxCov[iEl];  
+  kfVtxPrimeVertex.SetXYZ((float)fPrimVtxPos[0], (float)fPrimVtxPos[1], (float)fPrimVtxPos[2]);
+  kfVtxPrimeVertex.SetCovarianceMatrix(fPrimVtxCovF);    
+  kfVtxPrimeVertex.SetChi2(fPrimVtx->GetChi2());
+  kfVtxPrimeVertex.SetNDF(fPrimVtx->GetNDF());
+  kfVtxPrimeVertex.SetNContributors(fPrimVtx->GetNContributors());
+  
+  KFParticle kfParticlePrimeVertex(kfVtxPrimeVertex);
+
+  int pdg1=211;
+  int pdg2=211;
+  
+  KFParticle kfTrack[2];
+  kfTrack[0] = CreateKFParticle(aodTrack1, pdg1);
+  kfTrack[1] = CreateKFParticle(aodTrack2, pdg1);
+
+  bool checkval=true;
+  bool checkval1=true;
+  bool checkval2=true;
+  int fRecoMethod = 0;
+
+  KFParticle kfTrack1 = CreateKFParticle(aodTrack1, pdg1);
+  KFParticle kfTrack2 = CreateKFParticle(aodTrack2, pdg1);
+    
+  KFParticleK0s kfCheckIfSafePair;
+  kfCheckIfSafePair.AddDaughter(kfTrack[1]);
+  if (!kfCheckIfSafePair.CheckIfSafePair(kfTrack[0])) {
+    if (isSignalFlag) ++abord;
+    return NULL;
+  }
+    
+  KFParticle kfK0s;
+  kfK0s.Initialize();
+  kfK0s.SetConstructMethod(2); 
+  //kfK0s.SetConstructMethod(0); 
+  
+  const KFParticle *kfKs0Daughters[2] = {&kfTrack[0],&kfTrack[1]};  
+  cout<<"[1.0.0.0]"<<endl;
+  kfK0s.Construct(kfKs0Daughters, 2);
+  cout<<"[2.0.0.0]"<<endl;
+  float chi2K0s   = kfK0s.GetChi2() / kfK0s.GetNDF();
+  cout<<"[3.0.0.0]"<<endl;
+  float momK0s[3] = {kfK0s.GetPx(),kfK0s.GetPy(),kfK0s.GetPz()};
+  cout<<"[4.0.0.0]"<<endl;
+  float posK0s[3] = {};
+  float covK0s[36]= {};
+  posK0s[0] = kfK0s.GetX();
+  posK0s[1] = kfK0s.GetY();
+  posK0s[2] = kfK0s.GetZ();
+  cout<<"[5.0.0.0]"<<endl;
+  float QtAlfa[2]={};
+  kfK0s.GetArmenterosPodolanski(kfTrack[0],kfTrack[1],QtAlfa);
+  cout<<"[6.0.0.0]"<<endl;
+  for (int index=0; index<36; ++index) covK0s[index] = kfK0s.GetCovariance(index);
+  cout<<"[7.0.0.0]"<<endl;
+  double decay_length    = DecayLengthFromKF(kfK0s,kfParticlePrimeVertex);
+  double decay_length_xy = DecayLengthXYFromKF(kfK0s,kfParticlePrimeVertex);
+  cout<<"[8.0.0.0]"<<endl;
+  float dcaPointK0s[8]={}, dcaPointK0sCov[36]={};  
+  //kfK0s.GetParametersAtPoint(fPrimVtxPosF, fPrimVtxCovF, dcaPointK0s, dcaPointK0sCov);
+  
+  double dcaK0s    = sqrt(pow(fPrimVtxPos[0]-dcaPointK0s[0],2) + pow(fPrimVtxPos[1]-dcaPointK0s[1],2) + pow(fPrimVtxPos[2]-dcaPointK0s[2],2));
+  double dcaK0s_xy = sqrt(pow(fPrimVtxPos[0]-dcaPointK0s[0],2) + pow(fPrimVtxPos[1]-dcaPointK0s[1],2));
+  cout<<"[9.0.0.0]"<<endl;
+  float dcaPointDaughter1[8]={}, dcaPointDaughterCov1[36]={};
+  float dcaPointDaughter2[8]={}, dcaPointDaughterCov2[36]={};
+  //kfTrack[0].GetParametersAtPoint(fPrimVtxPosF, fPrimVtxCovF, dcaPointDaughter1, dcaPointDaughterCov1);
+  //kfTrack[1].GetParametersAtPoint(fPrimVtxPosF, fPrimVtxCovF, dcaPointDaughter2, dcaPointDaughterCov2);
+  cout<<"[10.0.0.0]"<<endl;
+  double dcaDaughter1;
+  double dcaDaughter2;
+  double dcaDaughter_xy1;
+  double dcaDaughter_xy2;
+  
+  dcaDaughter1 = sqrt(pow(fPrimVtxPos[0]-dcaPointDaughter1[0],2)+
+		      pow(fPrimVtxPos[1]-dcaPointDaughter1[1],2)+
+		      pow(fPrimVtxPos[2]-dcaPointDaughter1[2],2));
+  dcaDaughter2 = sqrt(pow(fPrimVtxPos[0]-dcaPointDaughter2[0],2)+
+		      pow(fPrimVtxPos[1]-dcaPointDaughter2[1],2)+
+		      pow(fPrimVtxPos[2]-dcaPointDaughter2[2],2));
+  cout<<"[11.0.0.0]"<<endl;
+  dcaDaughter_xy1 = sqrt(pow(fPrimVtxPos[0]-dcaPointDaughter1[0],2)+
+			 pow(fPrimVtxPos[1]-dcaPointDaughter1[1],2));
+  dcaDaughter_xy2 = sqrt(pow(fPrimVtxPos[0]-dcaPointDaughter2[0],2)+
+			 pow(fPrimVtxPos[1]-dcaPointDaughter2[1],2));
+  cout<<"[12.0.0.0]"<<endl;
+  double daughterDistance    = sqrt(pow(dcaPointDaughter1[0]-dcaPointDaughter2[0],2)+
+				    pow(dcaPointDaughter1[1]-dcaPointDaughter2[1],2)+
+				    pow(dcaPointDaughter1[2]-dcaPointDaughter2[2],2));
+  double daughterDistance_xy = sqrt(pow(dcaPointDaughter1[0]-dcaPointDaughter2[0],2)+
+				    pow(dcaPointDaughter1[1]-dcaPointDaughter2[1],2));
+  cout<<"[13.0.0.0]"<<endl;
+  //kfTrack[0].TransportToPoint(posK0s);
+  //kfTrack[1].TransportToPoint(posK0s);
+
+  /*
+  TLorentzVector lv1;
+  TLorentzVector lv2;  
+  lv1.SetPtEtaPhiM(sqrt(kfTrack[0].GetPx()*kfTrack[0].GetPx() + kfTrack[0].GetPy()*kfTrack[0].GetPy()),kfTrack[0].GetEta(),kfTrack[0].GetPhi(),TDatabasePDG::Instance()->GetParticle(211)->Mass());
+  lv2.SetPtEtaPhiM(sqrt(kfTrack[1].GetPx()*kfTrack[1].GetPx() + kfTrack[1].GetPy()*kfTrack[1].GetPy()),kfTrack[1].GetEta(),kfTrack[1].GetPhi(),TDatabasePDG::Instance()->GetParticle(211)->Mass());
+  TLorentzVector lv12 = lv1 + lv2;
+  */
+
+  unique_ptr<TVector3> momS(new TVector3(momK0s[0],momK0s[1],momK0s[2]));
+  unique_ptr<TVector3> vecS(new TVector3(posK0s[0]-fPrimVtxPos[0],posK0s[1]-fPrimVtxPos[1],posK0s[2]-fPrimVtxPos[2]));
+  double kfSpv  = momS->Angle(*vecS.get());
+  double kfScpv = TMath::Cos(kfSpv);  
+  momS->SetZ(0.);
+  vecS->SetZ(0.); 
+  double kfSpvXY                 = momS->Angle(*vecS.get());
+  double kfScpvXY                = TMath::Cos(kfSpvXY);
+  cout<<"[14.0.0.0]"<<endl;
+  double kfMassK0s               = kfK0s.GetMass();
+  cout<<"[15.0.0.0]"<<endl;
+  double kfEtaK0s                = 0;//kfK0s.GetEta();  
+  cout<<"[16.0.0.0]"<<endl;
+  double kfMomK0s[]              = {kfK0s.GetPx(),kfK0s.GetPy(),kfK0s.GetPz()};
+  double kfVtxK0s[]              = {kfK0s.GetX(),kfK0s.GetY(),kfK0s.GetZ()};
+  cout<<"[17.0.0.0]"<<endl;
+  int kfQK0s                     = kfK0s.Q();
+  double kfDecayLengthXYK0s      = decay_length_xy;
+  double kfDecayLengthK0s        = decay_length;
+  double kfImpParXYK0s           = dcaK0s_xy;
+  double kfImpParK0s             = dcaK0s;
+  double kfCosPointVectorXYK0s   = kfScpvXY;
+  double kfCosPointVectorK0s     = kfScpv;
+  double kfDaughterDistanceXYK0s = kfTrack[0].GetDistanceFromParticleXY(kfTrack[1]);
+  double kfDaughterDistanceK0s   = 0;//daughterDistance;
+  double kfChi2perNdfK0s         = chi2K0s;
+  int kfTrackIdDaughters[]       = {aodTrack1->GetID(),aodTrack2->GetID()};
+  int kfTrackLabelDaughters[]    = {aodTrack1->GetLabel(),aodTrack2->GetLabel()};
+  double kfMomDaughter1[]        = {kfTrack[0].Px(),kfTrack[0].Py(),kfTrack[0].Pz()};
+  double kfMomDaughter2[]        = {kfTrack[1].Px(),kfTrack[1].Py(),kfTrack[1].Pz()};
+  double kfImpParXYDaughters[]   = {dcaDaughter_xy1,dcaDaughter_xy2};
+  double kfImpParDaughters[]     = {dcaDaughter1,dcaDaughter2};
+  cout<<"[18.0.0.0]"<<endl;
+  K0sContainer* container = new K0sContainer(kfMassK0s,kfEtaK0s,kfMomK0s,kfVtxK0s,kfQK0s,kfDecayLengthXYK0s,kfDecayLengthK0s,
+					     kfImpParXYK0s,kfImpParK0s,kfCosPointVectorXYK0s,kfCosPointVectorK0s,
+					     kfDaughterDistanceXYK0s,kfDaughterDistanceK0s,
+					     kfChi2perNdfK0s,kfTrackIdDaughters,kfTrackLabelDaughters,
+					     kfMomDaughter1,kfMomDaughter2,kfImpParXYDaughters,kfImpParDaughters);
+  cout<<"[19.0.0.0]"<<endl;
+  if (0) {
+
+    AliAODMCParticle* particle1 = (AliAODMCParticle *)fMCTrackArray->At(aodTrack1->GetLabel());
+    
+    if(particle1) {
+      AliAODMCParticle* mother = (AliAODMCParticle *)fMCTrackArray->At(particle1->GetMother());
+      if (mother) {
+	if (mother->GetMother()<0) {
+	  if (isSignalFlag) cout<<"=================================================================================================================="<<endl;
+	  cout<<"GM Label  :"<<fUtils->getGrandMotherLabel(kfTrackLabelDaughters[0])<<endl;
+	  cout<<"MC VTX    : "<<particle1->Xv()<<"   "<<particle1->Yv()<<"   "<<particle1->Zv()<<endl;
+	  cout<<"KF VTX    : "<<kfK0s.GetX()<<"   "<<kfK0s.GetY()<<"   "<<kfK0s.GetZ()<<endl;
+	  cout<<"MC MOM    : "<<mother->Px()<<"   "<<mother->Py()<<"   "<<mother->Pz()<<endl;
+	  cout<<"KF MOM    : "<<kfK0s.Px()<<"   "<<kfK0s.Py()<<"   "<<kfK0s.Pz()<<endl;
+	  cout<<"KF MASS   : "<<kfMassK0s<<endl;
+	  cout<<"KF dDis   : "<<kfDaughterDistanceXYK0s<<endl;
+	  cout<<endl;	  
+	}
+      }
+    }
+  }
+  
+  return container;
+}
+
+bool AliAnalysisTaskAODTrackPair::updateAODv0(AliAODv0* v0){
+  /*
+  AliAODTrack *aodTrack1 = (AliAODTrack *)v0->GetDaughter(0);
+  AliAODTrack *aodTrack2 = (AliAODTrack *)v0->GetDaughter(1);
+  
+  AliAODv0 *new_v0 = calcK0sFromTracks(aodTrack1,aodTrack2);
+  
+  double dca_daughters = new_v0->DcaV0Daughters();
+  
+  double Mom1[] = {new_v0->MomPosX(),new_v0->MomPosY(),new_v0->MomPosZ()};
+  double Mom2[] = {new_v0->MomNegX(),new_v0->MomNegY(),new_v0->MomNegZ()};
+
+  double rDcaDaughterToPrimVertex[] = {new_v0->DcaPosToPrimVertex(),new_v0->DcaNegToPrimVertex()};
+  double rDcaV0ToPrimVertex = new_v0->DcaV0ToPrimVertex();
+  
+  v0->Fill(new_v0->GetSecondaryVtx(),dca_daughters,rDcaV0ToPrimVertex,Mom1,Mom2,rDcaDaughterToPrimVertex);
+
+  delete new_v0;
+  */
+  return true;
+}
+
+int AliAnalysisTaskAODTrackPair::findLeadingTrack(){
+  
+  return 1;
+  int nTrack = fEvent->GetNumberOfTracks();
+  
+  for (int iTrack = 0; iTrack < nTrack; ++iTrack){
+    
+  }
+
+}
+
+KFParticle AliAnalysisTaskAODTrackPair::CreateKFParticle(AliAODTrack* track, int pdg){
+  
+
+  AliKFParticle alikfp(*track,pdg);
+
+  float fkP[8]  = {};
+  float fkC[21] = {};
+
+  for (int index=0; index<6; index++) {
+    fkP[index] = alikfp.GetParameter(index);
+  }
+  for (int index=0; index<21; index++) {
+    fkC[index] = alikfp.GetCovariance(index);
+  }
+  
+  double fP[6]={};
+  double fC[21]={};
+
+  track->GetXYZ(fP);
+  track->GetPxPyPz(&fP[3]);
+  track->GetCovarianceXYZPxPyPz(fC);
+  
+  KFPTrack kfpt;
+  kfpt.SetParameters(fP);
+  kfpt.SetCovarianceMatrix(fC);
+  kfpt.SetCharge(track->Charge());
+  kfpt.SetNDF(1);
+  kfpt.SetChi2(track->Chi2perNDF());
+  
+  KFParticle kfp;
+  kfp.Initialize();  
+  //kfp = KFParticle(kfpt);
+  kfp.Create(fkP,fkC,track->Charge(),  TDatabasePDG::Instance()->GetParticle(pdg)->Mass());
+
+  return kfp;
+}
+
+bool AliAnalysisTaskAODTrackPair::CheckTrackCovariance(AliAODTrack* track){
+  
+  Double_t covMatrix[21];
+  track->GetCovarianceXYZPxPyPz(covMatrix);
+  Double_t cov[6][6]={0.};
+  cov[0][0] = covMatrix[0];
+  cov[1][0] = covMatrix[1];
+  cov[1][1] = covMatrix[2];
+  cov[2][0] = covMatrix[3];
+  cov[2][1] = covMatrix[4];
+  cov[2][2] = covMatrix[5];
+  cov[3][0] = covMatrix[6];
+  cov[3][1] = covMatrix[7];
+  cov[3][2] = covMatrix[8];
+  cov[3][3] = covMatrix[9];
+  cov[4][0] = covMatrix[10];
+  cov[4][1] = covMatrix[11];
+  cov[4][2] = covMatrix[12];
+  cov[4][3] = covMatrix[13];
+  cov[4][4] = covMatrix[14];
+  cov[5][0] = covMatrix[15];
+  cov[5][1] = covMatrix[16];
+  cov[5][2] = covMatrix[17];
+  cov[5][3] = covMatrix[18];
+  cov[5][4] = covMatrix[19];
+  cov[5][5] = covMatrix[20];
+
+  if ( cov[0][0]<0 || cov[1][1]<0 || cov[2][2]<0 || cov[3][3]<0 || cov[4][4]<0 || cov[5][5]<0 ) return kFALSE;
+  for (Int_t i=0; i<6; i++) {
+    for (Int_t j=0; j<6; j++) {
+      if (i<=j) continue;
+      if ( fabs(cov[i][j]) > TMath::Sqrt(cov[i][i]*cov[j][j]) ) return false;
+    }
+  }
+
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPair::CheckTrackCovariance(KFParticle kfp){
+  if ( kfp.GetCovariance(0,0)<0 || kfp.GetCovariance(1,1)<0 || kfp.GetCovariance(2,2)<0 || 
+       kfp.GetCovariance(3,3)<0 || kfp.GetCovariance(4,4)<0 || kfp.GetCovariance(5,5)<0 ) return false;
+  for (Int_t i=0; i<6; i++) {
+    for (Int_t j=0; j<6; j++) {
+      if (i<=j) continue;
+      if ( fabs(kfp.GetCovariance(i,j)) > TMath::Sqrt(kfp.GetCovariance(i,i)*kfp.GetCovariance(j,j)) ) return false;
+    }
+  }
+  return true;
+}
+
+double AliAnalysisTaskAODTrackPair::DecayLengthFromKF(KFParticle kfpParticle, KFParticle PV){
+  Double_t dx_particle = PV.GetX()-kfpParticle.GetX();
+  Double_t dy_particle = PV.GetY()-kfpParticle.GetY();
+  Double_t dz_particle = PV.GetZ()-kfpParticle.GetZ();
+  Double_t l_particle = TMath::Sqrt(dx_particle*dx_particle + dy_particle*dy_particle + dz_particle*dz_particle);
+  return l_particle;
+}
+double AliAnalysisTaskAODTrackPair::DecayLengthXYFromKF(KFParticle kfpParticle, KFParticle PV){
+  Double_t dx_particle = PV.GetX()-kfpParticle.GetX();
+  Double_t dy_particle = PV.GetY()-kfpParticle.GetY();
+  Double_t l_particle = TMath::Sqrt(dx_particle*dx_particle + dy_particle*dy_particle);
+  return l_particle;
 }
 
 bool AliAnalysisTaskAODTrackPair::ProcessMC(){
@@ -2063,58 +1928,39 @@ bool AliAnalysisTaskAODTrackPair::ProcessMC(){
   AliAODMCParticle *particle2;
   AliAODMCParticle *particle12;
   
-  Int_t nV0 = fAODv0Array->GetEntriesFast();
+  Int_t nV0 = fArrayK0s->GetEntriesFast();
   
   vector<int> plabels1;
   vector<int> plabels2;
   vector<int> plabels12;
-  vector<int> v0label;
+  vector<int> v0label1;
+  vector<int> v0label2;
+  vector<int> v0label12;
   
-  for (int iV0_1 = 0; iV0_1 < nV0; ++iV0_1) {
+  for (int iV0 = 0; iV0 < nV0; ++iV0) {
     
-    AliAODv0* v0_1 = (AliAODv0 *)fAODv0Array->At(iV0_1);
+    K0sContainer* v0 = (K0sContainer *)fArrayK0s->At(iV0);
     
-    AliAODTrack *Track1 = (AliAODTrack *)v0_1->GetDaughter(0);
-    AliAODTrack *Track2 = (AliAODTrack *)v0_1->GetDaughter(1);
-
-    plabels12.push_back(Track1->GetLabel());    
-    plabels12.push_back(Track2->GetLabel());
-    v0label.push_back(iV0_1);
-    v0label.push_back(iV0_1);
+    plabels12.push_back(v0->dLabel[0]);
+    plabels12.push_back(v0->dLabel[1]);
+    v0label12.push_back(iV0);
+    v0label12.push_back(iV0);
     
-    plabels1.push_back(Track1->GetLabel());    
-    plabels2.push_back(Track2->GetLabel());    
+    plabels1.push_back(v0->dLabel[0]);
+    plabels2.push_back(v0->dLabel[1]);
+    v0label1.push_back(iV0);
+    v0label2.push_back(iV0);
   }
   
   for (Int_t iTrack1 = 0; iTrack1 < fMCTrackArray->GetEntries(); ++iTrack1) {
     
-    TrueMass = 0;
-    TrueRap  = 0;
-    TruePhi  = 0;
-    TruePt   = 0;
-
-    RecMass = 0;
-    RecRap  = 0;
-    RecPhi  = 0;
-    RecPt   = 0;
-    RecDcaV0Daughters    = 0; 
-    RecDcaV0ToPrimVertex = 0; 
-    RecCosPointingAngle  = 0; 
-    RecLifetimeV0        = 0; 
-    RecDcaToPrimVertex1  = 0; 
-    RecDcaToPrimVertex2  = 0; 
-
-    isDetect = false;
-    
     particle1 = (AliAODMCParticle *)fMCTrackArray->At(iTrack1);
     
-    if(!particle1) {
-      continue;
-    }
-    
-    if (particle1->GetPdgCode() != 310 || particle1->GetNDaughters() != 2 || particle1->GetMother()>-1){
-      continue;
-    }
+    if (!particle1)                       continue;        
+    if (particle1->GetMother()>-1)        continue;
+    if (particle1->GetPdgCode() != 310)   continue; 
+    if (particle1->GetNDaughters() != 2 ) continue;
+    if(!isAcceptK0sKinematics(particle1)) continue;
     
     int label1 = particle1->GetDaughterFirst();
     int label2 = particle1->GetDaughterLast();
@@ -2122,446 +1968,188 @@ bool AliAnalysisTaskAODTrackPair::ProcessMC(){
     AliAODMCParticle* p1 = (AliAODMCParticle *)fMCTrackArray->At(label1);
     AliAODMCParticle* p2 = (AliAODMCParticle *)fMCTrackArray->At(label2);
 
-    if(!p1 || !p2) {
-      continue;
-    }
+    if(!p1 || !p2)                                                      continue;
+    if (fabs(p1->GetPdgCode()) != 211 || fabs(p2->GetPdgCode()) != 211) continue;
     
-    if (fabs(p1->GetPdgCode()) != 211 || fabs(p2->GetPdgCode()) != 211) {
-      continue;
-    }
-    
-    TrueMass = particle1->M();
-    TrueRap = particle1->Y();
-    TruePhi = particle1->Phi();
-    TruePt = particle1->Pt();
-    
-    bool detect1=false;
-    bool detect2=false;
-    
-    int irec1 = -1;
-    int irec2 = -1;
-    
-    int v0label1=-1;
-    int v0label2=-1;
-    
-    fHistTrueK0sPtRapidity->Fill(particle1->Y(),particle1->Pt());
+    double fill_k0s[] = {particle1->M(), particle1->Pt(), fUtils->getCentClass(), 0};
+    fSparseTrueK0s->Fill(fill_k0s);
 
-    for (int iDetect = 0; iDetect<plabels12.size(); ++iDetect) {
-      if (plabels12[iDetect] == label1) {
-	detect1 = true;
-	v0label1 = v0label[iDetect];
-      }
-      if (plabels12[iDetect] == label2) {
-	detect2 = true;
-	v0label2 = v0label[iDetect];
+    bool det = false;
+    int idv0 = 0;
+    
+    for (int iV0 = 0; iV0 < nV0; ++iV0) {
+      if ((plabels1[iV0]==label1 && plabels2[iV0]==label2) || (plabels1[iV0]==label2 && plabels2[iV0]==label1)) {
+	det  = true;
+	idv0 = iV0;
       }
     }
     
-    if (detect1 && detect2 && v0label1==v0label2){
+    if (det){      
+      K0sContainer* v0 = (K0sContainer *)fArrayK0s->At(idv0);
+
+      double rx = fabs(p1->Xv())>0 ? v0->Vtx[0]/p1->Xv() : 0;
+      double ry = fabs(p1->Yv())>0 ? v0->Vtx[1]/p1->Yv() : 0;
+      double rz = fabs(p1->Zv())>0 ? v0->Vtx[2]/p1->Zv() : 0;
+
+      double fill_secondary[] = {particle1->P(), rx, ry, rz};
       
-      fHistRecTrueK0sPtRapidity->Fill(particle1->Y(),particle1->Pt());
-      
-      AliAODv0* v0_1 = (AliAODv0*)fAODv0Array->At(v0label1);
-      
-      RecMass              = v0_1->MassK0Short();
-      RecRap               = v0_1->RapK0Short();
-      RecPhi               = v0_1->Phi();
-      RecPt                = v0_1->Pt();      
-      RecV0DecayLength     = v0_1->DecayLengthV0(primRecVtx);
-      RecV0Radius          = v0_1->RadiusV0();
-      RecDcaV0Daughters    = v0_1->DcaV0Daughters();
-      RecDcaV0ToPrimVertex = v0_1->DcaV0ToPrimVertex();      
-      RecCosPointingAngle  = v0_1->CosPointingAngle(primRecVtx);
-      RecLifetimeV0        = fUtils->fPdgK0sMass * v0_1->DecayLengthV0(primRecVtx) / v0_1->P();
-      RecDcaToPrimVertex1  = v0_1->DcaPosToPrimVertex();
-      RecDcaToPrimVertex2  = v0_1->DcaNegToPrimVertex();
-      
-      isDetect = true;
-      
-      fTreeK0s->Fill();
+      fSparseTrueK0sRecK0s->Fill(fill_secondary);      
     }
     
-    
-
   }
   
-
   return true;
 }
 
-AliAODv0* AliAnalysisTaskAODTrackPair::calcAODv0(AliAODTrack* aodTrack1,AliAODTrack* aodTrack2){
-  		
-  AliExternalTrackParam exTrack1;
-  AliExternalTrackParam exTrack2;
+bool AliAnalysisTaskAODTrackPair::isAcceptK0sPair(K0sContainer* v0_1, K0sContainer* v0_2){
+
+  int iTrack1[2];  
+  iTrack1[0] = v0_1->dTrackid[0];
+  iTrack1[1] = v0_1->dTrackid[1];
+
+  int iTrack2[2];  
+  iTrack2[0] = v0_2->dTrackid[0];
+  iTrack2[1] = v0_2->dTrackid[1];
   
-  exTrack1.CopyFromVTrack(aodTrack1);
-  exTrack2.CopyFromVTrack(aodTrack2);
-  
-  exTrack1.CheckCovariance();
-  exTrack2.CheckCovariance();
-  
-  double d1 = exTrack1.GetD(fUtils->getVtxX(),fUtils->getVtxY(),fEvent->GetMagneticField());
-  double d2 = exTrack2.GetD(fUtils->getVtxX(),fUtils->getVtxY(),fEvent->GetMagneticField());
-  
-  double x1, x2;
-  
-  if (Preoptimize(&exTrack1,&exTrack2,&x1,&x2,fEvent->GetMagneticField())){
-    exTrack1.PropagateTo(x1,fEvent->GetMagneticField()); 
-    exTrack2.PropagateTo(x2,fEvent->GetMagneticField());
+  if (iTrack1[0] == iTrack2[0] || iTrack1[0] == iTrack2[1] || iTrack1[1] == iTrack2[0] || iTrack1[1] == iTrack2[1]) {
+    return false;
+  } else {
+    return true;
   }
-  
-  exTrack1.PropagateTo(x1,fEvent->GetMagneticField());
-  exTrack2.PropagateTo(x2,fEvent->GetMagneticField());
-  
-  double dca = exTrack1.GetDCA(&exTrack2,fEvent->GetMagneticField(),x1,x2);
-  
-  AliESDv0 vertex(exTrack1,0,exTrack2,1);
-  vertex.Refit();
-  
-  double v0dcax=vertex.Xv(), v0dcay=vertex.Yv();
-	
-  float cpa = vertex.GetV0CosineOfPointingAngle(fUtils->getVtxX(),fUtils->getVtxY(),fUtils->getVtxZ());
-  
-  vertex.SetDcaV0Daughters(dca);
-  vertex.SetV0CosineOfPointingAngle(cpa);
-  vertex.ChangeMassHypothesis(310);
-  
-  double Mom1[] = {exTrack1.Px(),exTrack1.Py(),exTrack1.Pz()};
-  double Mom2[] = {exTrack2.Px(),exTrack2.Py(),exTrack2.Pz()};
-  
-  double rDcaDaughterToPrimVertex[] = {fabs(d1),fabs(d2)};
-  double rDcaV0ToPrimVertex         = sqrt(pow(fUtils->getVtxX()-v0dcax,2) + pow(fUtils->getVtxY()-v0dcay,2));
-  
-  aodTrack1->SetPxPyPzAtDCA(exTrack1.Px(),exTrack1.Py(),exTrack1.Pz());
-  aodTrack2->SetPxPyPzAtDCA(exTrack2.Px(),exTrack2.Py(),exTrack2.Pz());	
-  aodTrack1->SetDCA(d1,0);
-  aodTrack2->SetDCA(d2,0);
-  
-  AliAODVertex *secondVtx = new AliAODVertex();
-  secondVtx->SetPosition(vertex.Xv(),vertex.Yv(),vertex.Zv());
-  secondVtx->AddDaughter(aodTrack1);
-  secondVtx->AddDaughter(aodTrack2);
-  
-  AliAODv0* v0 = new AliAODv0(secondVtx,dca,rDcaV0ToPrimVertex,Mom1,Mom2,rDcaDaughterToPrimVertex);		
-  v0->SetCharge(aodTrack1->Charge()+aodTrack2->Charge());
-  
-  return v0;
+
 }
 
-bool AliAnalysisTaskAODTrackPair::updateAODv0(AliAODv0* v0){
-
-  double MagF = fEvent->GetMagneticField();
-
-  AliAODTrack *aodTrack1 = (AliAODTrack *)v0->GetDaughter(0);
-  AliAODTrack *aodTrack2 = (AliAODTrack *)v0->GetDaughter(1);
+bool AliAnalysisTaskAODTrackPair::isAcceptV0QualityCuts(K0sContainer* v0, bool* isAcceptCuts){  
   
-  if (!aodTrack1 || !aodTrack2) {
-    cout<<"Lack of information to calculate new v0"<<endl;
+  isAcceptCuts[0] = false;
+  isAcceptCuts[1] = false;
+  isAcceptCuts[2] = false;
+  isAcceptCuts[3] = false;
+  isAcceptCuts[4] = false;
+  isAcceptCuts[5] = false;
+
+  double p  = v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2] > 0 ? 
+    sqrt(v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2]) : 0;
+  
+  double max_chi2            = fHistChi2Cut->GetBinContent(fHistChi2Cut->GetXaxis()->FindBin(p));
+  double min_cpv             = fHistPointingAngleXYCut->GetBinContent(fHistPointingAngleXYCut->GetXaxis()->FindBin(p));
+  double max_lengthXY        = fHistDecayLengthXYCut->GetBinContent(fHistDecayLengthXYCut->GetXaxis()->FindBin(p));
+  double max_trackDistanceXY = fHistDaughterTrackDistanceXYCut->GetBinContent(fHistDaughterTrackDistanceXYCut->GetXaxis()->FindBin(p));
+  double max_DCAxy           = fHistDCAxyCut->GetBinContent(fHistDCAxyCut->GetXaxis()->FindBin(p));
+  double max_lifetime        = fHistLifeTimeCut->GetBinContent(fHistLifeTimeCut->GetXaxis()->FindBin(p));
+
+  double chi2            = v0->rChi2V0;
+  double cpv             = v0->CpvXY;  
+  double lengthXY        = v0->DecayLengthXY;
+  double trackDistanceXY = v0->DcaDaughtersXY;
+  double DCAxy           = v0->DcaXY;
+  double lifetime        = fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p;
+
+  if ( onChi2Cut ) {
+    if ( chi2 < max_chi2 ) isAcceptCuts[0] = true;
+    else                   isAcceptCuts[0] = false;
+  } else {
+    isAcceptCuts[0] = true;
+  }
+  
+  if ( onPointingAngleXYCut ) {
+    if ( cpv > min_cpv ) isAcceptCuts[1] = true;
+    else                 isAcceptCuts[1] = false;
+  } else {
+    isAcceptCuts[1] = true;
+  }    
+  
+  if ( onDecayLengthXYCut ) {
+    if ( lengthXY < max_lengthXY ) isAcceptCuts[2] = true;
+    else                           isAcceptCuts[2] = false;
+  } else {
+    isAcceptCuts[2] = true;
+  }
+  
+  if ( onDaughterTrackDistanceXYCut ) {
+    if ( trackDistanceXY < max_trackDistanceXY ) isAcceptCuts[3] = true;
+    else                                         isAcceptCuts[3] = false;
+  } else {
+    isAcceptCuts[3] = true;
+  }
+  
+  if ( onDCAXYCut ) {
+    if ( DCAxy < max_DCAxy )  isAcceptCuts[4] = true;
+    else                      isAcceptCuts[4] = false;
+  } else {
+    isAcceptCuts[4] = true;
+  }
+
+  if ( onLifetimeCut ) {
+    if ( lifetime < max_lifetime ) isAcceptCuts[5] = true;
+    else                           isAcceptCuts[5] = false;
+  } else {
+    isAcceptCuts[5] = true;
+  }
+  
+  if (isAcceptCuts[0]==true && isAcceptCuts[1]==true && 
+      isAcceptCuts[2]==true && isAcceptCuts[3]==true && 
+      isAcceptCuts[4]==true && isAcceptCuts[5]==true) {
+    return true;
+  } else {
     return false;
   }
-  
-  AliExternalTrackParam exTrack1;
-  AliExternalTrackParam exTrack2;
-      
-  exTrack1.CopyFromVTrack(aodTrack1);
-  exTrack2.CopyFromVTrack(aodTrack2);
 
-  exTrack1.CheckCovariance();
-  exTrack2.CheckCovariance();
-      
-  double d1 = exTrack1.GetD(fUtils->getVtxX(),fUtils->getVtxY(),MagF);
-  double d2 = exTrack2.GetD(fUtils->getVtxX(),fUtils->getVtxY(),MagF);
-       
-  double x1, x2;
-      
-  if (Preoptimize(&exTrack1,&exTrack2,&x1,&x2,MagF)){
-    exTrack1.PropagateTo(x1,MagF); 
-    exTrack2.PropagateTo(x2,MagF);
-  }
-  
-  exTrack1.PropagateTo(x1,MagF);
-  exTrack2.PropagateTo(x2,MagF);
-  
-  double dca = exTrack1.GetDCA(&exTrack2,MagF,x1,x2);
-  
-  AliESDv0 vertex(exTrack1,aodTrack1->GetID(),exTrack2,aodTrack2->GetID());
-  vertex.Refit();
-  
-  double v0dcax=vertex.Xv(), v0dcay=vertex.Yv();
-  
-  float cpa = vertex.GetV0CosineOfPointingAngle(fUtils->getVtxX(),fUtils->getVtxY(),fUtils->getVtxZ());
-  
-  vertex.SetDcaV0Daughters(dca);
-  vertex.SetV0CosineOfPointingAngle(cpa);
-  vertex.ChangeMassHypothesis(310);
-  
-  double Mom1[] = {exTrack1.Px(),exTrack1.Py(),exTrack1.Pz()};
-  double Mom2[] = {exTrack2.Px(),exTrack2.Py(),exTrack2.Pz()};
-  
-  double rDcaDaughterToPrimVertex[] = {fabs(d1),fabs(d2)};
-  double rDcaV0ToPrimVertex = sqrt(pow(fUtils->getVtxX() - v0dcax,2) + pow(fUtils->getVtxY() - v0dcay,2));
-  
-  AliAODVertex *secondVtx = v0->GetSecondaryVtx();
-  secondVtx->SetPosition(vertex.Xv(),vertex.Yv(),vertex.Zv());  
-  v0->Fill(secondVtx,dca,rDcaV0ToPrimVertex,Mom1,Mom2,rDcaDaughterToPrimVertex);
+}
 
+bool AliAnalysisTaskAODTrackPair::isAcceptK0sCuts(K0sContainer* v0){
   return true;
 }
 
-//________________________________________________
-void AliAnalysisTaskAODTrackPair::GetHelixCenter(const AliExternalTrackParam *track,double center[2], const double b)
-{
-  // Copied from AliV0ReaderV1::GetHelixCenter
-  // Get Center of the helix track parametrization
-  
-  Int_t charge=track->Charge();
-  
-  double    helix[6];
-  track->GetHelixParameters(helix,b);
-  
-  double xpos =    helix[5];
-  double ypos =    helix[0];
-  double radius = TMath::Abs(1./helix[4]);
-  double phi = helix[2];
-  if(phi < 0){
-    phi = phi + 2*TMath::Pi();
-  }
-  phi -= TMath::Pi()/2.;
-  double xpoint =    radius * TMath::Cos(phi);
-  double ypoint =    radius * TMath::Sin(phi);
-  if(b<0&&charge > 0){
-    xpoint = - xpoint;
-    ypoint = - ypoint;
-  }
-  if(b>0 && charge < 0){
-    xpoint = - xpoint;
-    ypoint = - ypoint;
-  }
-  center[0] =    xpos + xpoint;
-  center[1] =    ypos + ypoint;
-  return;
+bool AliAnalysisTaskAODTrackPair::isAcceptK0sKinematics(K0sContainer* v0) {
+
+  unique_ptr<TVector3> vec(new TVector3());
+  vec->SetXYZ(v0->P[0],v0->P[1],v0->P[2]);
+  unique_ptr<TLorentzVector> lv(new TLorentzVector());
+  lv->SetPtEtaPhiM(vec->Pt(), vec->Eta(), vec->Phi(), v0->Mass);
+  if (fMinK0sRap > lv->Rapidity() || fMaxK0sRap < lv->Rapidity()) return false;
+  if (fMinK0sPt > vec->Pt() || fMaxK0sPt < vec->Pt())             return false;
+  return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::Preoptimize(const AliExternalTrackParam *nt, AliExternalTrackParam *pt, 
-					      double *lPreprocessxn, double *lPreprocessxp, const double b)
-//This function pre-optimizes a two-track pair in the XY plane
-//and provides two X values for the tracks if successful
-{
-  double lMinimumX = -3.0 ;
-  double lMaximumX = 300.0;
+bool AliAnalysisTaskAODTrackPair::isAcceptK0sKinematics(AliAODMCParticle* v0) {
+
+  unique_ptr<TLorentzVector> lv(new TLorentzVector());
+  lv->SetPtEtaPhiM(v0->Pt(), v0->Eta(), v0->Phi(), v0->M());  
   
-  double nhelix[6], phelix[6];
-  nt->GetHelixParameters(nhelix,b);
-  pt->GetHelixParameters(phelix,b);
-  double lNegCenterR[2], lPosCenterR[2];
+  if (fMinK0sRap > lv->Rapidity() || fMaxK0sRap < lv->Rapidity()) return false;
+  if (fMinK0sPt > lv->Pt() || fMaxK0sPt < lv->Pt())             return false;
   
-  //Negative track parameters in XY
-  GetHelixCenter( nt , lNegCenterR, b);
-  double xNegCenter = lNegCenterR[0];
-  double yNegCenter = lNegCenterR[1];
-  double NegRadius = TMath::Abs(1./nhelix[4]);
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPair::isAcceptPrimaryTrack(AliAODTrack* track){
+  return true;
+}
+
+/*
+void AliAnalysisTaskAODTrackPair::Construct( const KFParticle *vDaughters[], int nDaughters){
   
-  //Positive track parameters in XY
-  GetHelixCenter( pt , lPosCenterR, b );
-  double xPosCenter = lPosCenterR[0];
-  double yPosCenter = lPosCenterR[1];
-  double PosRadius = TMath::Abs(1./phelix[4]);
+  fNDF      = -3;
   
-  //Define convenient coordinate system
-  //Logical zero: position of negative center
-  double ux = xPosCenter - xNegCenter;
-  double uy = yPosCenter - yNegCenter;
+  double fC[36] = {};  
+  double fP[8]  = {};
+  double fChi2  =  0;
   
-  //Check center-to-center distance
-  double lDist = TMath::Sqrt(
-                               TMath::Power( xNegCenter - xPosCenter , 2) +
-                               TMath::Power( yNegCenter - yPosCenter , 2)
-                               );
-  //Normalize ux, uz to unit vector
-  ux /= lDist; uy /= lDist;
+  fC[35] = 1;
   
-  //Calculate perpendicular vector (normalized)
-  double vx = -uy;
-  double vy = +ux;
+  for( Int_t index=0; index<7;  index++) fP[index] = vDaughters[0]->GetParameter(index);
+  for( Int_t index=0; index<28; index++) fC[index] = vDaughters[0]->GetCovariance(index);
   
-  double lPreprocessDCAxy = 1e+3; //define outside scope
-  *lPreprocessxp = pt->GetX(); //start at current location
-  *lPreprocessxn = nt->GetX(); //start at current location
+  //for (int index=0; index<nDaughters; ++index) {
+  //AddDaughter( *vDaughters[index] );
+  //}
   
-  //============================================================
-  //Pre-optimization in the XY plane: cases considered here
-  //============================================================
-  //
-  //  Case 1: Circles do not touch, centers far away
-  //          (D > R1 + R2)
-  //
-  //  Case 2: Circles touch, centers at reasonable distance wrt D
-  //          (D < R1 + R2) && (D > |R1-R2|)
-  //
-  //  Case 3: Circles do not touch, one inside the other
-  //          (D < |R1-R2|)
-  //
-  //  Cases 1 and 2 are treated. Case 3 is not treated (unlikely
-  //  to be a problem with unlike-sign charged tracks): brute
-  //  force minimization takes place in any case
-  //
-  //============================================================
+}
+
+void AliAnalysisTaskAODTrackPair::AddDaughter(){
   
-  //______________________
-  //CASE 1
-  if( (lDist > NegRadius + PosRadius) ){
-    //================================================================
-    //Case 1: distance bigger than sum of radii ("gamma-like")
-    //        re-position tracks along the center-to-center axis
-    //Re-position negative track
-    double xNegOptPosition = xNegCenter + NegRadius*ux;
-    double yNegOptPosition = yNegCenter + NegRadius*uy;
-    double csNeg=TMath::Cos(nt->GetAlpha());
-    double snNeg=TMath::Sin(nt->GetAlpha());
-    double xThisNeg=xNegOptPosition*csNeg + yNegOptPosition*snNeg;
-    
-    //Re-position positive track
-    double xPosOptPosition = xPosCenter - PosRadius*ux;
-    double yPosOptPosition = yPosCenter - PosRadius*uy;
-    double csPos=TMath::Cos(pt->GetAlpha());
-    double snPos=TMath::Sin(pt->GetAlpha());
-    double xThisPos=xPosOptPosition*csPos + yPosOptPosition*snPos;
-    
-    if( xThisNeg < lMaximumX && xThisPos < lMaximumX && xThisNeg > lMinimumX && xThisPos > lMinimumX) {
-      double lCase1NegR[3]={0.},lCase1PosR[3]={0.};
-      if (nt->GetXYZAt(xThisNeg,b, lCase1NegR) && pt->GetXYZAt(xThisPos,b, lCase1PosR)) {
-	lPreprocessDCAxy = TMath::Sqrt(
-				       TMath::Power(lCase1NegR[0]-lCase1PosR[0],2)+
-				       TMath::Power(lCase1NegR[1]-lCase1PosR[1],2)+
-				       TMath::Power(lCase1NegR[2]-lCase1PosR[2],2)
-				       );
-	//Pass coordinates
-	if( lPreprocessDCAxy<999){
-	  *lPreprocessxp = xThisPos;
-	  *lPreprocessxn = xThisNeg;
-	}
-      }
-    }
-    //================================================================
-  }
   
-  //______________________
-  //CASE 2
-  if( (lDist > TMath::Abs(NegRadius-PosRadius)) && (lDist < NegRadius + PosRadius) ){
-    //================================================================
-    //Case 2: distance smaller than sum of radii (cowboy/sailor configs)
-    
-    //Calculate coordinate for radical line
-    double lRadical = (lDist*lDist - PosRadius*PosRadius + NegRadius*NegRadius) / (2*lDist);
-    
-    //Calculate absolute displacement from center-to-center axis
-    double lDisplace = (0.5/lDist) * TMath::Sqrt(
-                                                   (-lDist + PosRadius - NegRadius) *
-                                                   (-lDist - PosRadius + NegRadius) *
-                                                   (-lDist + PosRadius + NegRadius) *
-                                                   ( lDist + PosRadius + NegRadius)
-                                                   );
-    
-    //3D distances in the two cases studied (prefer smallest)
-    double lCase2aDCA = 1e+3;
-    double lCase2bDCA = 1e+3;
-    
-    //2 cases: positive and negative displacement
-    double xNegOptPosition[2], yNegOptPosition[2], xPosOptPosition[2], yPosOptPosition[2];
-    double csNeg, snNeg, csPos, snPos;
-    double xThisNeg[2], xThisPos[2];
-    
-    csNeg=TMath::Cos(nt->GetAlpha());
-    snNeg=TMath::Sin(nt->GetAlpha());
-    csPos=TMath::Cos(pt->GetAlpha());
-    snPos=TMath::Sin(pt->GetAlpha());
-    
-    //Case 2a: Positive displacement along v vector
-    //Re-position negative track
-    xNegOptPosition[0] = xNegCenter + lRadical*ux + lDisplace*vx;
-    yNegOptPosition[0] = yNegCenter + lRadical*uy + lDisplace*vy;
-    xThisNeg[0] = xNegOptPosition[0]*csNeg + yNegOptPosition[0]*snNeg;
-    //Re-position positive track
-    xPosOptPosition[0] = xNegCenter + lRadical*ux + lDisplace*vx;
-    yPosOptPosition[0] = yNegCenter + lRadical*uy + lDisplace*vy;
-    xThisPos[0] = xPosOptPosition[0]*csPos + yPosOptPosition[0]*snPos;
-    
-    //Case 2b: Negative displacement along v vector
-    //Re-position negative track
-    xNegOptPosition[1] = xNegCenter + lRadical*ux - lDisplace*vx;
-    yNegOptPosition[1] = yNegCenter + lRadical*uy - lDisplace*vy;
-    xThisNeg[1] = xNegOptPosition[1]*csNeg + yNegOptPosition[1]*snNeg;
-    //Re-position positive track
-    xPosOptPosition[1] = xNegCenter + lRadical*ux - lDisplace*vx;
-    yPosOptPosition[1] = yNegCenter + lRadical*uy - lDisplace*vy;
-    xThisPos[1] = xPosOptPosition[1]*csPos + yPosOptPosition[1]*snPos;
-    
-    //Test the two cases, please
-    
-    //Case 2a
-    if( xThisNeg[0] < lMaximumX && xThisPos[0] < lMaximumX && xThisNeg[0] > lMinimumX && xThisPos[0] > lMinimumX ){
-      double lCase2aNegR[3]={0.}, lCase2aPosR[3]={0.};
-      if (nt->GetXYZAt(xThisNeg[0],b, lCase2aNegR) && pt->GetXYZAt(xThisPos[0],b, lCase2aPosR)) {
-	lCase2aDCA = TMath::Sqrt(
-				 TMath::Power(lCase2aNegR[0]-lCase2aPosR[0],2)+
-				 TMath::Power(lCase2aNegR[1]-lCase2aPosR[1],2)+
-				 TMath::Power(lCase2aNegR[2]-lCase2aPosR[2],2)
-				 );
-      }
-    }
-    
-    //Case 2b
-    if( xThisNeg[1] < lMaximumX && xThisPos[1] < lMaximumX && xThisNeg[1] > lMinimumX && xThisPos[1] > lMinimumX ){      
-      double lCase2bNegR[3]={0.}, lCase2bPosR[3]={0.};
-      if (nt->GetXYZAt(xThisNeg[1],b, lCase2bNegR) && pt->GetXYZAt(xThisPos[1],b, lCase2bPosR)) {
-	lCase2bDCA = TMath::Sqrt(
-				 TMath::Power(lCase2bNegR[0]-lCase2bPosR[0],2)+
-				 TMath::Power(lCase2bNegR[1]-lCase2bPosR[1],2)+
-				 TMath::Power(lCase2bNegR[2]-lCase2bPosR[2],2)
-				 );
-      }
-    }
-    //Minor detail: all things being equal, prefer closest X
-    double lCase2aSumX = xThisPos[0]+xThisNeg[0];
-    double lCase2bSumX = xThisPos[1]+xThisNeg[1];
-    
-    double lDCAxySmallestR = lCase2aDCA;
-    double lxpSmallestR = xThisPos[0];
-    double lxnSmallestR = xThisNeg[0];
-    
-    double lDCAxyLargestR = lCase2bDCA;
-    double lxpLargestR = xThisPos[1];
-    double lxnLargestR = xThisNeg[1];
-    
-    if( lCase2bSumX+1e-6 < lCase2aSumX ){
-      lDCAxySmallestR = lCase2bDCA;
-      lxpSmallestR = xThisPos[1];
-      lxnSmallestR = xThisNeg[1];
-      lDCAxyLargestR = lCase2aDCA;
-      lxpLargestR = xThisPos[0];
-      lxnLargestR = xThisNeg[0];
-    }
-    
-    //Pass conclusion to lPreprocess variables, please
-    lPreprocessDCAxy = lDCAxySmallestR;
-    *lPreprocessxp = lxpSmallestR;
-    *lPreprocessxn = lxnSmallestR;
-    if( lDCAxyLargestR+1e-6 < lDCAxySmallestR ){ //beware epsilon: numerical calculations are unstable here
-      lPreprocessDCAxy = lDCAxyLargestR;
-      *lPreprocessxp = lxpLargestR;
-      *lPreprocessxn = lxnLargestR;
-    }
-    //Protection against something too crazy, please
-    if( lPreprocessDCAxy>999){
-      *lPreprocessxp = pt->GetX(); //start at current location
-      *lPreprocessxn = nt->GetX(); //start at current location
-    }
-    
-  }
-  //End of preprocessing stage!
-  //at this point lPreprocessxp, lPreprocessxn are already good starting points: update helixparams
-  Bool_t lWorked = kFALSE;
-  if( lPreprocessDCAxy < 999 ) lWorked = kTRUE;
-  return lWorked;
 
 }
+*/
