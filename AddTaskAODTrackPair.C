@@ -53,7 +53,8 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
 						 bool pairDCA_cut=true,
 						 bool track_distance_cut=true,
 						 bool dcaxy_cut=true,
-						 bool lifetime_cut=true) {
+						 bool lifetime_cut=true,
+						 bool armenteros_cut=true) {
     
   TFile *input3 = TFile::Open(k0s_cuts_file_path.c_str());
   
@@ -84,7 +85,8 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   utils->setProtonSelectSigmaTOF(min_proton_sigma_tof, max_proton_sigma_tof);
   utils->setTrackQualities(findable, dcaxy.c_str(), dcaz, chi2tpc, chi2its, nclusttpc, nclustits);
   utils->setPairTargetPIDs(pid1, pid2);
-  
+
+
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
     ::Error("AddTaskAODMuonEventSelection",
@@ -112,8 +114,15 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   task->setMixingAnalysis(onMixingAnalysis);
   task->setMC(isMC);
   task->setManualV0Analysis(isManual);  
-  task->setK0sCus(input3);
-  task->setK0sCuts(decay_length_cut,pointangle_cut,chi2_cut,pairDCA_cut,track_distance_cut,dcaxy_cut,lifetime_cut);  
+  task->setK0sCuts(input3,decay_length_cut,pointangle_cut,chi2_cut,pairDCA_cut,track_distance_cut,dcaxy_cut,lifetime_cut,armenteros_cut);  
+  task->setK0sDaughterTrackPRange(min_track_p,max_track_p);
+  task->setK0sDaughterTrackPtRange(min_track_pt,max_track_pt);
+  task->setK0sDaughterTrackEtaRange(min_track_eta,max_track_eta);
+  task->setK0sDaughterTrackChi2TPC(chi2tpc);
+  task->setK0sDaughterTrackChi2ITS(chi2its);
+  task->setK0sDaughterTrackNClustTPC(nclusttpc);
+  task->setK0sDaughterTrackNClustSPD(nclustits);
+  task->setK0sDaughterTrackFindableTPC(findable);
   mgr->AddTask(task);
 
   cout << "min_vtxz=" << min_vtxz << endl;

@@ -62,6 +62,7 @@
 
 #include "iostream"
 #include "memory"
+#include <time.h>
 
 using namespace std;
 
@@ -80,15 +81,18 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fUtils(NULL),
   
   fMCTrackArray(NULL),
-  fArrayK0s(NULL),
+  fArrayK0s(unique_ptr<TObjArray>(new TObjArray())),
+  fArrayK0sDaughterTrack(unique_ptr<TObjArray>(new TObjArray())),
+//fArrayK0s(NULL),
+//fArrayK0sDaughterTrack(NULL),
   
-  fHistDecayLengthXYCut(NULL),
-  fHistPointingAngleXYCut(NULL),
-  fHistChi2Cut(NULL),
+  fHistDecayLengthCut(NULL),
+  fHistPointingAngleCut(NULL),
+  fHistChi2perNDFCut(NULL),
   fHistDaughterPairDCAXYCut(NULL),
   fHistDaughterTrackDistanceXYCut(NULL),
-  fHistDCAxyCut(NULL),
-  fHistLifeTimeCut(NULL),
+  fHistDCACut(NULL),
+  fHistProperLifeTimeCut(NULL),
   
   fTrackDepth(100),
   fPoolSize(100),
@@ -101,25 +105,45 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   onEvtMixingPoolCent(true),
   onEvtMixingPoolPsi(true),
   
-  onDecayLengthXYCut(false),
-  onPointingAngleXYCut(true),
-  onChi2Cut(true),
+  onDecayLengthCut(false),
+  onPointingAngleCut(true),
+  onChi2perNDFCut(true),
   onDaughterPairDCAXYCut(false),
   onDaughterTrackDistanceXYCut(true),
-  onDCAXYCut(false),
+  onDCACut(false),
   onLifetimeCut(false),
+  onArmenterosCut(true),
   
   fIsMC(false),
   fIsMixingAnalysis(false),
   fIsManualV0Analysis(true),
 
+  fArmenterosAlpha(0.16),
+
   fMinK0sRap(-0.5),
   fMaxK0sRap(0.5),
   fMinK0sPt(0.4),
   fMaxK0sPt(99.),
+  fMinK0sMassRange(0.48833812),
+  fMaxK0sMassRange(0.50741788),
+
+  fMinTrackTPCNClusts(70),
+  fMinTrackSPDNClusts(0),
+  fMaxReducedChi2TPC(4.),
+  fMaxReducedChi2ITS(36.),
+  fMinCrossRowsFindableRatio(0.8),
+
+  fMinTrackP(0.05),
+  fMaxTrackP(999.),
+  fMinTrackPt(0.05),
+  fMaxTrackPt(999.),
+  fMinTrackEta(-0.8),
+  fMaxTrackEta(+0.8),  
+  fMinLeadingTrackPt(5.),
 
   fMethodCent("SPDTracklets"),
   fPrimVtxPos(),
+  fPrimVtxCov(),
   fCent(0.),
   fPsi(0.),
 
@@ -154,6 +178,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fSparseULSPionPair_PassDaughterDistanceXYCut(NULL),  
   fSparseULSPionPair_PassDCAXYCut(NULL),
   fSparseULSPionPair_PassLifetimeCut(NULL),
+  fSparseULSPionPair_PassArmenterosCut(NULL),
   
   fSparseNeutralK0sPair(NULL),
   fSparseNeutralNegativeK0sPair(NULL),
@@ -197,7 +222,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fHistReducedChi2TPC(NULL),
   fHistReducedChi2ITS(NULL),
   fHistDCAz(NULL),
-  fHistDCAxyPt(NULL),
+  fHistDCAxy(NULL),
   fHistTrackP(NULL),
   fHistTrackPt(NULL),
   fHistTrackEta(NULL),    
@@ -214,6 +239,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fHistV0PV0PropLifeTime(NULL),
   fHistV0TrackDCAXY(NULL),
   fHistV0TrackDCA(NULL),
+  fHistV0Armenteros(NULL),
 
   fHistSelV0PV0DecayLengthXY(NULL),
   fHistSelV0PV0DecayLength(NULL),
@@ -227,6 +253,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fHistSelV0PV0PropLifeTime(NULL),
   fHistSelV0TrackDCAXY(NULL),
   fHistSelV0TrackDCA(NULL),
+  fHistSelV0Armenteros(NULL),
 
   fHistV0PV0DecayLengthXY_TrueK0s(NULL),
   fHistV0PV0DecayLength_TrueK0s(NULL),
@@ -240,7 +267,8 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fHistV0PV0PropLifeTime_TrueK0s(NULL),
   fHistV0TrackDCAXY_TrueK0s(NULL),
   fHistV0TrackDCA_TrueK0s(NULL),
-
+  fHistV0Armenteros_TrueK0s(NULL),
+  
   fHistSelV0PV0DecayLengthXY_TrueK0s(NULL),
   fHistSelV0PV0DecayLength_TrueK0s(NULL),
   fHistSelV0PV0PointingAngleXY_TrueK0s(NULL),
@@ -253,7 +281,8 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fHistSelV0PV0PropLifeTime_TrueK0s(NULL),
   fHistSelV0TrackDCAXY_TrueK0s(NULL),
   fHistSelV0TrackDCA_TrueK0s(NULL),
-  
+  fHistSelV0Armenteros_TrueK0s(NULL),
+
   fHistLSV0PV0DecayLengthXY(NULL),
   fHistLSV0PV0DecayLength(NULL),
   fHistLSV0PV0PointingAngleXY(NULL),
@@ -266,6 +295,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fHistLSV0PV0PropLifeTime(NULL),
   fHistLSV0TrackDCAXY(NULL),
   fHistLSV0TrackDCA(NULL),
+  fHistLSV0Armenteros(NULL),
 
   fHistLSSelV0PV0DecayLengthXY(NULL),
   fHistLSSelV0PV0DecayLength(NULL),
@@ -279,6 +309,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fHistLSSelV0PV0PropLifeTime(NULL),
   fHistLSSelV0TrackDCAXY(NULL),
   fHistLSSelV0TrackDCA(NULL),
+  fHistLSSelV0Armenteros(NULL),
 
   fHistLSV0PV0DecayLengthXY_TrueK0s(NULL),
   fHistLSV0PV0DecayLength_TrueK0s(NULL),
@@ -292,6 +323,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fHistLSV0PV0PropLifeTime_TrueK0s(NULL),
   fHistLSV0TrackDCAXY_TrueK0s(NULL),
   fHistLSV0TrackDCA_TrueK0s(NULL),
+  fHistLSV0Armenteros_TrueK0s(NULL),
 
   fHistLSSelV0PV0DecayLengthXY_TrueK0s(NULL),
   fHistLSSelV0PV0DecayLength_TrueK0s(NULL),
@@ -305,15 +337,20 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fHistLSSelV0PV0PropLifeTime_TrueK0s(NULL),
   fHistLSSelV0TrackDCAXY_TrueK0s(NULL),
   fHistLSSelV0TrackDCA_TrueK0s(NULL),
+  fHistLSSelV0Armenteros_TrueK0s(NULL),
 
+  selectEvt(0),
   all(0),
-  abord(0)
+  abord(0),
+  start(0),
+  end(0)
   
 {
 
 }
 
-AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : AliAnalysisTaskSE(name), 
+AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) :
+  AliAnalysisTaskSE(name), 
 
   fEvent(NULL),
   fPrimVtx(NULL),
@@ -326,15 +363,18 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fUtils(NULL),
   
   fMCTrackArray(NULL),
-  fArrayK0s(NULL),
-  
-  fHistDecayLengthXYCut(NULL),
-  fHistPointingAngleXYCut(NULL),
-  fHistChi2Cut(NULL),
+  fArrayK0s(unique_ptr<TObjArray>(new TObjArray())),
+  fArrayK0sDaughterTrack(unique_ptr<TObjArray>(new TObjArray())),									     
+  //fArrayK0s(NULL),
+  //fArrayK0sDaughterTrack(NULL),
+
+  fHistDecayLengthCut(NULL),
+  fHistPointingAngleCut(NULL),
+  fHistChi2perNDFCut(NULL),
   fHistDaughterPairDCAXYCut(NULL),
   fHistDaughterTrackDistanceXYCut(NULL),
-  fHistDCAxyCut(NULL),
-  fHistLifeTimeCut(NULL),
+  fHistDCACut(NULL),
+  fHistProperLifeTimeCut(NULL),
 
   fTrackDepth(100),
   fPoolSize(100),
@@ -347,25 +387,45 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   onEvtMixingPoolCent(true),
   onEvtMixingPoolPsi(true),
 
-  onDecayLengthXYCut(false),
-  onPointingAngleXYCut(true),
-  onChi2Cut(true),
+  onDecayLengthCut(false),
+  onPointingAngleCut(true),
+  onChi2perNDFCut(true),
   onDaughterPairDCAXYCut(false),
   onDaughterTrackDistanceXYCut(true),
-  onDCAXYCut(false),
+  onDCACut(false),
   onLifetimeCut(false),
+  onArmenterosCut(true),
 
   fIsMC(false),
   fIsMixingAnalysis(false),
   fIsManualV0Analysis(true),
 
+  fArmenterosAlpha(0.16),
+
   fMinK0sRap(-0.5),
   fMaxK0sRap(0.5),
   fMinK0sPt(0.4),
   fMaxK0sPt(99.),
+  fMinK0sMassRange(0.48833812),
+  fMaxK0sMassRange(0.50741788),
+
+  fMinTrackTPCNClusts(70),
+  fMinTrackSPDNClusts(0),
+  fMaxReducedChi2TPC(4.),
+  fMaxReducedChi2ITS(36.),
+  fMinCrossRowsFindableRatio(0.8),
+  
+  fMinTrackP(0.05),
+  fMaxTrackP(999.),
+  fMinTrackPt(0.05),
+  fMaxTrackPt(999.),
+  fMinTrackEta(-0.8),
+  fMaxTrackEta(+0.8),
+  fMinLeadingTrackPt(5.),
 
   fMethodCent("SPDTracklets"),
   fPrimVtxPos(),
+  fPrimVtxCov(),
   fCent(0.),
   fPsi(0.),
 
@@ -400,6 +460,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fSparseULSPionPair_PassDaughterDistanceXYCut(NULL),  
   fSparseULSPionPair_PassDCAXYCut(NULL),
   fSparseULSPionPair_PassLifetimeCut(NULL),
+  fSparseULSPionPair_PassArmenterosCut(NULL),
 
   fSparseNeutralK0sPair(NULL),
   fSparseNeutralNegativeK0sPair(NULL),
@@ -443,7 +504,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fHistReducedChi2TPC(NULL),
   fHistReducedChi2ITS(NULL),
   fHistDCAz(NULL),
-  fHistDCAxyPt(NULL),
+  fHistDCAxy(NULL),
   fHistTrackP(NULL),
   fHistTrackPt(NULL),
   fHistTrackEta(NULL),    
@@ -460,6 +521,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fHistV0PV0PropLifeTime(NULL),
   fHistV0TrackDCAXY(NULL),
   fHistV0TrackDCA(NULL),
+  fHistV0Armenteros(NULL),
 
   fHistSelV0PV0DecayLengthXY(NULL),
   fHistSelV0PV0DecayLength(NULL),
@@ -473,6 +535,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fHistSelV0PV0PropLifeTime(NULL),
   fHistSelV0TrackDCAXY(NULL),
   fHistSelV0TrackDCA(NULL),
+  fHistSelV0Armenteros(NULL),
 
   fHistV0PV0DecayLengthXY_TrueK0s(NULL),
   fHistV0PV0DecayLength_TrueK0s(NULL),
@@ -486,6 +549,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fHistV0PV0PropLifeTime_TrueK0s(NULL),
   fHistV0TrackDCAXY_TrueK0s(NULL),
   fHistV0TrackDCA_TrueK0s(NULL),
+  fHistV0Armenteros_TrueK0s(NULL),
 
   fHistSelV0PV0DecayLengthXY_TrueK0s(NULL),
   fHistSelV0PV0DecayLength_TrueK0s(NULL),
@@ -499,7 +563,8 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fHistSelV0PV0PropLifeTime_TrueK0s(NULL),
   fHistSelV0TrackDCAXY_TrueK0s(NULL),
   fHistSelV0TrackDCA_TrueK0s(NULL),
-  
+  fHistSelV0Armenteros_TrueK0s(NULL),
+
   fHistLSV0PV0DecayLengthXY(NULL),
   fHistLSV0PV0DecayLength(NULL),
   fHistLSV0PV0PointingAngleXY(NULL),
@@ -512,6 +577,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fHistLSV0PV0PropLifeTime(NULL),
   fHistLSV0TrackDCAXY(NULL),
   fHistLSV0TrackDCA(NULL),
+  fHistLSV0Armenteros(NULL),
 
   fHistLSSelV0PV0DecayLengthXY(NULL),
   fHistLSSelV0PV0DecayLength(NULL),
@@ -525,6 +591,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fHistLSSelV0PV0PropLifeTime(NULL),
   fHistLSSelV0TrackDCAXY(NULL),
   fHistLSSelV0TrackDCA(NULL),
+  fHistLSSelV0Armenteros(NULL),
 
   fHistLSV0PV0DecayLengthXY_TrueK0s(NULL),
   fHistLSV0PV0DecayLength_TrueK0s(NULL),
@@ -538,6 +605,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fHistLSV0PV0PropLifeTime_TrueK0s(NULL),
   fHistLSV0TrackDCAXY_TrueK0s(NULL),
   fHistLSV0TrackDCA_TrueK0s(NULL),
+  fHistLSV0Armenteros_TrueK0s(NULL),
 
   fHistLSSelV0PV0DecayLengthXY_TrueK0s(NULL),
   fHistLSSelV0PV0DecayLength_TrueK0s(NULL),
@@ -551,9 +619,14 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
   fHistLSSelV0PV0PropLifeTime_TrueK0s(NULL),
   fHistLSSelV0TrackDCAXY_TrueK0s(NULL),
   fHistLSSelV0TrackDCA_TrueK0s(NULL),
+  fHistLSSelV0Armenteros_TrueK0s(NULL),
 
+  selectEvt(0),
   all(0),
-  abord(0)
+  abord(0),
+  start(0),
+  end(0)
+
   
 {
 
@@ -597,16 +670,12 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
    fOutputList->SetOwner(true);
 
    double min_mass = 0.0;
-   double max_mass = 6.0;
+   double max_mass = 1.0;
    double width_mass = 0.001;
 
    double min_pt = 0.0;
-   double max_pt = 20.0;
+   double max_pt = 10.0;
    double width_pt = 0.5;
-
-   double min_rap = -0.8;
-   double max_rap = 0.8;
-   double width_rap = 0.1;
 
    double min_angle = 0;
    double max_angle = 180.;
@@ -615,98 +684,121 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
    vector<double> bins_cent{0,1,5,10,20,40,60,80,100};
    int binnum_cent = bins_cent.size() - 1;
    
-   int bins[4] = {int((max_mass - min_mass) / width_mass), int((max_pt - min_pt) / width_pt), binnum_cent,int((max_angle-min_angle)/width_angle)};
-   double min_bins[4] = {min_mass, min_pt, 0, min_angle};
-   double max_bins[4] = {max_mass, max_pt, 100, max_angle};   
+   int bins_K0s[3] = {int((max_mass - min_mass) / width_mass), int((max_pt - min_pt) / width_pt), binnum_cent};
+   double min_bins_K0s[3] = {min_mass, min_pt,   0};
+   double max_bins_K0s[3] = {max_mass, max_pt, 100};
 
-   fSparseULSPionPair  = new THnSparseF("fSparseULSPionPair", "", 4, bins,min_bins, max_bins);
-   fSparseLSppPionPair = new THnSparseF("fSparseLSppPionPair", "", 4,bins, min_bins, max_bins);
-   fSparseLSmmPionPair = new THnSparseF("fSparseLSmmPionPair", "", 4,bins, min_bins, max_bins);
-   fSparseULSPionPair  -> SetBinEdges(2,bins_cent.data());
-   fSparseLSppPionPair -> SetBinEdges(2,bins_cent.data());
-   fSparseLSmmPionPair -> SetBinEdges(2,bins_cent.data());
+   fSparseULSPionPair  = new THnSparseF("fSparseULSPionPair", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);
+   fSparseLSppPionPair = new THnSparseF("fSparseLSppPionPair", "", 2,bins_K0s, min_bins_K0s, max_bins_K0s);
+   fSparseLSmmPionPair = new THnSparseF("fSparseLSmmPionPair", "", 2,bins_K0s, min_bins_K0s, max_bins_K0s);
+   //fSparseULSPionPair  -> SetBinEdges(2,bins_cent.data());
+   //fSparseLSppPionPair -> SetBinEdges(2,bins_cent.data());
+   //fSparseLSmmPionPair -> SetBinEdges(2,bins_cent.data());
    fOutputList -> Add(fSparseULSPionPair);
    fOutputList -> Add(fSparseLSppPionPair);
    fOutputList -> Add(fSparseLSmmPionPair);
 
-   fSparseMixULSPionPair  = new THnSparseF("fSparseMixULSPionPair", "", 4, bins,min_bins, max_bins);
-   fSparseMixLSppPionPair = new THnSparseF("fSparseMixLSppPionPair", "", 4,bins, min_bins, max_bins);
-   fSparseMixLSmmPionPair = new THnSparseF("fSparseMixLSmmPionPair", "", 4,bins, min_bins, max_bins);
-   fSparseMixULSPionPair  -> SetBinEdges(2,bins_cent.data());
-   fSparseMixLSppPionPair -> SetBinEdges(2,bins_cent.data());
-   fSparseMixLSmmPionPair -> SetBinEdges(2,bins_cent.data());
+   fSparseMixULSPionPair  = new THnSparseF("fSparseMixULSPionPair", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);
+   fSparseMixLSppPionPair = new THnSparseF("fSparseMixLSppPionPair", "", 2,bins_K0s, min_bins_K0s, max_bins_K0s);
+   fSparseMixLSmmPionPair = new THnSparseF("fSparseMixLSmmPionPair", "", 2,bins_K0s, min_bins_K0s, max_bins_K0s);
+   //fSparseMixULSPionPair  -> SetBinEdges(2,bins_cent.data());
+   //fSparseMixLSppPionPair -> SetBinEdges(2,bins_cent.data());
+   //fSparseMixLSmmPionPair -> SetBinEdges(2,bins_cent.data());
    fOutputList -> Add(fSparseMixULSPionPair);
    fOutputList -> Add(fSparseMixLSppPionPair);
    fOutputList -> Add(fSparseMixLSmmPionPair);
 
-   fSparseULSPionPairBeforeCuts  = new THnSparseF("fSparseULSPionPairBeforeCuts", "", 4, bins,min_bins, max_bins);
-   fSparseLSppPionPairBeforeCuts = new THnSparseF("fSparseLSppPionPairBeforeCuts", "", 4,bins, min_bins, max_bins);
-   fSparseLSmmPionPairBeforeCuts = new THnSparseF("fSparseLSmmPionPairBeforeCuts", "", 4,bins, min_bins, max_bins);
-   fSparseULSPionPairBeforeCuts  -> SetBinEdges(2,bins_cent.data());
-   fSparseLSppPionPairBeforeCuts -> SetBinEdges(2,bins_cent.data());
-   fSparseLSmmPionPairBeforeCuts -> SetBinEdges(2,bins_cent.data());
+   fSparseULSPionPairBeforeCuts  = new THnSparseF("fSparseULSPionPairBeforeCuts", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);
+   fSparseLSppPionPairBeforeCuts = new THnSparseF("fSparseLSppPionPairBeforeCuts", "", 2,bins_K0s, min_bins_K0s, max_bins_K0s);
+   fSparseLSmmPionPairBeforeCuts = new THnSparseF("fSparseLSmmPionPairBeforeCuts", "", 2,bins_K0s, min_bins_K0s, max_bins_K0s);
+   //fSparseULSPionPairBeforeCuts  -> SetBinEdges(2,bins_cent.data());
+   //fSparseLSppPionPairBeforeCuts -> SetBinEdges(2,bins_cent.data());
+   //fSparseLSmmPionPairBeforeCuts -> SetBinEdges(2,bins_cent.data());
    fOutputList -> Add(fSparseULSPionPairBeforeCuts);
    fOutputList -> Add(fSparseLSppPionPairBeforeCuts);
    fOutputList -> Add(fSparseLSmmPionPairBeforeCuts);
    
-   fSparseULSPionPair_PassChi2perNDFCut         = new THnSparseF("fSparseULSPionPair_PassChi2perNDFCut", "", 4, bins,min_bins, max_bins);
-   fSparseULSPionPair_PassCPVXYCut              = new THnSparseF("fSparseULSPionPair_PassCPVXYCut", "", 4, bins,min_bins, max_bins);
-   fSparseULSPionPair_PassDecayLengthXYCut      = new THnSparseF("fSparseULSPionPair_PassDecayLengthXYCut", "", 4, bins,min_bins, max_bins);
-   fSparseULSPionPair_PassDaughterDistanceXYCut = new THnSparseF("fSparseULSPionPair_PassDaughterDistanceXYCut", "", 4, bins,min_bins, max_bins);  
-   fSparseULSPionPair_PassDCAXYCut              = new THnSparseF("fSparseULSPionPair_PassDCAXYCut", "", 4, bins,min_bins, max_bins);
-   fSparseULSPionPair_PassLifetimeCut           = new THnSparseF("fSparseULSPionPair_PassLifetimeCut", "", 4, bins,min_bins, max_bins);
+   fSparseULSPionPair_PassChi2perNDFCut         = new THnSparseF("fSparseULSPionPair_PassChi2perNDFCut", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);
+   fSparseULSPionPair_PassCPVXYCut              = new THnSparseF("fSparseULSPionPair_PassCPVXYCut", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);
+   fSparseULSPionPair_PassDecayLengthXYCut      = new THnSparseF("fSparseULSPionPair_PassDecayLengthXYCut", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);
+   fSparseULSPionPair_PassDaughterDistanceXYCut = new THnSparseF("fSparseULSPionPair_PassDaughterDistanceXYCut", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);  
+   fSparseULSPionPair_PassDCAXYCut              = new THnSparseF("fSparseULSPionPair_PassDCAXYCut", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);
+   fSparseULSPionPair_PassLifetimeCut           = new THnSparseF("fSparseULSPionPair_PassLifetimeCut", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);
+   fSparseULSPionPair_PassArmenterosCut         = new THnSparseF("fSparseULSPionPair_PassArmenterosCut", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);
    fOutputList -> Add(fSparseULSPionPair_PassChi2perNDFCut);
    fOutputList -> Add(fSparseULSPionPair_PassCPVXYCut);
-   fOutputList -> Add(fSparseULSPionPair_PassDecayLengthXYCut);
+   //fOutputList -> Add(fSparseULSPionPair_PassDecayLengthXYCut);
    fOutputList -> Add(fSparseULSPionPair_PassDaughterDistanceXYCut);
-   fOutputList -> Add(fSparseULSPionPair_PassDCAXYCut);
-   fOutputList -> Add(fSparseULSPionPair_PassLifetimeCut);
+   //fOutputList -> Add(fSparseULSPionPair_PassDCAXYCut);
+   //fOutputList -> Add(fSparseULSPionPair_PassLifetimeCut);
+   fOutputList -> Add(fSparseULSPionPair_PassArmenterosCut);
 
+   min_mass = 0.0;
+   max_mass = 6.0;
+   width_mass = 0.005;
 
-   fSparseNeutralK0sPair          = new THnSparseF("fSparseNeutralK0sPair", "", 4, bins,min_bins, max_bins);
-   fSparseNeutralNegativeK0sPair  = new THnSparseF("fSparseNeutralNegativeK0sPair", "", 4, bins,min_bins, max_bins);
-   fSparseNeutralPositiveK0sPair  = new THnSparseF("fSparseNeutralPositiveK0sPair", "", 4, bins,min_bins, max_bins);
-   fSparsePositiveK0sPair         = new THnSparseF("fSparsePositiveK0sPair", "", 4, bins,min_bins, max_bins);
-   fSparseNegativeK0sPair         = new THnSparseF("fSparseNegativeK0sPair", "", 4, bins,min_bins, max_bins);
-   fSparsePositiveNegativeK0sPair = new THnSparseF("fSparsePositiveNegativeK0sPair", "", 4, bins,min_bins, max_bins);
-   fSparseNeutralK0sPair         -> SetBinEdges(2,bins_cent.data());
-   fSparseNeutralNegativeK0sPair -> SetBinEdges(2,bins_cent.data());
-   fSparseNeutralPositiveK0sPair -> SetBinEdges(2,bins_cent.data());
-   fSparsePositiveK0sPair        -> SetBinEdges(2,bins_cent.data());
-   fSparseNegativeK0sPair        -> SetBinEdges(2,bins_cent.data());
-   fSparsePositiveNegativeK0sPair->SetBinEdges(2,bins_cent.data());
+   min_pt = 0.0;
+   max_pt = 20.0;
+   width_pt = 0.5;
+
+   min_angle = 0;
+   max_angle = 180.;
+   width_angle = 60.;
+   
+   int bins_K0sK0s[4] = {int((max_mass - min_mass) / width_mass), int((max_pt - min_pt) / width_pt), 
+			 binnum_cent, int((max_angle - min_angle)/width_angle)};
+   double min_bins_K0sK0s[4] = {min_mass, min_pt,   0, min_angle};
+   double max_bins_K0sK0s[4] = {max_mass, max_pt, 100, max_angle};
+ 
+   fSparseNeutralK0sPair          = new THnSparseF("fSparseNeutralK0sPair", "", 2, bins_K0sK0s,min_bins_K0sK0s, max_bins_K0sK0s);
+   fSparseNeutralNegativeK0sPair  = new THnSparseF("fSparseNeutralNegativeK0sPair", "", 2, bins_K0sK0s,min_bins_K0sK0s, max_bins_K0sK0s);
+   fSparseNeutralPositiveK0sPair  = new THnSparseF("fSparseNeutralPositiveK0sPair", "", 2, bins_K0sK0s,min_bins_K0sK0s, max_bins_K0sK0s);
+   fSparsePositiveK0sPair         = new THnSparseF("fSparsePositiveK0sPair", "", 2, bins_K0sK0s,min_bins_K0sK0s, max_bins_K0sK0s);
+   fSparseNegativeK0sPair         = new THnSparseF("fSparseNegativeK0sPair", "", 2, bins_K0sK0s,min_bins_K0sK0s, max_bins_K0sK0s);
+   fSparsePositiveNegativeK0sPair = new THnSparseF("fSparsePositiveNegativeK0sPair", "", 2, bins_K0sK0s,min_bins_K0sK0s, max_bins_K0sK0s);
+   //fSparseNeutralK0sPair         -> SetBinEdges(2,bins_cent.data());
+   //fSparseNeutralNegativeK0sPair -> SetBinEdges(2,bins_cent.data());
+   //fSparseNeutralPositiveK0sPair -> SetBinEdges(2,bins_cent.data());
+   //fSparsePositiveK0sPair        -> SetBinEdges(2,bins_cent.data());
+   //fSparseNegativeK0sPair        -> SetBinEdges(2,bins_cent.data());
+   //fSparsePositiveNegativeK0sPair->SetBinEdges(2,bins_cent.data());
    fOutputList -> Add(fSparseNeutralK0sPair);
    fOutputList -> Add(fSparseNeutralNegativeK0sPair);
    fOutputList -> Add(fSparseNeutralPositiveK0sPair);
    fOutputList -> Add(fSparsePositiveK0sPair);
    fOutputList -> Add(fSparseNegativeK0sPair);
    fOutputList -> Add(fSparsePositiveNegativeK0sPair);
-      
-   fSparseTrueK0s = new THnSparseF("fSparseTrueK0s", "", 4, bins,min_bins, max_bins);
-   fSparseTrueK0s -> SetBinEdges(2,bins_cent.data());
-   fOutputList    -> Add(fSparseTrueK0s);
    
+   if (fIsMC) {
+     fSparseTrueK0s = new THnSparseF("fSparseTrueK0s", "", 2, bins_K0s,min_bins_K0s, max_bins_K0s);
+     fSparseTrueK0s -> SetBinEdges(2,bins_cent.data());
+     fOutputList    -> Add(fSparseTrueK0s);
+   }
+
    int bins_K0sParams[4]        = {10, 400, 400, 600};
    double min_bins_K0sParams[4] = {0,    0,   0,  -1};
    double max_bins_K0sParams[4] = {10,   2,   2,   2};
    
-   fSparseTrueK0sRecK0s = new THnSparseF("fSparseTrueK0sRecK0s", "", 4, bins_K0sParams, min_bins_K0sParams, max_bins_K0sParams);
-   fOutputList -> Add(fSparseTrueK0sRecK0s);
-   
+   if (fIsMC) {
+     fSparseTrueK0sRecK0s = new THnSparseF("fSparseTrueK0sRecK0s", "", 4, bins_K0sParams, min_bins_K0sParams, max_bins_K0sParams);
+     fOutputList -> Add(fSparseTrueK0sRecK0s);
+   }
+
    width_pt = 0.1;
    
-   fHistV0PV0DecayLengthXY   = new TH2F("fHistV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-   fHistV0PV0DecayLength     = new TH2F("fHistV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-   fHistV0PV0PointingAngleXY = new TH2F("fHistV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-   fHistV0PV0PointingAngle   = new TH2F("fHistV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-   fHistV0PV0DCAXY           = new TH2F("fHistV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
-   fHistV0PV0DCA             = new TH2F("fHistV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistV0PV0DecayLengthXY   = new TH2F("fHistV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+   fHistV0PV0DecayLength     = new TH2F("fHistV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+   fHistV0PV0PointingAngleXY = new TH2F("fHistV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+   fHistV0PV0PointingAngle   = new TH2F("fHistV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+   fHistV0PV0DCAXY           = new TH2F("fHistV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
+   fHistV0PV0DCA             = new TH2F("fHistV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
    fHistV0PV0TrackDistanceXY = new TH2F("fHistV0PV0TrackDistanceXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
    fHistV0PV0TrackDistance   = new TH2F("fHistV0PV0TrackDistance", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
    fHistV0PV0Chi2perNDF      = new TH2F("fHistV0PV0Chi2perNDF", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
-   fHistV0PV0PropLifeTime    = new TH2F("fHistV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
-   fHistV0TrackDCAXY         = new TH2F("fHistV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
-   fHistV0TrackDCA           = new TH2F("fHistV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fHistV0PV0PropLifeTime    = new TH2F("fHistV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0, 50.);
+   fHistV0TrackDCAXY         = new TH2F("fHistV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+   fHistV0TrackDCA           = new TH2F("fHistV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+   fHistV0Armenteros         = new TH2F("fHistV0Armenteros", "",200,-1,1,300,0,0.3);
    fOutputList -> Add(fHistV0PV0DecayLengthXY);
    fOutputList -> Add(fHistV0PV0DecayLength);
    fOutputList -> Add(fHistV0PV0PointingAngleXY);
@@ -719,19 +811,21 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
    fOutputList -> Add(fHistV0PV0PropLifeTime);
    fOutputList -> Add(fHistV0TrackDCAXY);
    fOutputList -> Add(fHistV0TrackDCA);
+   fOutputList -> Add(fHistV0Armenteros);
 
-   fHistSelV0PV0DecayLengthXY   = new TH2F("fHistSelV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-   fHistSelV0PV0DecayLength     = new TH2F("fHistSelV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-   fHistSelV0PV0PointingAngleXY = new TH2F("fHistSelV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-   fHistSelV0PV0PointingAngle   = new TH2F("fHistSelV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-   fHistSelV0PV0DCAXY           = new TH2F("fHistSelV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
-   fHistSelV0PV0DCA             = new TH2F("fHistSelV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistSelV0PV0DecayLengthXY   = new TH2F("fHistSelV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+   fHistSelV0PV0DecayLength     = new TH2F("fHistSelV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+   fHistSelV0PV0PointingAngleXY = new TH2F("fHistSelV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+   fHistSelV0PV0PointingAngle   = new TH2F("fHistSelV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+   fHistSelV0PV0DCAXY           = new TH2F("fHistSelV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
+   fHistSelV0PV0DCA             = new TH2F("fHistSelV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
    fHistSelV0PV0TrackDistanceXY = new TH2F("fHistSelV0PV0TrackDistanceXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
    fHistSelV0PV0TrackDistance   = new TH2F("fHistSelV0PV0TrackDistance", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
    fHistSelV0PV0Chi2perNDF      = new TH2F("fHistSelV0PV0Chi2perNDF", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
-   fHistSelV0PV0PropLifeTime    = new TH2F("fHistSelV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
-   fHistSelV0TrackDCAXY         = new TH2F("fHistSelV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
-   fHistSelV0TrackDCA           = new TH2F("fHistSelV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fHistSelV0PV0PropLifeTime    = new TH2F("fHistSelV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0, 50.);
+   fHistSelV0TrackDCAXY         = new TH2F("fHistSelV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+   fHistSelV0TrackDCA           = new TH2F("fHistSelV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+   fHistSelV0Armenteros         = new TH2F("fHistSelV0Armenteros", "",200,-1,1,300,0,0.3);
    fOutputList -> Add(fHistSelV0PV0DecayLengthXY);
    fOutputList -> Add(fHistSelV0PV0DecayLength);
    fOutputList -> Add(fHistSelV0PV0PointingAngleXY);
@@ -744,19 +838,21 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
    fOutputList -> Add(fHistSelV0PV0PropLifeTime);
    fOutputList -> Add(fHistSelV0TrackDCAXY);
    fOutputList -> Add(fHistSelV0TrackDCA);
+   fOutputList -> Add(fHistSelV0Armenteros);
 
-   fHistLSV0PV0DecayLengthXY   = new TH2F("fHistLSV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-   fHistLSV0PV0DecayLength     = new TH2F("fHistLSV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-   fHistLSV0PV0PointingAngleXY = new TH2F("fHistLSV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-   fHistLSV0PV0PointingAngle   = new TH2F("fHistLSV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-   fHistLSV0PV0DCAXY           = new TH2F("fHistLSV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
-   fHistLSV0PV0DCA             = new TH2F("fHistLSV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistLSV0PV0DecayLengthXY   = new TH2F("fHistLSV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+   fHistLSV0PV0DecayLength     = new TH2F("fHistLSV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+   fHistLSV0PV0PointingAngleXY = new TH2F("fHistLSV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+   fHistLSV0PV0PointingAngle   = new TH2F("fHistLSV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+   fHistLSV0PV0DCAXY           = new TH2F("fHistLSV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
+   fHistLSV0PV0DCA             = new TH2F("fHistLSV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
    fHistLSV0PV0TrackDistanceXY = new TH2F("fHistLSV0PV0TrackDistanceXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
    fHistLSV0PV0TrackDistance   = new TH2F("fHistLSV0PV0TrackDistance", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
    fHistLSV0PV0Chi2perNDF      = new TH2F("fHistLSV0PV0Chi2perNDF", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
-   fHistLSV0PV0PropLifeTime    = new TH2F("fHistLSV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
-   fHistLSV0TrackDCAXY         = new TH2F("fHistLSV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
-   fHistLSV0TrackDCA           = new TH2F("fHistLSV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fHistLSV0PV0PropLifeTime    = new TH2F("fHistLSV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0, 50.);
+   fHistLSV0TrackDCAXY         = new TH2F("fHistLSV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+   fHistLSV0TrackDCA           = new TH2F("fHistLSV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+   fHistLSV0Armenteros         = new TH2F("fHistLSV0Armenteros", "",200,-1,1,300,0,0.3);
    fOutputList -> Add(fHistLSV0PV0DecayLengthXY);
    fOutputList -> Add(fHistLSV0PV0DecayLength);
    fOutputList -> Add(fHistLSV0PV0PointingAngleXY);
@@ -769,19 +865,21 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
    fOutputList -> Add(fHistLSV0PV0PropLifeTime);
    fOutputList -> Add(fHistLSV0TrackDCAXY);
    fOutputList -> Add(fHistLSV0TrackDCA);
+   fOutputList -> Add(fHistLSV0Armenteros);
 
-   fHistLSSelV0PV0DecayLengthXY   = new TH2F("fHistLSSelV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-   fHistLSSelV0PV0DecayLength     = new TH2F("fHistLSSelV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-   fHistLSSelV0PV0PointingAngleXY = new TH2F("fHistLSSelV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-   fHistLSSelV0PV0PointingAngle   = new TH2F("fHistLSSelV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-   fHistLSSelV0PV0DCAXY           = new TH2F("fHistLSSelV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
-   fHistLSSelV0PV0DCA             = new TH2F("fHistLSSelV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+   fHistLSSelV0PV0DecayLengthXY   = new TH2F("fHistLSSelV0PV0DecayLengthXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+   fHistLSSelV0PV0DecayLength     = new TH2F("fHistLSSelV0PV0DecayLength", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+   fHistLSSelV0PV0PointingAngleXY = new TH2F("fHistLSSelV0PV0PointingAngleXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+   fHistLSSelV0PV0PointingAngle   = new TH2F("fHistLSSelV0PV0PointingAngle", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+   fHistLSSelV0PV0DCAXY           = new TH2F("fHistLSSelV0PV0DCAXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
+   fHistLSSelV0PV0DCA             = new TH2F("fHistLSSelV0PV0DCA", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
    fHistLSSelV0PV0TrackDistanceXY = new TH2F("fHistLSSelV0PV0TrackDistanceXY", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
    fHistLSSelV0PV0TrackDistance   = new TH2F("fHistLSSelV0PV0TrackDistance", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
    fHistLSSelV0PV0Chi2perNDF      = new TH2F("fHistLSSelV0PV0Chi2perNDF", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
-   fHistLSSelV0PV0PropLifeTime    = new TH2F("fHistLSSelV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
-   fHistLSSelV0TrackDCAXY         = new TH2F("fHistLSSelV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
-   fHistLSSelV0TrackDCA           = new TH2F("fHistLSSelV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+   fHistLSSelV0PV0PropLifeTime    = new TH2F("fHistLSSelV0PV0PropLifeTime", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0, 50.);
+   fHistLSSelV0TrackDCAXY         = new TH2F("fHistLSSelV0TrackDCAXY", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+   fHistLSSelV0TrackDCA           = new TH2F("fHistLSSelV0TrackDCA", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+   fHistLSSelV0Armenteros         = new TH2F("fHistLSSelV0Armenteros", "",200,-1,1,300,0,0.3);
    fOutputList -> Add(fHistLSSelV0PV0DecayLengthXY);
    fOutputList -> Add(fHistLSSelV0PV0DecayLength);
    fOutputList -> Add(fHistLSSelV0PV0PointingAngleXY);
@@ -794,20 +892,22 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
    fOutputList -> Add(fHistLSSelV0PV0PropLifeTime);
    fOutputList -> Add(fHistLSSelV0TrackDCAXY);
    fOutputList -> Add(fHistLSSelV0TrackDCA);
+   fOutputList -> Add(fHistLSSelV0Armenteros);
 
    if (fIsMC) {
-     fHistV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-     fHistV0PV0DecayLength_TrueK0s     = new TH2F("fHistV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-     fHistV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-     fHistV0PV0PointingAngle_TrueK0s   = new TH2F("fHistV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-     fHistV0PV0DCAXY_TrueK0s           = new TH2F("fHistV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
-     fHistV0PV0DCA_TrueK0s             = new TH2F("fHistV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+     fHistV0PV0DecayLength_TrueK0s     = new TH2F("fHistV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+     fHistV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+     fHistV0PV0PointingAngle_TrueK0s   = new TH2F("fHistV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+     fHistV0PV0DCAXY_TrueK0s           = new TH2F("fHistV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
+     fHistV0PV0DCA_TrueK0s             = new TH2F("fHistV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
      fHistV0PV0TrackDistanceXY_TrueK0s = new TH2F("fHistV0PV0TrackDistanceXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
      fHistV0PV0TrackDistance_TrueK0s   = new TH2F("fHistV0PV0TrackDistance_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
      fHistV0PV0Chi2perNDF_TrueK0s      = new TH2F("fHistV0PV0Chi2perNDF_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
-     fHistV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
-     fHistV0TrackDCAXY_TrueK0s         = new TH2F("fHistV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
-     fHistV0TrackDCA_TrueK0s           = new TH2F("fHistV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fHistV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0, 50.);
+     fHistV0TrackDCAXY_TrueK0s         = new TH2F("fHistV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+     fHistV0TrackDCA_TrueK0s           = new TH2F("fHistV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+     fHistV0Armenteros_TrueK0s         = new TH2F("fHistV0Armenteros_TrueK0s", "",200,-1,1,300,0,0.3);
      fOutputList -> Add(fHistV0PV0DecayLengthXY_TrueK0s);
      fOutputList -> Add(fHistV0PV0DecayLength_TrueK0s);
      fOutputList -> Add(fHistV0PV0PointingAngleXY_TrueK0s);
@@ -820,19 +920,21 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
      fOutputList -> Add(fHistV0PV0PropLifeTime_TrueK0s);
      fOutputList -> Add(fHistV0TrackDCAXY_TrueK0s);
      fOutputList -> Add(fHistV0TrackDCA_TrueK0s);
+     fOutputList -> Add(fHistV0Armenteros_TrueK0s);
 
-     fHistSelV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistSelV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-     fHistSelV0PV0DecayLength_TrueK0s     = new TH2F("fHistSelV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-     fHistSelV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistSelV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-     fHistSelV0PV0PointingAngle_TrueK0s   = new TH2F("fHistSelV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-     fHistSelV0PV0DCAXY_TrueK0s           = new TH2F("fHistSelV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
-     fHistSelV0PV0DCA_TrueK0s             = new TH2F("fHistSelV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistSelV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistSelV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+     fHistSelV0PV0DecayLength_TrueK0s     = new TH2F("fHistSelV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+     fHistSelV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistSelV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+     fHistSelV0PV0PointingAngle_TrueK0s   = new TH2F("fHistSelV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+     fHistSelV0PV0DCAXY_TrueK0s           = new TH2F("fHistSelV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
+     fHistSelV0PV0DCA_TrueK0s             = new TH2F("fHistSelV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
      fHistSelV0PV0TrackDistanceXY_TrueK0s = new TH2F("fHistSelV0PV0TrackDistanceXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
      fHistSelV0PV0TrackDistance_TrueK0s   = new TH2F("fHistSelV0PV0TrackDistance_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
      fHistSelV0PV0Chi2perNDF_TrueK0s      = new TH2F("fHistSelV0PV0Chi2perNDF_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
-     fHistSelV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistSelV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
-     fHistSelV0TrackDCAXY_TrueK0s         = new TH2F("fHistSelV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
-     fHistSelV0TrackDCA_TrueK0s           = new TH2F("fHistSelV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fHistSelV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistSelV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0, 50.);
+     fHistSelV0TrackDCAXY_TrueK0s         = new TH2F("fHistSelV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+     fHistSelV0TrackDCA_TrueK0s           = new TH2F("fHistSelV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+     fHistSelV0Armenteros_TrueK0s         = new TH2F("fHistSelV0Armenteros_TrueK0s", "",200,-1,1,300,0,0.3);
      fOutputList -> Add(fHistSelV0PV0DecayLengthXY_TrueK0s);
      fOutputList -> Add(fHistSelV0PV0DecayLength_TrueK0s);
      fOutputList -> Add(fHistSelV0PV0PointingAngleXY_TrueK0s);
@@ -845,20 +947,21 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
      fOutputList -> Add(fHistSelV0PV0PropLifeTime_TrueK0s);
      fOutputList -> Add(fHistSelV0TrackDCAXY_TrueK0s);
      fOutputList -> Add(fHistSelV0TrackDCA_TrueK0s);
+     fOutputList -> Add(fHistSelV0Armenteros_TrueK0s);
 
-
-     fHistLSV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistLSV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-     fHistLSV0PV0DecayLength_TrueK0s     = new TH2F("fHistLSV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-     fHistLSV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistLSV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-     fHistLSV0PV0PointingAngle_TrueK0s   = new TH2F("fHistLSV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-     fHistLSV0PV0DCAXY_TrueK0s           = new TH2F("fHistLSV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
-     fHistLSV0PV0DCA_TrueK0s             = new TH2F("fHistLSV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistLSV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistLSV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+     fHistLSV0PV0DecayLength_TrueK0s     = new TH2F("fHistLSV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+     fHistLSV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistLSV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+     fHistLSV0PV0PointingAngle_TrueK0s   = new TH2F("fHistLSV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+     fHistLSV0PV0DCAXY_TrueK0s           = new TH2F("fHistLSV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
+     fHistLSV0PV0DCA_TrueK0s             = new TH2F("fHistLSV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
      fHistLSV0PV0TrackDistanceXY_TrueK0s = new TH2F("fHistLSV0PV0TrackDistanceXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
      fHistLSV0PV0TrackDistance_TrueK0s   = new TH2F("fHistLSV0PV0TrackDistance_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
      fHistLSV0PV0Chi2perNDF_TrueK0s      = new TH2F("fHistLSV0PV0Chi2perNDF_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
-     fHistLSV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistLSV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
-     fHistLSV0TrackDCAXY_TrueK0s         = new TH2F("fHistLSV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
-     fHistLSV0TrackDCA_TrueK0s           = new TH2F("fHistLSV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fHistLSV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistLSV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0, 50.);
+     fHistLSV0TrackDCAXY_TrueK0s         = new TH2F("fHistLSV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+     fHistLSV0TrackDCA_TrueK0s           = new TH2F("fHistLSV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+     fHistLSV0Armenteros_TrueK0s         = new TH2F("fHistLSV0Armenteros_TrueK0s", "",200,-1,1,300,0,0.3);
      fOutputList -> Add(fHistLSV0PV0DecayLengthXY_TrueK0s);
      fOutputList -> Add(fHistLSV0PV0DecayLength_TrueK0s);
      fOutputList -> Add(fHistLSV0PV0PointingAngleXY_TrueK0s);
@@ -871,19 +974,21 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
      fOutputList -> Add(fHistLSV0PV0PropLifeTime_TrueK0s);
      fOutputList -> Add(fHistLSV0TrackDCAXY_TrueK0s);
      fOutputList -> Add(fHistLSV0TrackDCA_TrueK0s);
+     fOutputList -> Add(fHistLSV0Armenteros_TrueK0s);
 
-     fHistLSSelV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistLSSelV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-     fHistLSSelV0PV0DecayLength_TrueK0s     = new TH2F("fHistLSSelV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 500, 0., 100.);
-     fHistLSSelV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistLSSelV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-     fHistLSSelV0PV0PointingAngle_TrueK0s   = new TH2F("fHistLSSelV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0.95, 1.0);
-     fHistLSSelV0PV0DCAXY_TrueK0s           = new TH2F("fHistLSSelV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
-     fHistLSSelV0PV0DCA_TrueK0s             = new TH2F("fHistLSSelV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 400, 0., 80.);
+     fHistLSSelV0PV0DecayLengthXY_TrueK0s   = new TH2F("fHistLSSelV0PV0DecayLengthXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+     fHistLSSelV0PV0DecayLength_TrueK0s     = new TH2F("fHistLSSelV0PV0DecayLength_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0., 100.);
+     fHistLSSelV0PV0PointingAngleXY_TrueK0s = new TH2F("fHistLSSelV0PV0PointingAngleXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+     fHistLSSelV0PV0PointingAngle_TrueK0s   = new TH2F("fHistLSSelV0PV0PointingAngle_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,10000, 0.99, 1.0);
+     fHistLSSelV0PV0DCAXY_TrueK0s           = new TH2F("fHistLSSelV0PV0DCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
+     fHistLSSelV0PV0DCA_TrueK0s             = new TH2F("fHistLSSelV0PV0DCA_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 1000, 0., 10.);
      fHistLSSelV0PV0TrackDistanceXY_TrueK0s = new TH2F("fHistLSSelV0PV0TrackDistanceXY_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
      fHistLSSelV0PV0TrackDistance_TrueK0s   = new TH2F("fHistLSSelV0PV0TrackDistance_TrueK0s", "",int((max_pt - min_pt) / width_pt),min_pt, max_pt, 10000, 0, 10);
      fHistLSSelV0PV0Chi2perNDF_TrueK0s      = new TH2F("fHistLSSelV0PV0Chi2perNDF_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,1000, 0., 10.);
-     fHistLSSelV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistLSSelV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,250, 0, 50.);
-     fHistLSSelV0TrackDCAXY_TrueK0s         = new TH2F("fHistLSSelV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
-     fHistLSSelV0TrackDCA_TrueK0s           = new TH2F("fHistLSSelV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 1000, 0., 100.);
+     fHistLSSelV0PV0PropLifeTime_TrueK0s    = new TH2F("fHistLSSelV0PV0PropLifeTime_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt,500, 0, 50.);
+     fHistLSSelV0TrackDCAXY_TrueK0s         = new TH2F("fHistLSSelV0TrackDCAXY_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+     fHistLSSelV0TrackDCA_TrueK0s           = new TH2F("fHistLSSelV0TrackDCA_TrueK0s", "",int((max_pt - min_pt) / width_pt), min_pt, max_pt, 5000, 0., 50.);
+     fHistLSSelV0Armenteros_TrueK0s         = new TH2F("fHistLSSelV0Armenteros_TrueK0s", "",200,-1,1,300,0,0.3);
      fOutputList -> Add(fHistLSSelV0PV0DecayLengthXY_TrueK0s);
      fOutputList -> Add(fHistLSSelV0PV0DecayLength_TrueK0s);
      fOutputList -> Add(fHistLSSelV0PV0PointingAngleXY_TrueK0s);
@@ -896,18 +1001,19 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
      fOutputList -> Add(fHistLSSelV0PV0PropLifeTime_TrueK0s);
      fOutputList -> Add(fHistLSSelV0TrackDCAXY_TrueK0s);
      fOutputList -> Add(fHistLSSelV0TrackDCA_TrueK0s);
+     fOutputList -> Add(fHistLSSelV0Armenteros_TrueK0s);
    }
    
    fHistTrackP                    = new TH1F("fHistTrackP", "", 100, 0, 10);
    fHistTrackPt                   = new TH1F("fHistTrackPt", "", 100, 0, 10);
    fHistTrackEta                  = new TH1F("fHistTrackEta", "", 20, -1, 1);   
-   fHistTPCNClusts                = new TH1F("fHistTPCNClusts", "", 160, 0, 160);
-   fHistSPDNClusts                = new TH1F("fHistSPDNClusts", "", 6, 0, 6);
-   fHistTPCCrossRowsFindableRatio = new TH1F("fHistTPCCrossRowsFindableRatio", "", 200, 0, 2);
-   fHistReducedChi2TPC            = new TH1F("fHistReducedChi2TPC", "", 100, 0, 10);
-   fHistReducedChi2ITS            = new TH1F("fHistReducedChi2ITS", "", 250, 0, 50);
-   fHistDCAz                      = new TH1F("fHistDCAz", "", 100, 0, 10);
-   fHistDCAxyPt                   = new TH2F("fHistDCAxyPt", "", 200, -1, 1, 100, 0, 10);
+   fHistTPCNClusts                = new TH2F("fHistTPCNClusts", "", 160, 0, 160, 100, 0, 10);
+   fHistSPDNClusts                = new TH2F("fHistSPDNClusts", "", 6, 0, 6, 100, 0, 10);
+   fHistTPCCrossRowsFindableRatio = new TH2F("fHistTPCCrossRowsFindableRatio", "", 200, 0, 2, 100, 0, 10);
+   fHistReducedChi2TPC            = new TH2F("fHistReducedChi2TPC", "", 100, 0, 10, 100, 0, 10);
+   fHistReducedChi2ITS            = new TH2F("fHistReducedChi2ITS", "", 250, 0, 50, 100, 0, 10);
+   fHistDCAz                      = new TH2F("fHistDCAz", "", 1200, -60, 60, 100, 0, 10);
+   fHistDCAxy                     = new TH2F("fHistDCAxy", "", 2000, 0, 20, 100, 0, 10);
    
    fOutputList->Add(fHistTrackP);
    fOutputList->Add(fHistTrackPt);
@@ -918,7 +1024,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
    fOutputList->Add(fHistReducedChi2TPC);
    fOutputList->Add(fHistReducedChi2ITS);
    fOutputList->Add(fHistDCAz);
-   fOutputList->Add(fHistDCAxyPt);
+   fOutputList->Add(fHistDCAxy);
    
    double min_dEdx = 0.;
    double max_dEdx = 300.;
@@ -1001,25 +1107,45 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
  //________________________________________________________________________
 
  void AliAnalysisTaskAODTrackPair::UserExec(Option_t *) {
-   
-   fArrayK0s = new TObjArray();
+   selectEvt++;
+   //cout<<"   Event: "<<selectEvt<<endl;
+   /*
+   if (selectEvt < 14000) {     
+     ++selectEvt;
+     return;
+   }
+   */
+
+   fArrayK0s = unique_ptr<TObjArray>(new TObjArray());
    fArrayK0s -> SetOwner(true);
+   
+   fArrayK0sDaughterTrack = unique_ptr<TObjArray>(new TObjArray());
+   fArrayK0sDaughterTrack->SetOwner(true);
    
    if (!Initialize())            return ;
    if (!fUtils->isAcceptEvent()) return ;
    if (!fIsMixingAnalysis) {
      AddK0sArray(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
-     K0sPairAnalysis(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
+     K0sPairAnalysis(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));     
    } else {
      //K0sPairAnalysisEventMixing(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
    }
-   if(fIsMC){
-     ProcessMC();
+   if(fIsMC){     
+     //ProcessMC();
    }
-   if (fArrayK0s) delete fArrayK0s;
    
-   cout<<abord<<"  outof "<<all<<endl;
+   //if (fIsMC) cout<<abord<<"  outof "<<all<<endl;
    
+
+   if (selectEvt == 0){
+     start = clock();
+   }else if (selectEvt % 1000 == 0){
+     end = clock();
+     const double time = static_cast<double>(end - start) / CLOCKS_PER_SEC;   
+     cout<<Form("(%d) time %lf[s]\n", selectEvt, time)<<endl;
+     start = clock();
+   } 
+     
  }
 
  bool AliAnalysisTaskAODTrackPair::Initialize() {
@@ -1034,6 +1160,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
    if (fPrimVtx->GetNContributors() < fMinNContPrimVtx) return false;
 
    fPrimVtx->GetXYZ(fPrimVtxPos);
+   fPrimVtx->GetCovarianceMatrix(fPrimVtxCov);
    
    fMultSelection = (AliMultSelection *)fEvent->FindListObject("MultSelection");
    
@@ -1050,7 +1177,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) : Ali
      
      fMCTrackArray = dynamic_cast<TClonesArray *>(fEvent->FindListObject(AliAODMCParticle::StdBranchName()));
      
-     if (!fMCTrackArray) return false;     
+     if (!fMCTrackArray) return false;
      
      fUtils->setMCArray(fMCTrackArray);
      
@@ -1103,27 +1230,46 @@ bool AliAnalysisTaskAODTrackPair::TrackPIDChecker(AliAODTrack *track, AliPID::EP
 
 bool AliAnalysisTaskAODTrackPair::TrackQualityChecker(AliAODTrack *track) {
 
-  fHistTPCNClusts->Fill(track->GetTPCNcls());
+  fHistTPCNClusts->Fill(track->GetTPCNcls(), track->P());
 
   int nSPD = 0;
 
   if (track->HasPointOnITSLayer(0)) ++nSPD;
   if (track->HasPointOnITSLayer(1)) ++nSPD;
 
-  fHistSPDNClusts->Fill(nSPD);
+
+  fHistSPDNClusts->Fill(nSPD, track->P());
   
   double fr       = track->GetTPCCrossedRows() > 0 ? track->GetTPCNclsF() / track->GetTPCCrossedRows() : 0;
   double rchi2tpc = track->GetTPCNcls() > 0 ? track->GetTPCchi2() / track->GetTPCNcls() : 0;
   double rchi2its = track->GetITSNcls() > 0 ? track->GetITSchi2() / track->GetITSNcls() : 0;
   
-  fHistTPCCrossRowsFindableRatio -> Fill(fr);
-  fHistReducedChi2TPC            -> Fill(rchi2tpc);
-  fHistReducedChi2ITS            -> Fill(rchi2its);
+  fHistTPCCrossRowsFindableRatio -> Fill(fr, track->P());
+  fHistReducedChi2TPC            -> Fill(rchi2tpc, track->P());
+  fHistReducedChi2ITS            -> Fill(rchi2its, track->P());
   
-  double dca_xy, dca_z;
+  double maxd   = 999.;
+  double dz[2]  = {};
+  double cov[3] = {};
+  track->PropagateToDCA(fPrimVtx,fEvent->GetMagneticField(),maxd,dz,cov);
 
-  fHistDCAz    -> Fill(dca_z);
-  fHistDCAxyPt -> Fill(dca_xy, track->Pt());  
+  KFParticle kfTrack;
+  kfTrack = CreateKFParticle(track, 211);
+  float dca, e_dca;
+  float fPrimVtxPosF[] = {static_cast<float>(fPrimVtxPos[0]),static_cast<float>(fPrimVtxPos[1]),static_cast<float>(fPrimVtxPos[2])};
+  float fPrimVtxCovF[] = {static_cast<float>(fPrimVtxCov[0]),static_cast<float>(fPrimVtxCov[1]),static_cast<float>(fPrimVtxCov[2]),
+			  static_cast<float>(fPrimVtxCov[3]),static_cast<float>(fPrimVtxCov[4]),static_cast<float>(fPrimVtxCov[5])};
+  kfTrack.GetDistanceFromVertexXY(fPrimVtxPosF,fPrimVtxCovF,dca,e_dca);
+  double dca_xy = dca;
+  double dca_z  = dz[1];
+    
+  /*
+  double dca_xy = dz[0];
+  double dca_z  = dz[1];
+  */
+    
+  fHistDCAz     -> Fill(dca_z, track->P());
+  fHistDCAxy    -> Fill(dca_xy, track->P());  
   fHistTrackP   -> Fill(track->P());
   fHistTrackPt  -> Fill(track->Pt());
   fHistTrackEta -> Fill(track->Eta());
@@ -1131,183 +1277,260 @@ bool AliAnalysisTaskAODTrackPair::TrackQualityChecker(AliAODTrack *track) {
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::V0QualityChecker(K0sContainer *v0, bool isSel) {
-    
-  double p  = v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2] > 0 ? 
-    sqrt(v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2]) : 0;
+bool AliAnalysisTaskAODTrackPair::V0QualityChecker(double mass, double p, int charge, double DCApairXY, double DCApair, double decay_length, 
+						   double decay_length_xy, double cpv,
+						   double cpv_xy, double dca, double dca_xy, double distance_daughter, double distance_daughter_xy,
+						   double chi2, double lifetime, double armenteros_alpha, double armenteros_qt, int dlabel[2],bool isSel){  
   
-  double DCApairXY = v0->dDcaXY[0]*v0->dDcaXY[0] + v0->dDcaXY[1]*v0->dDcaXY[1] > 0 ?
-    sqrt(v0->dDcaXY[0]*v0->dDcaXY[0] + v0->dDcaXY[1]*v0->dDcaXY[1]) : 999;
-  double DCApair   = v0->dDcaXYZ[0]*v0->dDcaXYZ[0] + v0->dDcaXYZ[1]*v0->dDcaXYZ[1] > 0 ?
-    sqrt(v0->dDcaXYZ[0]*v0->dDcaXYZ[0] + v0->dDcaXYZ[1]*v0->dDcaXYZ[1]) : 999;
-
+  if ( !isAcceptK0sCandidateMassRange(mass) ) return false;
+  
   if (isSel) {    
     
-    fHistSelV0PV0DecayLengthXY   -> Fill(p, v0->DecayLengthXY);
-    fHistSelV0PV0DecayLength     -> Fill(p, v0->DecayLengthXYZ);
-    fHistSelV0PV0PointingAngleXY -> Fill(p, v0->CpvXY);
-    fHistSelV0PV0PointingAngle   -> Fill(p, v0->CpvXYZ);
-    fHistSelV0PV0DCAXY           -> Fill(p, v0->DcaXY);
-    fHistSelV0PV0DCA             -> Fill(p, v0->DcaXYZ);
-    fHistSelV0PV0TrackDistanceXY -> Fill(p, v0->DcaDaughtersXY);
-    fHistSelV0PV0TrackDistance    -> Fill(p, v0->DcaDaughtersXYZ);
-    fHistSelV0PV0Chi2perNDF      -> Fill(p, v0->rChi2V0);
-    fHistSelV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+    fHistSelV0PV0DecayLengthXY   -> Fill(p, decay_length_xy);
+    fHistSelV0PV0DecayLength     -> Fill(p, decay_length);
+    fHistSelV0PV0PointingAngleXY -> Fill(p, cpv_xy);
+    fHistSelV0PV0PointingAngle   -> Fill(p, cpv);
+    fHistSelV0PV0DCAXY           -> Fill(p, dca_xy);
+    fHistSelV0PV0DCA             -> Fill(p, dca);
+    fHistSelV0PV0TrackDistanceXY -> Fill(p, distance_daughter_xy);
+    fHistSelV0PV0TrackDistance   -> Fill(p, distance_daughter);
+    fHistSelV0PV0Chi2perNDF      -> Fill(p, chi2);
+    fHistSelV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * decay_length / p);    
     fHistSelV0TrackDCAXY         -> Fill(p, DCApairXY);
     fHistSelV0TrackDCA           -> Fill(p, DCApair);
+    fHistSelV0Armenteros         -> Fill(armenteros_alpha,armenteros_qt);
 
-    if (fabs(v0->Charge) > 0) {
-      fHistLSSelV0PV0DecayLengthXY   -> Fill(p, v0->DecayLengthXY);
-      fHistLSSelV0PV0DecayLength     -> Fill(p, v0->DecayLengthXYZ);
-      fHistLSSelV0PV0PointingAngleXY -> Fill(p, v0->CpvXY);
-      fHistLSSelV0PV0PointingAngle   -> Fill(p, v0->CpvXYZ);
-      fHistLSSelV0PV0DCAXY           -> Fill(p, v0->DcaXY);
-      fHistLSSelV0PV0DCA             -> Fill(p, v0->DcaXYZ);
-      fHistLSSelV0PV0TrackDistanceXY -> Fill(p, v0->DcaDaughtersXY);
-      fHistLSSelV0PV0TrackDistance    -> Fill(p, v0->DcaDaughtersXYZ);
-      fHistLSSelV0PV0Chi2perNDF      -> Fill(p, v0->rChi2V0);
-      fHistLSSelV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+    if (fabs(charge) > 0) {
+      fHistLSSelV0PV0DecayLengthXY   -> Fill(p, decay_length_xy);
+      fHistLSSelV0PV0DecayLength     -> Fill(p, decay_length);
+      fHistLSSelV0PV0PointingAngleXY -> Fill(p, cpv_xy);
+      fHistLSSelV0PV0PointingAngle   -> Fill(p, cpv);
+      fHistLSSelV0PV0DCAXY           -> Fill(p, dca_xy);
+      fHistLSSelV0PV0DCA             -> Fill(p, dca);
+      fHistLSSelV0PV0TrackDistanceXY -> Fill(p, distance_daughter_xy);
+      fHistLSSelV0PV0TrackDistance   -> Fill(p, distance_daughter);
+      fHistLSSelV0PV0Chi2perNDF      -> Fill(p, chi2);
+      fHistLSSelV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * decay_length / p);    
       fHistLSSelV0TrackDCAXY         -> Fill(p, DCApairXY);
       fHistLSSelV0TrackDCA           -> Fill(p, DCApair);
+      fHistLSSelV0Armenteros         -> Fill(armenteros_alpha,armenteros_qt);
     }
 
     if(fIsMC && 
-       fUtils->isSameMotherPair(v0->dLabel[0],v0->dLabel[1]) &&
-       fUtils->getMotherPdgCode(v0->dLabel[0]) == 310 &&
-       fUtils->getGrandMotherLabel(v0->dLabel[0]) == -1){      
+       fUtils->isSameMotherPair(dlabel[0],dlabel[1]) &&
+       fUtils->getMotherPdgCode(dlabel[0]) == 310 &&
+       fUtils->getGrandMotherLabel(dlabel[0]) == -1){      
     
-      fHistSelV0PV0DecayLengthXY_TrueK0s   -> Fill(p, v0->DecayLengthXY);
-      fHistSelV0PV0DecayLength_TrueK0s     -> Fill(p, v0->DecayLengthXYZ);
-      fHistSelV0PV0PointingAngleXY_TrueK0s -> Fill(p, v0->CpvXY);
-      fHistSelV0PV0PointingAngle_TrueK0s   -> Fill(p, v0->CpvXYZ);
-      fHistSelV0PV0DCAXY_TrueK0s           -> Fill(p, v0->DcaXY);
-      fHistSelV0PV0DCA_TrueK0s             -> Fill(p, v0->DcaXYZ);
-      fHistSelV0PV0TrackDistanceXY_TrueK0s -> Fill(p, v0->DcaDaughtersXY);
-      fHistSelV0PV0TrackDistance_TrueK0s   -> Fill(p, v0->DcaDaughtersXYZ);
-      fHistSelV0PV0Chi2perNDF_TrueK0s      -> Fill(p, v0->rChi2V0);
-      fHistSelV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+      fHistSelV0PV0DecayLengthXY_TrueK0s   -> Fill(p, decay_length_xy);
+      fHistSelV0PV0DecayLength_TrueK0s     -> Fill(p, decay_length);
+      fHistSelV0PV0PointingAngleXY_TrueK0s -> Fill(p, cpv_xy);
+      fHistSelV0PV0PointingAngle_TrueK0s   -> Fill(p, cpv);
+      fHistSelV0PV0DCAXY_TrueK0s           -> Fill(p, dca_xy);
+      fHistSelV0PV0DCA_TrueK0s             -> Fill(p, dca);
+      fHistSelV0PV0TrackDistanceXY_TrueK0s -> Fill(p, distance_daughter_xy);
+      fHistSelV0PV0TrackDistance_TrueK0s   -> Fill(p, distance_daughter);
+      fHistSelV0PV0Chi2perNDF_TrueK0s      -> Fill(p, chi2);
+      fHistSelV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * decay_length / p);    
       fHistSelV0TrackDCAXY_TrueK0s         -> Fill(p, DCApairXY);
       fHistSelV0TrackDCA_TrueK0s           -> Fill(p, DCApair);      
+      fHistSelV0Armenteros_TrueK0s         -> Fill(armenteros_alpha,armenteros_qt);
 
-      if (fabs(v0->Charge) > 0) {
-	fHistLSSelV0PV0DecayLengthXY_TrueK0s   -> Fill(p, v0->DecayLengthXY);
-	fHistLSSelV0PV0DecayLength_TrueK0s     -> Fill(p, v0->DecayLengthXYZ);
-	fHistLSSelV0PV0PointingAngleXY_TrueK0s -> Fill(p, v0->CpvXY);
-	fHistLSSelV0PV0PointingAngle_TrueK0s   -> Fill(p, v0->CpvXYZ);
-	fHistLSSelV0PV0DCAXY_TrueK0s           -> Fill(p, v0->DcaXY);
-	fHistLSSelV0PV0DCA_TrueK0s             -> Fill(p, v0->DcaXYZ);
-	fHistLSSelV0PV0TrackDistanceXY_TrueK0s -> Fill(p, v0->DcaDaughtersXY);
-	fHistLSSelV0PV0TrackDistance_TrueK0s    -> Fill(p, v0->DcaDaughtersXYZ);
-	fHistLSSelV0PV0Chi2perNDF_TrueK0s      -> Fill(p, v0->rChi2V0);
-	fHistLSSelV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+      if (fabs(charge) > 0) {
+	fHistLSSelV0PV0DecayLengthXY_TrueK0s   -> Fill(p, decay_length_xy);
+	fHistLSSelV0PV0DecayLength_TrueK0s     -> Fill(p, decay_length);
+	fHistLSSelV0PV0PointingAngleXY_TrueK0s -> Fill(p, cpv_xy);
+	fHistLSSelV0PV0PointingAngle_TrueK0s   -> Fill(p, cpv);
+	fHistLSSelV0PV0DCAXY_TrueK0s           -> Fill(p, dca_xy);
+	fHistLSSelV0PV0DCA_TrueK0s             -> Fill(p, dca);
+	fHistLSSelV0PV0TrackDistanceXY_TrueK0s -> Fill(p, distance_daughter_xy);
+	fHistLSSelV0PV0TrackDistance_TrueK0s   -> Fill(p, distance_daughter);
+	fHistLSSelV0PV0Chi2perNDF_TrueK0s      -> Fill(p, chi2);
+	fHistLSSelV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * decay_length / p);    
 	fHistLSSelV0TrackDCAXY_TrueK0s         -> Fill(p, DCApairXY);
 	fHistLSSelV0TrackDCA_TrueK0s           -> Fill(p, DCApair);
+	fHistLSSelV0Armenteros_TrueK0s         -> Fill(armenteros_alpha,armenteros_qt);
       }
 
     }    
   } else {
     
-    fHistV0PV0DecayLengthXY   -> Fill(p, v0->DecayLengthXY);
-    fHistV0PV0DecayLength     -> Fill(p, v0->DecayLengthXYZ);
-    fHistV0PV0PointingAngleXY -> Fill(p, v0->CpvXY);
-    fHistV0PV0PointingAngle   -> Fill(p, v0->CpvXYZ);
-    fHistV0PV0DCAXY           -> Fill(p, v0->DcaXY);
-    fHistV0PV0DCA             -> Fill(p, v0->DcaXYZ);
-    fHistV0PV0TrackDistanceXY -> Fill(p, v0->DcaDaughtersXY);
-    fHistV0PV0TrackDistance   -> Fill(p, v0->DcaDaughtersXYZ);
-    fHistV0PV0Chi2perNDF      -> Fill(p, v0->rChi2V0);
-    fHistV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+    fHistV0PV0DecayLengthXY   -> Fill(p, decay_length_xy);
+    fHistV0PV0DecayLength     -> Fill(p, decay_length);
+    fHistV0PV0PointingAngleXY -> Fill(p, cpv_xy);
+    fHistV0PV0PointingAngle   -> Fill(p, cpv);
+    fHistV0PV0DCAXY           -> Fill(p, dca_xy);
+    fHistV0PV0DCA             -> Fill(p, dca);
+    fHistV0PV0TrackDistanceXY -> Fill(p, distance_daughter_xy);
+    fHistV0PV0TrackDistance   -> Fill(p, distance_daughter);
+    fHistV0PV0Chi2perNDF      -> Fill(p, chi2);
+    fHistV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * decay_length / p);    
     fHistV0TrackDCAXY         -> Fill(p, DCApairXY);
     fHistV0TrackDCA           -> Fill(p, DCApair);
+    fHistV0Armenteros         -> Fill(armenteros_alpha,armenteros_qt);
 
-    if (fabs(v0->Charge) > 0) {
-      fHistLSV0PV0DecayLengthXY   -> Fill(p, v0->DecayLengthXY);
-      fHistLSV0PV0DecayLength     -> Fill(p, v0->DecayLengthXYZ);
-      fHistLSV0PV0PointingAngleXY -> Fill(p, v0->CpvXY);
-      fHistLSV0PV0PointingAngle   -> Fill(p, v0->CpvXYZ);
-      fHistLSV0PV0DCAXY           -> Fill(p, v0->DcaXY);
-      fHistLSV0PV0DCA             -> Fill(p, v0->DcaXYZ);
-      fHistLSV0PV0TrackDistanceXY -> Fill(p, v0->DcaDaughtersXY);
-      fHistLSV0PV0TrackDistance    -> Fill(p, v0->DcaDaughtersXYZ);
-      fHistLSV0PV0Chi2perNDF      -> Fill(p, v0->rChi2V0);
-      fHistLSV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+    if (fabs(charge) > 0) {
+      fHistLSV0PV0DecayLengthXY   -> Fill(p, decay_length_xy);
+      fHistLSV0PV0DecayLength     -> Fill(p, decay_length);
+      fHistLSV0PV0PointingAngleXY -> Fill(p, cpv_xy);
+      fHistLSV0PV0PointingAngle   -> Fill(p, cpv);
+      fHistLSV0PV0DCAXY           -> Fill(p, dca_xy);
+      fHistLSV0PV0DCA             -> Fill(p, dca);
+      fHistLSV0PV0TrackDistanceXY -> Fill(p, distance_daughter_xy);
+      fHistLSV0PV0TrackDistance   -> Fill(p, distance_daughter);
+      fHistLSV0PV0Chi2perNDF      -> Fill(p, chi2);
+      fHistLSV0PV0PropLifeTime    -> Fill(p, fUtils->fPdgK0sMass * decay_length / p);    
       fHistLSV0TrackDCAXY         -> Fill(p, DCApairXY);
       fHistLSV0TrackDCA           -> Fill(p, DCApair);
+      fHistLSV0Armenteros         -> Fill(armenteros_alpha,armenteros_qt);
     }
 
     if(fIsMC && 
-       fUtils->isSameMotherPair(v0->dLabel[0],v0->dLabel[1]) &&
-       fUtils->getMotherPdgCode(v0->dLabel[0]) == 310 &&
-       fUtils->getGrandMotherLabel(v0->dLabel[0]) == -1){      
+       fUtils->isSameMotherPair(dlabel[0],dlabel[1]) &&
+       fUtils->getMotherPdgCode(dlabel[0]) == 310 &&
+       fUtils->getGrandMotherLabel(dlabel[0]) == -1){      
     
-      fHistV0PV0DecayLengthXY_TrueK0s   -> Fill(p, v0->DecayLengthXY);
-      fHistV0PV0DecayLength_TrueK0s     -> Fill(p, v0->DecayLengthXYZ);
-      fHistV0PV0PointingAngleXY_TrueK0s -> Fill(p, v0->CpvXY);
-      fHistV0PV0PointingAngle_TrueK0s   -> Fill(p, v0->CpvXYZ);
-      fHistV0PV0DCAXY_TrueK0s           -> Fill(p, v0->DcaXY);
-      fHistV0PV0DCA_TrueK0s             -> Fill(p, v0->DcaXYZ);
-      fHistV0PV0TrackDistanceXY_TrueK0s -> Fill(p, v0->DcaDaughtersXY);
-      fHistV0PV0TrackDistance_TrueK0s   -> Fill(p, v0->DcaDaughtersXYZ);
-      fHistV0PV0Chi2perNDF_TrueK0s      -> Fill(p, v0->rChi2V0);
-      fHistV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+      fHistV0PV0DecayLengthXY_TrueK0s   -> Fill(p, decay_length_xy);
+      fHistV0PV0DecayLength_TrueK0s     -> Fill(p, decay_length);
+      fHistV0PV0PointingAngleXY_TrueK0s -> Fill(p, cpv_xy);
+      fHistV0PV0PointingAngle_TrueK0s   -> Fill(p, cpv);
+      fHistV0PV0DCAXY_TrueK0s           -> Fill(p, dca_xy);
+      fHistV0PV0DCA_TrueK0s             -> Fill(p, dca);
+      fHistV0PV0TrackDistanceXY_TrueK0s -> Fill(p, distance_daughter_xy);
+      fHistV0PV0TrackDistance_TrueK0s   -> Fill(p, distance_daughter);
+      fHistV0PV0Chi2perNDF_TrueK0s      -> Fill(p, chi2);
+      fHistV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * decay_length / p);    
       fHistV0TrackDCAXY_TrueK0s         -> Fill(p, DCApairXY);
       fHistV0TrackDCA_TrueK0s           -> Fill(p, DCApair);      
+      fHistV0Armenteros_TrueK0s         -> Fill(armenteros_alpha,armenteros_qt);
 
-      if (fabs(v0->Charge) > 0) {
-	fHistLSV0PV0DecayLengthXY_TrueK0s   -> Fill(p, v0->DecayLengthXY);
-	fHistLSV0PV0DecayLength_TrueK0s     -> Fill(p, v0->DecayLengthXYZ);
-	fHistLSV0PV0PointingAngleXY_TrueK0s -> Fill(p, v0->CpvXY);
-	fHistLSV0PV0PointingAngle_TrueK0s   -> Fill(p, v0->CpvXYZ);
-	fHistLSV0PV0DCAXY_TrueK0s           -> Fill(p, v0->DcaXY);
-	fHistLSV0PV0DCA_TrueK0s             -> Fill(p, v0->DcaXYZ);
-	fHistLSV0PV0TrackDistanceXY_TrueK0s -> Fill(p, v0->DcaDaughtersXY);
-	fHistLSV0PV0TrackDistance_TrueK0s    -> Fill(p, v0->DcaDaughtersXYZ);
-	fHistLSV0PV0Chi2perNDF_TrueK0s      -> Fill(p, v0->rChi2V0);
-	fHistLSV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p);    
+      if (fabs(charge) > 0) {
+	fHistLSV0PV0DecayLengthXY_TrueK0s   -> Fill(p, decay_length_xy);
+	fHistLSV0PV0DecayLength_TrueK0s     -> Fill(p, decay_length);
+	fHistLSV0PV0PointingAngleXY_TrueK0s -> Fill(p, cpv_xy);
+	fHistLSV0PV0PointingAngle_TrueK0s   -> Fill(p, cpv);
+	fHistLSV0PV0DCAXY_TrueK0s           -> Fill(p, dca_xy);
+	fHistLSV0PV0DCA_TrueK0s             -> Fill(p, dca);
+	fHistLSV0PV0TrackDistanceXY_TrueK0s -> Fill(p, distance_daughter_xy);
+	fHistLSV0PV0TrackDistance_TrueK0s   -> Fill(p, distance_daughter);
+	fHistLSV0PV0Chi2perNDF_TrueK0s      -> Fill(p, chi2);
+	fHistLSV0PV0PropLifeTime_TrueK0s    -> Fill(p, fUtils->fPdgK0sMass * decay_length / p);    
 	fHistLSV0TrackDCAXY_TrueK0s         -> Fill(p, DCApairXY);
 	fHistLSV0TrackDCA_TrueK0s           -> Fill(p, DCApair);
+	fHistLSV0Armenteros_TrueK0s         -> Fill(armenteros_alpha,armenteros_qt);
       }
 
     }    
   }
-
+  
   return true;
+}
+
+bool AliAnalysisTaskAODTrackPair::V0QualityChecker(K0sContainer* v0, bool isSel) {
+  
+  double p  = v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2] > 0 ? 
+    sqrt(v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2]) : 0;
+  
+  double DCApairXY = v0->dDcaXY[0]*v0->dDcaXY[0] + v0->dDcaXY[1]*v0->dDcaXY[1] > 0 ?
+    sqrt(v0->dDcaXY[0]*v0->dDcaXY[0] + v0->dDcaXY[1]*v0->dDcaXY[1]) : 999;
+  double DCApair   = v0->dDca[0]*v0->dDca[0] + v0->dDca[1]*v0->dDca[1] > 0 ?
+    sqrt(v0->dDca[0]*v0->dDca[0] + v0->dDca[1]*v0->dDca[1]) : 999;
+
+  double charge = v0->Charge;
+  double mass = v0->Mass;
+  double decay_length = v0->DecayLength;
+  double decay_length_xy = v0->DecayLengthXY;  
+  double cpv = v0->Cpv;
+  double cpv_xy = v0->CpvXY;
+  double dca = v0->Dca;
+  double dca_xy = v0->DcaXY;
+  double distance_daughter = v0->DistanceDaughters;
+  double distance_daughter_xy = v0->DistanceDaughtersXY; 
+  double chi2 = v0->rChi2V0;
+  double lifetime = fUtils->fPdgK0sMass * decay_length / p;
+  double armenteros_alpha = v0->Armenteros[1];
+  double armenteros_qt = v0->Armenteros[0];
+
+  int dlabel[] = {v0->dLabel[0],v0->dLabel[1]};
+    
+  return V0QualityChecker(mass, p, charge, DCApairXY, DCApair, decay_length, decay_length_xy, cpv, 
+			  cpv_xy, dca, dca_xy, distance_daughter, distance_daughter_xy,
+			  chi2, lifetime, armenteros_alpha, armenteros_qt, dlabel, isSel);
+}
+
+bool AliAnalysisTaskAODTrackPair::V0QualityChecker(AliAODv0* v0, bool isSel) {
+  
+  double p  = v0->P();
+  
+  double DCApairXY = v0->DcaPosToPrimVertex()*v0->DcaPosToPrimVertex() + v0->DcaNegToPrimVertex()*v0->DcaNegToPrimVertex() ? 
+    sqrt(v0->DcaPosToPrimVertex()*v0->DcaPosToPrimVertex() + v0->DcaNegToPrimVertex()*v0->DcaNegToPrimVertex()) : 0;
+  double DCApair   = DCApairXY;
+  
+  int charge = v0->Charge();
+  double mass = v0->MassK0Short();
+  double decay_length = v0->DecayLength(fPrimVtxPos);
+  double decay_length_xy = v0->DecayLengthXY(fPrimVtxPos);
+  double cpv = v0->CosPointingAngle(fPrimVtxPos);
+  double cpv_xy = v0->CosPointingAngleXY(fPrimVtxPos);
+  double dca = v0->DcaV0ToPrimVertex ();
+  double dca_xy = 0;
+  double distance_daughter = v0->DcaV0Daughters();
+  double distance_daughter_xy = 0;
+  double chi2 = v0->Chi2V0();
+  double lifetime = fUtils->fPdgK0sMass * decay_length / p;
+  double armenteros_alpha = v0->AlphaV0();
+  double armenteros_qt = v0->PtArmV0();
+    
+  int dlabel[2] = {};
+  
+  AliAODTrack *aodTrack1 = (AliAODTrack *)v0->GetDaughter(0);
+  AliAODTrack *aodTrack2 = (AliAODTrack *)v0->GetDaughter(1);
+
+  if (!aodTrack1 || !aodTrack2) {
+    dlabel[0] = -1;
+    dlabel[1] = -1;
+  } else {
+    dlabel[0] = aodTrack1->GetLabel();
+    dlabel[1] = aodTrack2->GetLabel();
+  }
+
+  return V0QualityChecker(mass, p, charge, DCApairXY, DCApair, decay_length, decay_length_xy, cpv,
+			  cpv_xy, dca, dca_xy, distance_daughter, distance_daughter_xy,
+			  chi2, lifetime, armenteros_alpha, armenteros_qt,dlabel,isSel);
 }
 
 bool AliAnalysisTaskAODTrackPair::K0sPairAnalysis(AliPID::EParticleType pid1,AliPID::EParticleType pid2) {  
   
-
   Int_t nV0 = fArrayK0s->GetEntriesFast();
   
   int iLeading = -1;  
 
   for (int iV0_1 = 0; iV0_1 < nV0; ++iV0_1) {
-
+    
     K0sContainer* v0_1 = static_cast<K0sContainer*>(fArrayK0s->At(iV0_1));
-
+    
     unique_ptr<TVector3> vec1(new TVector3());
     vec1->SetXYZ(v0_1->P[0],v0_1->P[1],v0_1->P[2]);
-
+    
     unique_ptr<TLorentzVector> lv1(new TLorentzVector());    
-    lv1->SetPtEtaPhiM(vec1->Pt(), vec1->PseudoRapidity(), vec1->Phi(), TDatabasePDG::Instance()->GetParticle(310)->Mass());
+    lv1->SetPtEtaPhiM(vec1->Pt(), vec1->PseudoRapidity(), vec1->Phi(), massK0s);
     
     for (int iV0_2 = iV0_1 + 1; iV0_2 < nV0; ++iV0_2) {
       
-      K0sContainer *v0_2 = static_cast<K0sContainer*>(fArrayK0s->At(iV0_2));
+      K0sContainer* v0_2 = static_cast<K0sContainer*>(fArrayK0s->At(iV0_2));
       
       if (!isAcceptK0sPair(v0_1,v0_2)) continue; 
       
       unique_ptr<TVector3> vec2(new TVector3());
       vec2->SetXYZ(v0_2->P[0],v0_2->P[1],v0_2->P[2]);
-      
+
       unique_ptr<TLorentzVector> lv2(new TLorentzVector());
-      lv2->SetPtEtaPhiM(vec2->Pt(), vec2->PseudoRapidity(), vec2->Phi(), TDatabasePDG::Instance()->GetParticle(310)->Mass());
-      
+      lv2->SetPtEtaPhiM(vec2->Pt(), vec2->PseudoRapidity(), vec2->Phi(), massK0s);
+
       unique_ptr<TLorentzVector> lv12(new TLorentzVector(lv1->Vect()+lv2->Vect(),lv1->T()+lv2->T()));
-      
+
       double fill[] = {lv12->M(), lv12->Pt(), fCent};      
-      
-      if (fUtils->isAcceptK0sCandidateMassRange(v0_1->Mass) && fUtils->isAcceptK0sCandidateMassRange(v0_2->Mass)) {
+
+      if (isAcceptK0sCandidateMassRange(v0_1->Mass) && isAcceptK0sCandidateMassRange(v0_2->Mass)) {
 	
 	if ( v0_1->Charge == 0 && v0_2->Charge == 0 ) {
 	  fSparseNeutralK0sPair->Fill(fill);
@@ -1321,9 +1544,9 @@ bool AliAnalysisTaskAODTrackPair::K0sPairAnalysis(AliPID::EParticleType pid1,Ali
 	  fSparseNegativeK0sPair->Fill(fill);
 	} else if ( (v0_1->Charge < 0 && v0_2->Charge > 0) || (v0_1->Charge > 0 && v0_2->Charge < 0) ) {
 	  fSparsePositiveNegativeK0sPair->Fill(fill);
-	}
-      
+	}      
       }
+      
     }
   }
 
@@ -1349,13 +1572,9 @@ bool AliAnalysisTaskAODTrackPair::K0sPairAnalysisEventMixing(AliPID::EParticleTy
     lv_leading.SetPtEtaPhiM(leadingTrack->Pt(),leadingTrack->Eta(),leadingTrack->Phi(),leadingTrack->M());
   }
   
-  if (onEvtMixingPoolVtxZ) {
-    poolVtxZ = fUtils->getVtxZ();
-  }
-  if (onEvtMixingPoolCent) {
-    poolCent = fUtils->getCentClass();
-  }
-  
+  if (onEvtMixingPoolVtxZ) poolVtxZ = fPrimVtxPos[2];
+  if (onEvtMixingPoolCent) poolCent = fCent;
+
   if (onEvtMixingPoolPsi) {
     if (iLeading>0) {
       poolPsi = leadingTrack->Phi();
@@ -1404,9 +1623,9 @@ bool AliAnalysisTaskAODTrackPair::K0sPairAnalysisEventMixing(AliPID::EParticleTy
 
 bool AliAnalysisTaskAODTrackPair::AddK0sArray(AliPID::EParticleType pid1,AliPID::EParticleType pid2) {  
   
-  TObjArray *fTrackArray = new TObjArray();
+  TObjArray* fTrackArray = new TObjArray();
   fTrackArray->SetOwner(true);
-
+    
   double poolCent = 0.;
   double poolVtxZ = 0.;
   double poolPsi  = 0.;
@@ -1414,105 +1633,116 @@ bool AliAnalysisTaskAODTrackPair::AddK0sArray(AliPID::EParticleType pid1,AliPID:
   if (onEvtMixingPoolVtxZ) poolVtxZ = fPrimVtxPos[2];
   if (onEvtMixingPoolCent) poolCent = fCent;
   if (onEvtMixingPoolPsi)  poolPsi  = fPsi;
- 
+  
   AliEventPool *pool = (AliEventPool *)fPoolMuonTrackMgrPion->GetEventPool(poolCent, poolVtxZ, poolPsi);
-   
+  
   int nTrack = fEvent->GetNumberOfTracks();
   
   if ( fIsManualV0Analysis ) {
     
     for (Int_t iTrack1 = 0; iTrack1 < nTrack; ++iTrack1) {
       
-      AliAODTrack* aodTrack1 = (AliAODTrack *)fEvent->GetTrack(iTrack1);
+      AliAODTrack* aodTrack1 = static_cast<AliAODTrack*>(fEvent->GetTrack(iTrack1));
       if(!aodTrack1) continue;
-
+      
       TrackPIDChecker(aodTrack1, pid1, false);
       
-      if ( !fUtils->isAcceptTrackKinematics(aodTrack1) ) continue;
-      if ( !fUtils->isAcceptV0TrackQuality(aodTrack1) )  continue;
-      if ( !fUtils->isAcceptMidPid(aodTrack1,pid1) )     continue;
+      if ( !isAcceptDaughterTrack(aodTrack1,pid1) ) continue;
+  
+      aodTrack1->SetID(iTrack1);
       
-      TrackQualityChecker(aodTrack1);      
-      TrackPIDChecker(aodTrack1, pid1, true);
+      AliAODTrack *track = static_cast<AliAODTrack*>(aodTrack1->Clone());      
+      fArrayK0sDaughterTrack->Add(track);      
+      fTrackArray->Add(aodTrack1);
+    }
+    
+    for (Int_t iTrack1 = 0; iTrack1 < fArrayK0sDaughterTrack->GetEntriesFast(); ++iTrack1) {
       
-      for (Int_t iTrack2 = iTrack1+1; iTrack2 < nTrack; ++iTrack2) {
-	
-	AliAODTrack* aodTrack2 = (AliAODTrack *)fEvent->GetTrack(iTrack2);
-	if(!aodTrack2) continue;
+      AliAODTrack* aodTrack1 = static_cast<AliAODTrack *>(fArrayK0sDaughterTrack->At(iTrack1));
 
-	if ( !fUtils->isAcceptTrackKinematics(aodTrack2) ) continue;
-	if ( !fUtils->isAcceptV0TrackQuality(aodTrack2) )  continue;
-	if ( !fUtils->isAcceptMidPid(aodTrack2,pid2) )     continue;
+      for (Int_t iTrack2 = iTrack1+1; iTrack2 < fArrayK0sDaughterTrack->GetEntriesFast(); ++iTrack2) {
 	
+	AliAODTrack* aodTrack2 = static_cast<AliAODTrack *>(fArrayK0sDaughterTrack->At(iTrack2));
 	
-	bool isSignalFlag = false;;	
-	if (fUtils->isSameMotherPair(aodTrack1,aodTrack2)){
-	  if(fUtils->getMotherPdgCode(aodTrack1) == 310){	 
-	    isSignalFlag = true;
-	  }
-	}
+	if ( !isAcceptDaughterTrackPairAngle(aodTrack1,aodTrack2) ) continue;
 	
-	aodTrack1->SetID(iTrack1);
-	aodTrack2->SetID(iTrack2);
-	
-	K0sContainer* v0 = calcK0sFromTracks(aodTrack1,aodTrack2);	
+	unique_ptr<K0sContainer> v0(calcK0sFromTracks(aodTrack1,aodTrack2));	
 	if (!v0) continue;
 	
-	V0QualityChecker(v0, false);	
+	V0QualityChecker(v0.get(), false);
 	
 	unique_ptr<TVector3> vec(new TVector3());
 	vec->SetXYZ(v0->P[0],v0->P[1],v0->P[2]);
 	
 	unique_ptr<TLorentzVector> lv(new TLorentzVector());
 	lv->SetPtEtaPhiM(vec->Pt(), vec->PseudoRapidity(), vec->Phi(), v0->Mass);
-	
-	double fill[] = {lv->M(), lv->Pt(), fCent, 0};
-	
-	if ( !isAcceptK0sKinematics(v0) )              continue;	
+
+	double fill[] = {lv->M(), lv->Pt(), fCent};
+       	
+	if ( !isAcceptK0sKinematics(v0.get()) )                continue;
 	
 	if ( v0->Charge == 0 )     fSparseULSPionPairBeforeCuts  -> Fill(fill);
 	else if ( v0->Charge > 0 ) fSparseLSppPionPairBeforeCuts -> Fill(fill);
 	else if ( v0->Charge < 0 ) fSparseLSmmPionPairBeforeCuts -> Fill(fill);
 	
-	bool *isAcceptCuts = new bool[6];
+	bool isAcceptCuts[7];
+
+	isAcceptV0QualityCuts(v0.get(),isAcceptCuts);
 	
-	isAcceptV0QualityCuts(v0,isAcceptCuts);
-	
-	/*
-	if ( v0->Charge == 0 ) {
-	  if (isAcceptCuts[0]) fSparseULSPionPair_PassChi2perNDFCut         -> Fill(fill);
-	  if (isAcceptCuts[1]) fSparseULSPionPair_PassCPVXYCut              -> Fill(fill);
-	  if (isAcceptCuts[2]) fSparseULSPionPair_PassDecayLengthXYCut      -> Fill(fill);
-	  if (isAcceptCuts[3]) fSparseULSPionPair_PassDaughterDistanceXYCut -> Fill(fill);
-	  if (isAcceptCuts[4]) fSparseULSPionPair_PassDCAXYCut              -> Fill(fill);
-	  if (isAcceptCuts[5]) fSparseULSPionPair_PassLifetimeCut           -> Fill(fill);
+	if ( !isAcceptV0QualityCuts(v0.get(),isAcceptCuts) ){
+	  if ( v0->Charge == 0 ) {
+	    if (isAcceptCuts[0]) fSparseULSPionPair_PassChi2perNDFCut         -> Fill(fill);
+	    if (isAcceptCuts[1]) fSparseULSPionPair_PassCPVXYCut              -> Fill(fill);
+	    if (isAcceptCuts[2]) fSparseULSPionPair_PassDecayLengthXYCut      -> Fill(fill);
+	    if (isAcceptCuts[3]) fSparseULSPionPair_PassDaughterDistanceXYCut -> Fill(fill);
+	    if (isAcceptCuts[4]) fSparseULSPionPair_PassDCAXYCut              -> Fill(fill);
+	    if (isAcceptCuts[5]) fSparseULSPionPair_PassLifetimeCut           -> Fill(fill);
+	    if (isAcceptCuts[6]) fSparseULSPionPair_PassArmenterosCut         -> Fill(fill);
+	  }
+	  continue;
+	} else {
+	  if ( v0->Charge == 0 ) {
+	    if (isAcceptCuts[0]) fSparseULSPionPair_PassChi2perNDFCut         -> Fill(fill);
+	    if (isAcceptCuts[1]) fSparseULSPionPair_PassCPVXYCut              -> Fill(fill);
+	    if (isAcceptCuts[2]) fSparseULSPionPair_PassDecayLengthXYCut      -> Fill(fill);
+	    if (isAcceptCuts[3]) fSparseULSPionPair_PassDaughterDistanceXYCut -> Fill(fill);
+	    if (isAcceptCuts[4]) fSparseULSPionPair_PassDCAXYCut              -> Fill(fill);
+	    if (isAcceptCuts[5]) fSparseULSPionPair_PassLifetimeCut           -> Fill(fill);
+	    if (isAcceptCuts[6]) fSparseULSPionPair_PassArmenterosCut         -> Fill(fill);
+	  }		  
 	}
-	*/
 	
-	//if ( !isAcceptV0QualityCuts(v0,isAcceptCuts) ) continue;
-	
-	V0QualityChecker(v0, true);
-	
-	delete [] isAcceptCuts;
+	V0QualityChecker(v0.get(), true);
 	
 	if ( v0->Charge == 0 )     fSparseULSPionPair  -> Fill(fill);
 	else if ( v0->Charge > 0 ) fSparseLSppPionPair -> Fill(fill);
 	else if ( v0->Charge < 0 ) fSparseLSmmPionPair -> Fill(fill);
-
-	fArrayK0s->Add(v0);
-      }
+	
+	K0sContainer* v0_arr = CreateRawPointerK0sContainer(v0.get());	
+	fArrayK0s->Add(v0_arr);
+	
+      }//end of loop iTrack2
       
       if (pool->IsReady()) {
-	continue;
-	for (Int_t iMixEvt = 0; iMixEvt < pool->GetCurrentNEvents(); iMixEvt++) {
 	
+	for (Int_t iMixEvt = 0; iMixEvt < pool->GetCurrentNEvents(); iMixEvt++) {
+	  
 	  TObjArray *poolTracks = (TObjArray *)pool->GetEvent(iMixEvt);
 	  
 	  for (int iTrack2 = 0; iTrack2 < poolTracks->GetEntriesFast(); ++iTrack2) {
 	    
-	    AliAODTrack* aodTrack2 = dynamic_cast<AliAODTrack*>(poolTracks->At(iTrack2));
+	    AliAODTrack* aodTrack2 = dynamic_cast<AliAODTrack*>(poolTracks->At(iTrack2));	    
+	    if (!aodTrack2) continue;	    
 	    
-	    K0sContainer* v0 = calcK0sFromTracks(aodTrack1,aodTrack2);
+	    if ( !isAcceptDaughterTrackPairAngle(aodTrack1,aodTrack2) ) continue;
+
+	    unique_ptr<K0sContainer> v0 = calcK0sFromTracks(aodTrack1,aodTrack2);
+	    if (!v0) continue;
+	    
+	    if ( !isAcceptK0sKinematics(v0.get()) ) continue;
+
+	    bool isAcceptCuts[7];	    
+	    if ( !isAcceptV0QualityCuts(v0.get(),isAcceptCuts) ) continue;
 	    
 	    unique_ptr<TVector3> vec(new TVector3());
 	    vec->SetXYZ(v0->P[0],v0->P[1],v0->P[2]);
@@ -1524,102 +1754,117 @@ bool AliAnalysisTaskAODTrackPair::AddK0sArray(AliPID::EParticleType pid1,AliPID:
 	    
 	    double fill[] = {lv->M(), lv->Pt(), fUtils->getCentClass(), 0};
 	
-	    if ( v0->Charge == 0 )     fSparseMixULSPionPair->Fill(fill);
-	    else if ( v0->Charge > 0 ) fSparseMixLSppPionPair->Fill(fill);
-	    else if ( v0->Charge < 0 ) fSparseMixLSmmPionPair->Fill(fill);
+	    if ( v0->Charge == 0 )     fSparseMixULSPionPair  -> Fill(fill);
+	    else if ( v0->Charge > 0 ) fSparseMixLSppPionPair -> Fill(fill);
+	    else if ( v0->Charge < 0 ) fSparseMixLSmmPionPair -> Fill(fill);
 	    
 	  }//end of loop iTrack2
 	}//end of loop iMixEvt	  	
-      }
-      fTrackArray->Add(aodTrack1);
-    }//end of loop iTrack1
-  
+      }//end of pool->IsReady()
+      
+    }//end of loop iTrack1  
   } else {
     
-    Int_t nV0 = fEvent->GetNumberOfV0s();
-    
-    for (int iV0 = 0; iV0 < nV0; ++iV0) {
-      /*
-      AliAODv0* _v0_ = (AliAODv0 *)fEvent->GetV0(iV0);
-      
-      AliAODTrack *aodTrack1 = (AliAODTrack *)_v0_ -> GetDaughter(0);
-      AliAODTrack *aodTrack2 = (AliAODTrack *)_v0_ -> GetDaughter(1);      
-      
-      TrackPIDChecker(aodTrack1, pid1,false);
-      
-      if ( !fUtils->isAcceptTrackKinematics(aodTrack1) ) continue;
-      if ( !fUtils->isAcceptV0TrackQuality(aodTrack1) )  continue;
-      if ( !fUtils->isAcceptMidPid(aodTrack1,pid1) )     continue;
-      
-      TrackQualityChecker(aodTrack1);
-      TrackPIDChecker(aodTrack1, pid1, true);
+    int nV0 = fEvent->GetNumberOfV0s();
 
-      if ( !fUtils->isAcceptTrackKinematics(aodTrack2) ) continue;
-      if ( !fUtils->isAcceptV0TrackQuality(aodTrack2) )  continue;
-      if ( !fUtils->isAcceptMidPid(aodTrack2,pid2) )     continue;
+    for (int iv0=0; iv0<nV0; ++ iv0) {
+      
+      AliAODv0 *v0 = (AliAODv0 *)fEvent->GetV0(iv0);
+      
+      if (v0->GetOnFlyStatus()) continue;
 
-      AliAODVertex *primeVtx = new AliAODVertex();
-      primeVtx->SetPosition(fUtils->getVtxX(),fUtils->getVtxY(),fUtils->getVtxZ());
+      AliAODTrack *aodTrack1 = (AliAODTrack *)v0->GetDaughter(0);
+      AliAODTrack *aodTrack2 = (AliAODTrack *)v0->GetDaughter(1);
       
-      double Mom1[] = {aodTrack1->Px(),aodTrack1->Py(),aodTrack1->Pz()};
-      double Mom2[] = {aodTrack2->Px(),aodTrack2->Py(),aodTrack2->Pz()};
+      int charge = aodTrack1->Charge() + aodTrack2->Charge();
+
+      TrackPIDChecker(aodTrack1, pid1, false);
       
-      double rDcaDaughterToPrimVertex[] = {0,0};
-      double rDcaV0ToPrimVertex = _v0_->DcaV0ToPrimVertex();
+      if ( !isAcceptDaughterTrack(aodTrack1,pid1) || !isAcceptDaughterTrack(aodTrack2,pid2)) continue;           
+      if ( !isAcceptDaughterTrackPairAngle(aodTrack1,aodTrack2) )                            continue;      
+      if ( !isAcceptK0sKinematics(v0) )                                                      continue;
       
-      AliAODVertex *secondVtx = new AliAODVertex();
-      secondVtx->SetPosition(_v0_->Xv(),_v0_->Yv(),_v0_->Zv());
-      secondVtx->AddDaughter(aodTrack1);
-      secondVtx->AddDaughter(aodTrack2);
+      //unique_ptr<K0sContainer> v1(calcK0sFromTracks(aodTrack1,aodTrack2));      
+      //if (!v1) continue;            
       
-      AliAODv0* v0=(AliAODv0*)_v0_->Clone();      
-      v0->SetCharge(aodTrack1->Charge() + aodTrack2->Charge());
-      v0->SetSecondaryVtx(secondVtx);
-      */
-      /*
-      if(!updateAODv0(v0)) {
+      double fill[] = {v0->MassK0Short(), v0->Pt(), fCent};
+
+      if ( charge == 0 )     fSparseULSPionPairBeforeCuts  -> Fill(fill);
+      else if ( charge > 0 ) fSparseLSppPionPairBeforeCuts -> Fill(fill);
+      else if ( charge < 0 ) fSparseLSmmPionPairBeforeCuts -> Fill(fill);
+      
+      bool isAcceptCuts[7];
+	
+      isAcceptV0QualityCuts(v0,isAcceptCuts);
+      
+      if ( !isAcceptV0QualityCuts(v0,isAcceptCuts) ){
+	if ( charge == 0 ) {
+	  if (isAcceptCuts[0]) fSparseULSPionPair_PassChi2perNDFCut         -> Fill(fill);
+	  if (isAcceptCuts[1]) fSparseULSPionPair_PassCPVXYCut              -> Fill(fill);
+	  if (isAcceptCuts[2]) fSparseULSPionPair_PassDecayLengthXYCut      -> Fill(fill);
+	  if (isAcceptCuts[3]) fSparseULSPionPair_PassDaughterDistanceXYCut -> Fill(fill);
+	  if (isAcceptCuts[4]) fSparseULSPionPair_PassDCAXYCut              -> Fill(fill);
+	  if (isAcceptCuts[5]) fSparseULSPionPair_PassLifetimeCut           -> Fill(fill);
+	  if (isAcceptCuts[6]) fSparseULSPionPair_PassArmenterosCut         -> Fill(fill);
+	}
 	continue;
+      } else {
+	if ( charge == 0 ) {
+	  if (isAcceptCuts[0]) fSparseULSPionPair_PassChi2perNDFCut         -> Fill(fill);
+	  if (isAcceptCuts[1]) fSparseULSPionPair_PassCPVXYCut              -> Fill(fill);
+	  if (isAcceptCuts[2]) fSparseULSPionPair_PassDecayLengthXYCut      -> Fill(fill);
+	  if (isAcceptCuts[3]) fSparseULSPionPair_PassDaughterDistanceXYCut -> Fill(fill);
+	  if (isAcceptCuts[4]) fSparseULSPionPair_PassDCAXYCut              -> Fill(fill);
+	  if (isAcceptCuts[5]) fSparseULSPionPair_PassLifetimeCut           -> Fill(fill);
+	  if (isAcceptCuts[6]) fSparseULSPionPair_PassArmenterosCut         -> Fill(fill);
+	}		  
       }
-      */
-      
-    }//end of loop iV0
+
+      //V0QualityChecker(v1.get(), true);
+      V0QualityChecker(v0, true);
+	
+      if ( charge == 0 )     fSparseULSPionPair  -> Fill(fill);
+      else if ( charge > 0 ) fSparseLSppPionPair -> Fill(fill);
+      else if ( charge < 0 ) fSparseLSmmPionPair -> Fill(fill);
+      continue;
+      fArrayK0s->Add(v0);
    
-  }
-  ///*
-  TObjArray *fTrackArrayClone = (TObjArray *)fTrackArray->Clone();
-  fTrackArrayClone->SetOwner(true);
-  if (fTrackArrayClone->GetEntriesFast() > 0) {
-    pool->UpdatePool(fTrackArrayClone);
-  }
-  //*/
-
-  return true;
-
-}
-
-K0sContainer* AliAnalysisTaskAODTrackPair::calcK0sFromTracks(AliAODTrack* aodTrack1,AliAODTrack* aodTrack2){
-  cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"<<endl;
-  bool isSignalFlag = false;
-  if(fUtils->getMotherPdgCode(aodTrack1) == 310){
-    if (fUtils->isSameMotherPair(aodTrack1,aodTrack2)){
-      all++;
-      cout<<"============================================================================================================"<<endl;
-      isSignalFlag = true;
     }
   }
   
-  double MagF = fEvent->GetMagneticField();
-  AliKFParticle::SetField(MagF);
+  TObjArray *fTrackArrayClone = (TObjArray *)fTrackArray->Clone();
+  fTrackArrayClone->SetOwner();
+  pool->UpdatePool(fTrackArrayClone);
+  
+  return true;
+  
+}
 
+unique_ptr<K0sContainer> AliAnalysisTaskAODTrackPair::calcK0sFromTracks(AliAODTrack* aodTrack1,AliAODTrack* aodTrack2){
+  
+  //cout<<"+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"<<endl;
+  bool isSignalFlag = false;
+  /*
+  if (fIsMC) {
+    if(fUtils->getMotherPdgCode(aodTrack1) == 310){
+      if (fUtils->isSameMotherPair(aodTrack1,aodTrack2)){
+	all++;
+	//cout<<"============================================================================================================"<<endl;
+	isSignalFlag = true;
+      }
+    }
+  }
+  */
+  double MagF = fEvent->GetMagneticField();
+    
   KFPVertex kfVtxPrimeVertex;
   double fPrimVtxCov[6]={};
   fPrimVtx->GetCovarianceMatrix(fPrimVtxCov);
-  
+
   float fPrimVtxPosF[3],fPrimVtxCovF[6];    
-  for(int iEl = 0; iEl < 3; iEl++)
-    fPrimVtxPosF[iEl] = (float)fPrimVtxPos[iEl];
-  for(int iEl = 0; iEl < 6; iEl++)
-    fPrimVtxCovF[iEl] = (float)fPrimVtxCov[iEl];  
+  for(int iEl = 0; iEl < 3; iEl++) fPrimVtxPosF[iEl] = (float)fPrimVtxPos[iEl];
+  for(int iEl = 0; iEl < 6; iEl++) fPrimVtxCovF[iEl] = (float)fPrimVtxCov[iEl];  
+
   kfVtxPrimeVertex.SetXYZ((float)fPrimVtxPos[0], (float)fPrimVtxPos[1], (float)fPrimVtxPos[2]);
   kfVtxPrimeVertex.SetCovarianceMatrix(fPrimVtxCovF);    
   kfVtxPrimeVertex.SetChi2(fPrimVtx->GetChi2());
@@ -1634,94 +1879,76 @@ K0sContainer* AliAnalysisTaskAODTrackPair::calcK0sFromTracks(AliAODTrack* aodTra
   KFParticle kfTrack[2];
   kfTrack[0] = CreateKFParticle(aodTrack1, pdg1);
   kfTrack[1] = CreateKFParticle(aodTrack2, pdg1);
-
-  bool checkval=true;
-  bool checkval1=true;
-  bool checkval2=true;
-  int fRecoMethod = 0;
-
-  KFParticle kfTrack1 = CreateKFParticle(aodTrack1, pdg1);
-  KFParticle kfTrack2 = CreateKFParticle(aodTrack2, pdg1);
-    
-  KFParticleK0s kfCheckIfSafePair;
-  kfCheckIfSafePair.AddDaughter(kfTrack[1]);
-  if (!kfCheckIfSafePair.CheckIfSafePair(kfTrack[0])) {
+  //cout<<"[1.1.0.0]"<<endl;  
+  unique_ptr<KFParticleK0s> kfCheckIfSafePair(new KFParticleK0s());
+  kfCheckIfSafePair->AddDaughter(kfTrack[1]);
+  //cout<<"[1.2.0.0]"<<endl;
+  ///*
+  if (!kfCheckIfSafePair->CheckIfSafePair(kfTrack[0])) {
     if (isSignalFlag) ++abord;
     return NULL;
   }
-    
+  //*/
+  //cout<<"[1.3.0.0]"<<endl;
   KFParticle kfK0s;
   kfK0s.Initialize();
-  kfK0s.SetConstructMethod(2); 
-  //kfK0s.SetConstructMethod(0); 
-  
+  kfK0s.SetConstructMethod(0); 
+  //cout<<"[1.4.0.0]"<<endl;
   const KFParticle *kfKs0Daughters[2] = {&kfTrack[0],&kfTrack[1]};  
-  cout<<"[1.0.0.0]"<<endl;
   kfK0s.Construct(kfKs0Daughters, 2);
-  cout<<"[2.0.0.0]"<<endl;
+  //cout<<"[1.5.0.0]"<<endl;
   float chi2K0s   = kfK0s.GetChi2() / kfK0s.GetNDF();
-  cout<<"[3.0.0.0]"<<endl;
+  
+  if (chi2K0s > 1e+2) return NULL;
+
   float momK0s[3] = {kfK0s.GetPx(),kfK0s.GetPy(),kfK0s.GetPz()};
-  cout<<"[4.0.0.0]"<<endl;
+  
   float posK0s[3] = {};
   float covK0s[36]= {};
   posK0s[0] = kfK0s.GetX();
   posK0s[1] = kfK0s.GetY();
   posK0s[2] = kfK0s.GetZ();
-  cout<<"[5.0.0.0]"<<endl;
-  float QtAlfa[2]={};
-  kfK0s.GetArmenterosPodolanski(kfTrack[0],kfTrack[1],QtAlfa);
-  cout<<"[6.0.0.0]"<<endl;
+  //cout<<"[1.6.0.0]"<<endl;
+  float QtAlfaF[2]={};
+  kfK0s.GetArmenterosPodolanski(kfTrack[0],kfTrack[1],QtAlfaF);
+  //cout<<"[1.7.0.0]"<<endl;
+  double QtAlfa[] = {QtAlfaF[0],QtAlfaF[1]};
+
   for (int index=0; index<36; ++index) covK0s[index] = kfK0s.GetCovariance(index);
-  cout<<"[7.0.0.0]"<<endl;
+
   double decay_length    = DecayLengthFromKF(kfK0s,kfParticlePrimeVertex);
   double decay_length_xy = DecayLengthXYFromKF(kfK0s,kfParticlePrimeVertex);
-  cout<<"[8.0.0.0]"<<endl;
-  float dcaPointK0s[8]={}, dcaPointK0sCov[36]={};  
-  //kfK0s.GetParametersAtPoint(fPrimVtxPosF, fPrimVtxCovF, dcaPointK0s, dcaPointK0sCov);
-  
-  double dcaK0s    = sqrt(pow(fPrimVtxPos[0]-dcaPointK0s[0],2) + pow(fPrimVtxPos[1]-dcaPointK0s[1],2) + pow(fPrimVtxPos[2]-dcaPointK0s[2],2));
-  double dcaK0s_xy = sqrt(pow(fPrimVtxPos[0]-dcaPointK0s[0],2) + pow(fPrimVtxPos[1]-dcaPointK0s[1],2));
-  cout<<"[9.0.0.0]"<<endl;
-  float dcaPointDaughter1[8]={}, dcaPointDaughterCov1[36]={};
-  float dcaPointDaughter2[8]={}, dcaPointDaughterCov2[36]={};
-  //kfTrack[0].GetParametersAtPoint(fPrimVtxPosF, fPrimVtxCovF, dcaPointDaughter1, dcaPointDaughterCov1);
-  //kfTrack[1].GetParametersAtPoint(fPrimVtxPosF, fPrimVtxCovF, dcaPointDaughter2, dcaPointDaughterCov2);
-  cout<<"[10.0.0.0]"<<endl;
-  double dcaDaughter1;
-  double dcaDaughter2;
-  double dcaDaughter_xy1;
-  double dcaDaughter_xy2;
-  
-  dcaDaughter1 = sqrt(pow(fPrimVtxPos[0]-dcaPointDaughter1[0],2)+
-		      pow(fPrimVtxPos[1]-dcaPointDaughter1[1],2)+
-		      pow(fPrimVtxPos[2]-dcaPointDaughter1[2],2));
-  dcaDaughter2 = sqrt(pow(fPrimVtxPos[0]-dcaPointDaughter2[0],2)+
-		      pow(fPrimVtxPos[1]-dcaPointDaughter2[1],2)+
-		      pow(fPrimVtxPos[2]-dcaPointDaughter2[2],2));
-  cout<<"[11.0.0.0]"<<endl;
-  dcaDaughter_xy1 = sqrt(pow(fPrimVtxPos[0]-dcaPointDaughter1[0],2)+
-			 pow(fPrimVtxPos[1]-dcaPointDaughter1[1],2));
-  dcaDaughter_xy2 = sqrt(pow(fPrimVtxPos[0]-dcaPointDaughter2[0],2)+
-			 pow(fPrimVtxPos[1]-dcaPointDaughter2[1],2));
-  cout<<"[12.0.0.0]"<<endl;
-  double daughterDistance    = sqrt(pow(dcaPointDaughter1[0]-dcaPointDaughter2[0],2)+
-				    pow(dcaPointDaughter1[1]-dcaPointDaughter2[1],2)+
-				    pow(dcaPointDaughter1[2]-dcaPointDaughter2[2],2));
-  double daughterDistance_xy = sqrt(pow(dcaPointDaughter1[0]-dcaPointDaughter2[0],2)+
-				    pow(dcaPointDaughter1[1]-dcaPointDaughter2[1],2));
-  cout<<"[13.0.0.0]"<<endl;
-  //kfTrack[0].TransportToPoint(posK0s);
-  //kfTrack[1].TransportToPoint(posK0s);
+  //cout<<"[1.8.0.0]   "<<chi2K0s<<endl;
+  float dcaK0s_xy, e_dcaK0s_xy;
+  kfK0s.GetDistanceFromVertexXY(kfParticlePrimeVertex,dcaK0s_xy,e_dcaK0s_xy);
+  //cout<<"[1.9.0.0]"<<endl;
+  float dcaK0s   = dcaK0s_xy;
+  float e_dcaK0s = e_dcaK0s_xy;
 
-  /*
+  kfTrack[0].TransportToPoint(posK0s);
+  kfTrack[1].TransportToPoint(posK0s);
+  //cout<<"[1.10.0.0]"<<endl;
+  float dcaDaughter_xy1, e_dcaDaughter_xy1;
+  float dcaDaughter_xy2, e_dcaDaughter_xy2;
+  //cout<<"[1.11.0.0]"<<endl;
+  kfTrack[0].GetDistanceFromVertexXY(kfParticlePrimeVertex,dcaDaughter_xy1,e_dcaDaughter_xy1);
+  kfTrack[1].GetDistanceFromVertexXY(kfParticlePrimeVertex,dcaDaughter_xy2,e_dcaDaughter_xy2);
+  //cout<<"[1.12.0.0]"<<endl;
+  double dcaDaughter1 = dcaDaughter_xy1;
+  double dcaDaughter2 = dcaDaughter_xy1;
+  
+  double daughterDistance_xy = kfTrack[0].GetDistanceFromParticleXY(kfTrack[1]);
+  double daughterDistance    = daughterDistance_xy;
+  //cout<<"[1.13.0.0]"<<endl;
   TLorentzVector lv1;
   TLorentzVector lv2;  
-  lv1.SetPtEtaPhiM(sqrt(kfTrack[0].GetPx()*kfTrack[0].GetPx() + kfTrack[0].GetPy()*kfTrack[0].GetPy()),kfTrack[0].GetEta(),kfTrack[0].GetPhi(),TDatabasePDG::Instance()->GetParticle(211)->Mass());
-  lv2.SetPtEtaPhiM(sqrt(kfTrack[1].GetPx()*kfTrack[1].GetPx() + kfTrack[1].GetPy()*kfTrack[1].GetPy()),kfTrack[1].GetEta(),kfTrack[1].GetPhi(),TDatabasePDG::Instance()->GetParticle(211)->Mass());
+  lv1.SetPtEtaPhiM(sqrt(kfTrack[0].GetPx()*kfTrack[0].GetPx() + kfTrack[0].GetPy()*kfTrack[0].GetPy()),
+		   kfTrack[0].GetEta(),kfTrack[0].GetPhi(),massPion);
+  lv2.SetPtEtaPhiM(sqrt(kfTrack[1].GetPx()*kfTrack[1].GetPx() + kfTrack[1].GetPy()*kfTrack[1].GetPy()),
+		   kfTrack[1].GetEta(),kfTrack[1].GetPhi(),massPion);
+  
   TLorentzVector lv12 = lv1 + lv2;
-  */
-
+  
   unique_ptr<TVector3> momS(new TVector3(momK0s[0],momK0s[1],momK0s[2]));
   unique_ptr<TVector3> vecS(new TVector3(posK0s[0]-fPrimVtxPos[0],posK0s[1]-fPrimVtxPos[1],posK0s[2]-fPrimVtxPos[2]));
   double kfSpv  = momS->Angle(*vecS.get());
@@ -1730,14 +1957,13 @@ K0sContainer* AliAnalysisTaskAODTrackPair::calcK0sFromTracks(AliAODTrack* aodTra
   vecS->SetZ(0.); 
   double kfSpvXY                 = momS->Angle(*vecS.get());
   double kfScpvXY                = TMath::Cos(kfSpvXY);
-  cout<<"[14.0.0.0]"<<endl;
-  double kfMassK0s               = kfK0s.GetMass();
-  cout<<"[15.0.0.0]"<<endl;
-  double kfEtaK0s                = 0;//kfK0s.GetEta();  
-  cout<<"[16.0.0.0]"<<endl;
+  
+  double kfMassK0s               = lv12.M();//kfK0s.GetMass();  
+  double kfEtaK0s                = lv12.Eta();//kfK0s.GetEta();  
+  
   double kfMomK0s[]              = {kfK0s.GetPx(),kfK0s.GetPy(),kfK0s.GetPz()};
   double kfVtxK0s[]              = {kfK0s.GetX(),kfK0s.GetY(),kfK0s.GetZ()};
-  cout<<"[17.0.0.0]"<<endl;
+  
   int kfQK0s                     = kfK0s.Q();
   double kfDecayLengthXYK0s      = decay_length_xy;
   double kfDecayLengthK0s        = decay_length;
@@ -1745,8 +1971,8 @@ K0sContainer* AliAnalysisTaskAODTrackPair::calcK0sFromTracks(AliAODTrack* aodTra
   double kfImpParK0s             = dcaK0s;
   double kfCosPointVectorXYK0s   = kfScpvXY;
   double kfCosPointVectorK0s     = kfScpv;
-  double kfDaughterDistanceXYK0s = kfTrack[0].GetDistanceFromParticleXY(kfTrack[1]);
-  double kfDaughterDistanceK0s   = 0;//daughterDistance;
+  double kfDaughterDistanceXYK0s = daughterDistance_xy;
+  double kfDaughterDistanceK0s   = daughterDistance;
   double kfChi2perNdfK0s         = chi2K0s;
   int kfTrackIdDaughters[]       = {aodTrack1->GetID(),aodTrack2->GetID()};
   int kfTrackLabelDaughters[]    = {aodTrack1->GetLabel(),aodTrack2->GetLabel()};
@@ -1754,13 +1980,13 @@ K0sContainer* AliAnalysisTaskAODTrackPair::calcK0sFromTracks(AliAODTrack* aodTra
   double kfMomDaughter2[]        = {kfTrack[1].Px(),kfTrack[1].Py(),kfTrack[1].Pz()};
   double kfImpParXYDaughters[]   = {dcaDaughter_xy1,dcaDaughter_xy2};
   double kfImpParDaughters[]     = {dcaDaughter1,dcaDaughter2};
-  cout<<"[18.0.0.0]"<<endl;
-  K0sContainer* container = new K0sContainer(kfMassK0s,kfEtaK0s,kfMomK0s,kfVtxK0s,kfQK0s,kfDecayLengthXYK0s,kfDecayLengthK0s,
-					     kfImpParXYK0s,kfImpParK0s,kfCosPointVectorXYK0s,kfCosPointVectorK0s,
-					     kfDaughterDistanceXYK0s,kfDaughterDistanceK0s,
-					     kfChi2perNdfK0s,kfTrackIdDaughters,kfTrackLabelDaughters,
-					     kfMomDaughter1,kfMomDaughter2,kfImpParXYDaughters,kfImpParDaughters);
-  cout<<"[19.0.0.0]"<<endl;
+  
+  unique_ptr<K0sContainer> container(new K0sContainer(kfMassK0s,kfEtaK0s,kfMomK0s,kfVtxK0s,kfQK0s,kfDecayLengthXYK0s,kfDecayLengthK0s,
+						      kfImpParXYK0s,kfImpParK0s,kfCosPointVectorXYK0s,kfCosPointVectorK0s,
+						      kfDaughterDistanceXYK0s,kfDaughterDistanceK0s,
+						      kfChi2perNdfK0s,QtAlfa,kfTrackIdDaughters,kfTrackLabelDaughters,
+						      kfMomDaughter1,kfMomDaughter2,kfImpParXYDaughters,kfImpParDaughters));
+  /*
   if (0) {
 
     AliAODMCParticle* particle1 = (AliAODMCParticle *)fMCTrackArray->At(aodTrack1->GetLabel());
@@ -1782,14 +2008,23 @@ K0sContainer* AliAnalysisTaskAODTrackPair::calcK0sFromTracks(AliAODTrack* aodTra
       }
     }
   }
-  
+  */
+
+  //cout<<"[1.14.0.0]"<<endl;
   return container;
+}
+
+unique_ptr<AliAODv0> AliAnalysisTaskAODTrackPair::calcAliAODv0FromTracks(AliAODTrack* aodTrack1,AliAODTrack* aodTrack2){
+  
+  
+  
+
 }
 
 bool AliAnalysisTaskAODTrackPair::updateAODv0(AliAODv0* v0){
   /*
-  AliAODTrack *aodTrack1 = (AliAODTrack *)v0->GetDaughter(0);
-  AliAODTrack *aodTrack2 = (AliAODTrack *)v0->GetDaughter(1);
+    AliAODTrack *aodTrack1 = (AliAODTrack *)v0->GetDaughter(0);
+    AliAODTrack *aodTrack2 = (AliAODTrack *)v0->GetDaughter(1);
   
   AliAODv0 *new_v0 = calcK0sFromTracks(aodTrack1,aodTrack2);
   
@@ -1821,7 +2056,6 @@ int AliAnalysisTaskAODTrackPair::findLeadingTrack(){
 
 KFParticle AliAnalysisTaskAODTrackPair::CreateKFParticle(AliAODTrack* track, int pdg){
   
-
   AliKFParticle alikfp(*track,pdg);
 
   float fkP[8]  = {};
@@ -1836,74 +2070,23 @@ KFParticle AliAnalysisTaskAODTrackPair::CreateKFParticle(AliAODTrack* track, int
   
   double fP[6]={};
   double fC[21]={};
-
+  
   track->GetXYZ(fP);
   track->GetPxPyPz(&fP[3]);
   track->GetCovarianceXYZPxPyPz(fC);
   
-  KFPTrack kfpt;
-  kfpt.SetParameters(fP);
-  kfpt.SetCovarianceMatrix(fC);
-  kfpt.SetCharge(track->Charge());
-  kfpt.SetNDF(1);
-  kfpt.SetChi2(track->Chi2perNDF());
-  
   KFParticle kfp;
   kfp.Initialize();  
-  //kfp = KFParticle(kfpt);
-  kfp.Create(fkP,fkC,track->Charge(),  TDatabasePDG::Instance()->GetParticle(pdg)->Mass());
+  kfp.Create(fkP,fkC,track->Charge(),massPion);
 
   return kfp;
 }
 
-bool AliAnalysisTaskAODTrackPair::CheckTrackCovariance(AliAODTrack* track){
-  
-  Double_t covMatrix[21];
-  track->GetCovarianceXYZPxPyPz(covMatrix);
-  Double_t cov[6][6]={0.};
-  cov[0][0] = covMatrix[0];
-  cov[1][0] = covMatrix[1];
-  cov[1][1] = covMatrix[2];
-  cov[2][0] = covMatrix[3];
-  cov[2][1] = covMatrix[4];
-  cov[2][2] = covMatrix[5];
-  cov[3][0] = covMatrix[6];
-  cov[3][1] = covMatrix[7];
-  cov[3][2] = covMatrix[8];
-  cov[3][3] = covMatrix[9];
-  cov[4][0] = covMatrix[10];
-  cov[4][1] = covMatrix[11];
-  cov[4][2] = covMatrix[12];
-  cov[4][3] = covMatrix[13];
-  cov[4][4] = covMatrix[14];
-  cov[5][0] = covMatrix[15];
-  cov[5][1] = covMatrix[16];
-  cov[5][2] = covMatrix[17];
-  cov[5][3] = covMatrix[18];
-  cov[5][4] = covMatrix[19];
-  cov[5][5] = covMatrix[20];
-
-  if ( cov[0][0]<0 || cov[1][1]<0 || cov[2][2]<0 || cov[3][3]<0 || cov[4][4]<0 || cov[5][5]<0 ) return kFALSE;
-  for (Int_t i=0; i<6; i++) {
-    for (Int_t j=0; j<6; j++) {
-      if (i<=j) continue;
-      if ( fabs(cov[i][j]) > TMath::Sqrt(cov[i][i]*cov[j][j]) ) return false;
-    }
-  }
-
-  return true;
-}
-
-bool AliAnalysisTaskAODTrackPair::CheckTrackCovariance(KFParticle kfp){
-  if ( kfp.GetCovariance(0,0)<0 || kfp.GetCovariance(1,1)<0 || kfp.GetCovariance(2,2)<0 || 
-       kfp.GetCovariance(3,3)<0 || kfp.GetCovariance(4,4)<0 || kfp.GetCovariance(5,5)<0 ) return false;
-  for (Int_t i=0; i<6; i++) {
-    for (Int_t j=0; j<6; j++) {
-      if (i<=j) continue;
-      if ( fabs(kfp.GetCovariance(i,j)) > TMath::Sqrt(kfp.GetCovariance(i,i)*kfp.GetCovariance(j,j)) ) return false;
-    }
-  }
-  return true;
+K0sContainer *AliAnalysisTaskAODTrackPair::CreateRawPointerK0sContainer(K0sContainer* unique){
+  K0sContainer *raw = new K0sContainer(unique->Mass,unique->Eta,unique->P,unique->Vtx,unique->Charge,unique->DecayLengthXY,unique->DecayLength,
+				       unique->DcaXY,unique->Dca,unique->CpvXY,unique->Cpv,unique->DistanceDaughtersXY,unique->DistanceDaughters,
+				       unique->rChi2V0,unique->Armenteros,unique->dTrackid,unique->dLabel,unique->dP1,unique->dP2,unique->dDcaXY,unique->dDca);
+    return raw;
 }
 
 double AliAnalysisTaskAODTrackPair::DecayLengthFromKF(KFParticle kfpParticle, KFParticle PV){
@@ -1939,7 +2122,7 @@ bool AliAnalysisTaskAODTrackPair::ProcessMC(){
   
   for (int iV0 = 0; iV0 < nV0; ++iV0) {
     
-    K0sContainer* v0 = (K0sContainer *)fArrayK0s->At(iV0);
+    K0sContainer* v0 = (K0sContainer* )fArrayK0s->At(iV0);
     
     plabels12.push_back(v0->dLabel[0]);
     plabels12.push_back(v0->dLabel[1]);
@@ -1971,7 +2154,7 @@ bool AliAnalysisTaskAODTrackPair::ProcessMC(){
     if(!p1 || !p2)                                                      continue;
     if (fabs(p1->GetPdgCode()) != 211 || fabs(p2->GetPdgCode()) != 211) continue;
     
-    double fill_k0s[] = {particle1->M(), particle1->Pt(), fUtils->getCentClass(), 0};
+    double fill_k0s[] = {particle1->M(), particle1->Pt(), fUtils->getCentClass()};
     fSparseTrueK0s->Fill(fill_k0s);
 
     bool det = false;
@@ -1985,7 +2168,7 @@ bool AliAnalysisTaskAODTrackPair::ProcessMC(){
     }
     
     if (det){      
-      K0sContainer* v0 = (K0sContainer *)fArrayK0s->At(idv0);
+      K0sContainer* v0 = (K0sContainer*)fArrayK0s->At(idv0);
 
       double rx = fabs(p1->Xv())>0 ? v0->Vtx[0]/p1->Xv() : 0;
       double ry = fabs(p1->Yv())>0 ? v0->Vtx[1]/p1->Yv() : 0;
@@ -2019,47 +2202,92 @@ bool AliAnalysisTaskAODTrackPair::isAcceptK0sPair(K0sContainer* v0_1, K0sContain
 
 }
 
-bool AliAnalysisTaskAODTrackPair::isAcceptV0QualityCuts(K0sContainer* v0, bool* isAcceptCuts){  
+bool AliAnalysisTaskAODTrackPair::isAcceptV0QualityCuts(K0sContainer* v0, bool isAcceptCuts[7]){  
   
+  double p  = v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2] > 0 ? 
+    sqrt(v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2]) : 0;
+  
+  double chi2            = v0->rChi2V0;
+  double cpv             = v0->Cpv;  
+  double lengthXY        = v0->DecayLengthXY;
+  double trackDistanceXY = v0->DistanceDaughtersXY;
+  double DCAxy           = v0->DcaXY;
+  double lifetime        = fUtils->fPdgK0sMass * v0->DecayLength / p;
+  
+  return isAcceptV0QualityCuts(p,chi2,cpv,lengthXY,trackDistanceXY,DCAxy,lifetime,isAcceptCuts);
+}
+
+bool AliAnalysisTaskAODTrackPair::isAcceptV0QualityCuts(AliAODv0* v0, bool isAcceptCuts[7]){  
+  
+  double p  = v0->P();
+  
+  double chi2            = v0->Chi2V0();
+  double cpv             = v0->CosPointingAngle(fPrimVtxPos);
+  double lengthXY        = v0->DecayLengthXY(fPrimVtxPos);
+  double trackDistanceXY = v0->DcaV0Daughters();
+  double DCAxy           = v0->DcaV0ToPrimVertex();
+  double lifetime        = fUtils->fPdgK0sMass * v0->DecayLength(fPrimVtxPos) / p;
+  
+  return isAcceptV0QualityCuts(p,chi2,cpv,lengthXY,trackDistanceXY,DCAxy,lifetime,isAcceptCuts);
+}
+
+bool AliAnalysisTaskAODTrackPair::isAcceptV0QualityCuts(double p, double chi2, double cpv, double lengthXY,
+							double trackDistanceXY, double DCAxy, double lifetime, bool isAcceptCuts[7]){     
   isAcceptCuts[0] = false;
   isAcceptCuts[1] = false;
   isAcceptCuts[2] = false;
   isAcceptCuts[3] = false;
   isAcceptCuts[4] = false;
   isAcceptCuts[5] = false;
+  isAcceptCuts[6] = false;
 
-  double p  = v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2] > 0 ? 
-    sqrt(v0->P[0]*v0->P[0] + v0->P[1]*v0->P[1] + v0->P[2]*v0->P[2]) : 0;
+  double max_chi2            = 0;
+  double min_cpv             = 0;
+  double max_lengthXY        = 0;
+  double max_trackDistanceXY = 0;
+  double max_DCAxy           = 0;
+  double max_lifetime        = 0;
   
-  double max_chi2            = fHistChi2Cut->GetBinContent(fHistChi2Cut->GetXaxis()->FindBin(p));
-  double min_cpv             = fHistPointingAngleXYCut->GetBinContent(fHistPointingAngleXYCut->GetXaxis()->FindBin(p));
-  double max_lengthXY        = fHistDecayLengthXYCut->GetBinContent(fHistDecayLengthXYCut->GetXaxis()->FindBin(p));
-  double max_trackDistanceXY = fHistDaughterTrackDistanceXYCut->GetBinContent(fHistDaughterTrackDistanceXYCut->GetXaxis()->FindBin(p));
-  double max_DCAxy           = fHistDCAxyCut->GetBinContent(fHistDCAxyCut->GetXaxis()->FindBin(p));
-  double max_lifetime        = fHistLifeTimeCut->GetBinContent(fHistLifeTimeCut->GetXaxis()->FindBin(p));
+  if (onChi2perNDFCut) {
+    if (!fHistChi2perNDFCut) cout<<"Missing "<<endl;
+    max_chi2            = fHistChi2perNDFCut->GetBinContent(fHistChi2perNDFCut->GetXaxis()->FindBin(p));
+  }
+  if (onPointingAngleCut){
+    if (!fHistPointingAngleCut) cout<<"Missing fHistPointingAngleCut"<<endl;
+    min_cpv             = fHistPointingAngleCut->GetBinContent(fHistPointingAngleCut->GetXaxis()->FindBin(p));
+  }
+  if (onDecayLengthCut){
+    if (!fHistDecayLengthCut) cout<<"Missing fHistDecayLengthCut"<<endl;
+    max_lengthXY        = fHistDecayLengthCut->GetBinContent(fHistDecayLengthCut->GetXaxis()->FindBin(p));
+  }
+  if (onDaughterTrackDistanceXYCut){
+    if (!fHistDaughterTrackDistanceXYCut) cout<<"Missing fHistDaughterTrackDistanceXYCut"<<endl;
+    max_trackDistanceXY = fHistDaughterTrackDistanceXYCut->GetBinContent(fHistDaughterTrackDistanceXYCut->GetXaxis()->FindBin(p));
+  }
+  if (onDCACut) {
+    if (!fHistDCACut) cout<<"Missing fHistDCACut"<<endl;
+    max_DCAxy           = fHistDCACut->GetBinContent(fHistDCACut->GetXaxis()->FindBin(p));
+  }
+  if (onLifetimeCut) {
+    if (!fHistProperLifeTimeCut) cout<<"Missing fHistProperLifeTimeCut"<<endl;
+    max_lifetime        = fHistProperLifeTimeCut->GetBinContent(fHistProperLifeTimeCut->GetXaxis()->FindBin(p));
+  }
 
-  double chi2            = v0->rChi2V0;
-  double cpv             = v0->CpvXY;  
-  double lengthXY        = v0->DecayLengthXY;
-  double trackDistanceXY = v0->DcaDaughtersXY;
-  double DCAxy           = v0->DcaXY;
-  double lifetime        = fUtils->fPdgK0sMass * v0->DecayLengthXYZ / p;
-
-  if ( onChi2Cut ) {
+  if ( onChi2perNDFCut ) {
     if ( chi2 < max_chi2 ) isAcceptCuts[0] = true;
     else                   isAcceptCuts[0] = false;
   } else {
     isAcceptCuts[0] = true;
   }
   
-  if ( onPointingAngleXYCut ) {
+  if ( onPointingAngleCut ) {
     if ( cpv > min_cpv ) isAcceptCuts[1] = true;
     else                 isAcceptCuts[1] = false;
   } else {
     isAcceptCuts[1] = true;
   }    
   
-  if ( onDecayLengthXYCut ) {
+  if ( onDecayLengthCut ) {
     if ( lengthXY < max_lengthXY ) isAcceptCuts[2] = true;
     else                           isAcceptCuts[2] = false;
   } else {
@@ -2073,7 +2301,7 @@ bool AliAnalysisTaskAODTrackPair::isAcceptV0QualityCuts(K0sContainer* v0, bool* 
     isAcceptCuts[3] = true;
   }
   
-  if ( onDCAXYCut ) {
+  if ( onDCACut ) {
     if ( DCAxy < max_DCAxy )  isAcceptCuts[4] = true;
     else                      isAcceptCuts[4] = false;
   } else {
@@ -2087,39 +2315,59 @@ bool AliAnalysisTaskAODTrackPair::isAcceptV0QualityCuts(K0sContainer* v0, bool* 
     isAcceptCuts[5] = true;
   }
   
+  if ( onArmenterosCut ) {
+    /*
+    if ( isAcceptK0sArmenteros(v0) ) isAcceptCuts[6] = true;
+    else                             isAcceptCuts[6] = false;
+    */
+    isAcceptCuts[6] = true;
+  } else {
+    isAcceptCuts[6] = true;
+  }
+  
   if (isAcceptCuts[0]==true && isAcceptCuts[1]==true && 
       isAcceptCuts[2]==true && isAcceptCuts[3]==true && 
-      isAcceptCuts[4]==true && isAcceptCuts[5]==true) {
-    return true;
-  } else {
-    return false;
-  }
+      isAcceptCuts[4]==true && isAcceptCuts[5]==true && 
+      isAcceptCuts[6]==true) return true;
+  else return false;
+}
 
+bool AliAnalysisTaskAODTrackPair::isAcceptK0sArmenteros(K0sContainer* v0){
+  
+  double qt = v0->Armenteros[0];
+  double alpha  = v0->Armenteros[1];
+  
+  if (qt<0.03)                              return false;
+  if (qt < fabs(fArmenterosAlpha * alpha))  return false;
+
+  return true;
 }
 
 bool AliAnalysisTaskAODTrackPair::isAcceptK0sCuts(K0sContainer* v0){
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPair::isAcceptK0sKinematics(K0sContainer* v0) {
-
+bool AliAnalysisTaskAODTrackPair::isAcceptK0sKinematics(K0sContainer* v0) {  
   unique_ptr<TVector3> vec(new TVector3());
   vec->SetXYZ(v0->P[0],v0->P[1],v0->P[2]);
   unique_ptr<TLorentzVector> lv(new TLorentzVector());
-  lv->SetPtEtaPhiM(vec->Pt(), vec->Eta(), vec->Phi(), v0->Mass);
-  if (fMinK0sRap > lv->Rapidity() || fMaxK0sRap < lv->Rapidity()) return false;
-  if (fMinK0sPt > vec->Pt() || fMaxK0sPt < vec->Pt())             return false;
-  return true;
+  lv->SetPtEtaPhiM(vec->Pt(), vec->Eta(), vec->Phi(), v0->Mass);  
+  return isAcceptK0sKinematics(lv->Rapidity(), lv->Pt());
 }
-
+bool AliAnalysisTaskAODTrackPair::isAcceptK0sKinematics(AliAODv0* v0) {  
+  unique_ptr<TLorentzVector> lv(new TLorentzVector());
+  lv->SetPtEtaPhiM(v0->Pt(), v0->Eta(), v0->Phi(), v0->MassK0Short());  
+  return isAcceptK0sKinematics(lv->Rapidity(), lv->Pt());
+}
 bool AliAnalysisTaskAODTrackPair::isAcceptK0sKinematics(AliAODMCParticle* v0) {
-
   unique_ptr<TLorentzVector> lv(new TLorentzVector());
   lv->SetPtEtaPhiM(v0->Pt(), v0->Eta(), v0->Phi(), v0->M());  
-  
-  if (fMinK0sRap > lv->Rapidity() || fMaxK0sRap < lv->Rapidity()) return false;
-  if (fMinK0sPt > lv->Pt() || fMaxK0sPt < lv->Pt())             return false;
-  
+  return isAcceptK0sKinematics(lv->Rapidity(), lv->Pt());
+}
+
+bool AliAnalysisTaskAODTrackPair::isAcceptK0sKinematics(double rap, double pt) {
+  if (fMinK0sRap > rap || fMaxK0sRap < rap) return false;
+  if (fMinK0sPt > pt || fMaxK0sPt < pt)     return false; 
   return true;
 }
 
@@ -2127,29 +2375,71 @@ bool AliAnalysisTaskAODTrackPair::isAcceptPrimaryTrack(AliAODTrack* track){
   return true;
 }
 
-/*
-void AliAnalysisTaskAODTrackPair::Construct( const KFParticle *vDaughters[], int nDaughters){
-  
-  fNDF      = -3;
-  
-  double fC[36] = {};  
-  double fP[8]  = {};
-  double fChi2  =  0;
-  
-  fC[35] = 1;
-  
-  for( Int_t index=0; index<7;  index++) fP[index] = vDaughters[0]->GetParameter(index);
-  for( Int_t index=0; index<28; index++) fC[index] = vDaughters[0]->GetCovariance(index);
-  
-  //for (int index=0; index<nDaughters; ++index) {
-  //AddDaughter( *vDaughters[index] );
-  //}
-  
+bool AliAnalysisTaskAODTrackPair::isAcceptK0sCandidateMassRange(double mass){
+  if ( fMinK0sMassRange>mass || mass > fMaxK0sMassRange) return false;
+  else                                                   return true;
 }
 
-void AliAnalysisTaskAODTrackPair::AddDaughter(){
-  
-  
-
+bool AliAnalysisTaskAODTrackPair::isAcceptDaughterTrackPairAngle(AliAODTrack* track1, AliAODTrack* track2){  
+  TVector3 v1(track1->Px(),track1->Py(),track1->Pz());
+  TVector3 v2(track2->Px(),track2->Py(),track2->Pz());
+  if (v1.Angle(v2)<1E-4)  return false;
+  else                    return true;
 }
-*/
+
+bool AliAnalysisTaskAODTrackPair::isAcceptDaughterTrack(AliAODTrack *track, AliPID::EParticleType pid1) {  
+
+  if ( !isAcceptDaughterTrackKinematics(track) ) return false;
+  if ( !isAcceptDaughterTrackQuality(track) )    return false;
+  if ( !fUtils->isAcceptMidPid(track,pid1) )     return false;  
+  if ( !fIsMC || (fIsMC && fUtils->getMotherPdgCode(track) == 310 && fUtils->getGrandMotherLabel(track->GetLabel()) == -1) ) {
+    TrackQualityChecker(track);    
+    TrackPIDChecker(track,pid1,true);
+  }
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPair::isAcceptDaughterTrackKinematics(AliAODTrack *track) {
+  if (track->P() < fMinTrackP || fMaxTrackP < track->P())         return false;
+  if (track->Eta() < fMinTrackEta || fMaxTrackEta < track->Eta()) return false;
+  if (track->Pt() < fMinTrackPt || fMaxTrackPt < track->Pt())     return false;
+  return true;
+}
+
+bool AliAnalysisTaskAODTrackPair::isAcceptDaughterTrackQuality(AliAODTrack *track) {
+  
+  if ( !track->HasPointOnITSLayer(0) && !track->HasPointOnITSLayer(1) && 
+       !track->HasPointOnITSLayer(4) && !track->HasPointOnITSLayer(5) && 
+       track->GetTOFBunchCrossing() != 0 )                                                                   return false;
+  if ( (track->GetStatus() & AliVTrack::kTPCrefit) == 0 )                                                    return false;
+  if ( fMinTrackTPCNClusts > track->GetTPCNcls() )                                                           return false;
+  if ( track->GetKinkIndex(0) != 0 )                                                                         return false;
+  if ( fMinCrossRowsFindableRatio > track->GetTPCNclsF() / track->GetTPCCrossedRows() )                      return false;
+  if ( fMaxReducedChi2TPC < track->GetTPCchi2() / track->GetTPCNcls() )                                      return false;
+  
+  double maxd   = 999.;
+  double dz[2]  = {};
+  double c[3]   = {};
+
+  /*
+  if (track->PropagateToDCA(fPrimVtx,fEvent->GetMagneticField(),maxd,dz,c) ){ 
+    if ( fabs(dz[0]) < 0.03 ) return false;
+  } 
+  */  
+  /*
+  KFParticle kfTrack;
+  kfTrack = CreateKFParticle(track, 211);
+  float dca, e_dca;
+  float fPrimVtxPosF[] = {static_cast<float>(fPrimVtxPos[0]),static_cast<float>(fPrimVtxPos[1]),static_cast<float>(fPrimVtxPos[2])};
+  float fPrimVtxCovF[] = {static_cast<float>(fPrimVtxCov[0]),static_cast<float>(fPrimVtxCov[1]),static_cast<float>(fPrimVtxCov[2]),
+			  static_cast<float>(fPrimVtxCov[3]),static_cast<float>(fPrimVtxCov[4]),static_cast<float>(fPrimVtxCov[5])};
+  kfTrack.GetDistanceFromVertexXY(fPrimVtxPosF,fPrimVtxCovF,dca,e_dca);  
+  if ( fabs(dca) < 0.03 ) return false;
+  */
+  double cov[21]={};
+  track->GetCovarianceXYZPxPyPz(cov); 
+  for (int index=0; index<6; ++index) if (fabs(cov[index]) > 1e+1)  return false; 
+  
+  return true;
+}
+
