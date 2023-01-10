@@ -38,8 +38,7 @@ public:
   
   bool isAcceptedK0sFromKpmStar(AliAODv0 *v0,double &mass);
   bool isAcceptV0TrackQuality(AliAODTrack *track);
-  bool isAcceptV0Basic(AliAODv0 *v0, int charge);
-  bool isAcceptV0Quality(AliAODv0 *v0, int charge);
+  
   bool isAcceptV0Kinematics(AliAODv0 *v0);
   bool isAcceptK0s(AliAODv0 *v0);
   bool isAcceptK0sK0sOpeningAngle(AliAODv0 *v0_1, AliAODv0 *v0_2);
@@ -116,6 +115,7 @@ public:
   
   bool isSameMotherPair(AliAODTrack *track1, AliAODTrack *track2);
   bool isSameMotherPair(AliAODMCParticle *part1, AliAODMCParticle *part2);
+  bool isSameMotherPair(int label1, int label2);
   bool isCharmQuarkOrigin(AliAODMCParticle *particle);
   bool isBeautyQuarkOrigin(AliAODMCParticle *particle);
   bool isHeavyFlavorOrigin(AliAODMCParticle *particle);
@@ -123,8 +123,10 @@ public:
   
   int getMotherPdgCode(AliAODTrack *track);
   int getMotherPdgCode(AliAODMCParticle *part);
+  int getMotherPdgCode(int label1);
   int getMotherLabel(AliAODTrack *track);
   int getMotherLabel(AliAODMCParticle *part);
+  int getGrandMotherLabel(int label1);
 
   double getTOFSigma(AliAODTrack *track1, AliPID::EParticleType pid);
   double getTPCSigma(AliAODTrack *track1, AliPID::EParticleType pid);
@@ -178,6 +180,8 @@ public:
       return 0;
     }
   }
+  
+  AliExternalTrackParam* getExTrackParams(AliAODTrack *aodTrack);
 
   bool isMC() { return fIsMC; }
 
@@ -382,7 +386,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////////////////////
   // Set analysis object
   //////////////////////////////////////////////////////////////////////////////////////////////
-
+  
   void setMultiEstimateMethod(std::string method) { fMultiMethod = method; }
   void setMuonTrackCut(AliMuonTrackCuts *cut) { fMuonTrackCuts = cut; }
   void setDownScalingHist(TFile *inFile) {
@@ -624,7 +628,7 @@ public:
   bool fIs2BodyProd;
 
   std::string fMultiMethod;
-
+  
   TH1F *fHistDsCMSL7;
   TH1F *fHistDsCINT7;
   TH1F *fHistDsCMLL7;

@@ -7,7 +7,11 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
 						 string k0s_cuts_file_path=
 						 "/Users/syano_mbp2021/analysis/run2/Glueball/K0sSelectionCuts.root",
 						 double min_vtxz = -10, double max_vtxz = 10, int min_vtx_cont = 1,
-						 double min_pair_rap = -0.5, double max_pair_rap = 0.5, double alpha = 0.2,
+						 double min_pair_rap = -0.5,
+						 double max_pair_rap = 0.5, 
+						 double min_pair_pt = 0.50,
+						 double max_pair_pt = 999., 
+						 double alpha = 0.2,
 						 double min_pangle = 0.998,
 						 double max_pangle = 0.998,
 						 double min_v0Dca = 0.1,
@@ -105,6 +109,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   }
 
   task->setUtils(utils);
+  task->setMC(isMC);
   task->setEvtMixingTrackDepth(trackdepth);
   task->setEvtMixingPoolSize(poolsize);
   task->setEvtMixingReadyFraction(readypoolfraction);
@@ -112,9 +117,10 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   task->setEvtMixingPoolCent(onpoolCent);
   task->setEvtMixingPoolPsi(onpoolPsi);
   task->setMixingAnalysis(onMixingAnalysis);
-  task->setMC(isMC);
   task->setManualV0Analysis(isManual);  
   task->setK0sCuts(input3,decay_length_cut,pointangle_cut,chi2_cut,pairDCA_cut,track_distance_cut,dcaxy_cut,lifetime_cut,armenteros_cut);  
+  task->setK0sRapRange(min_pair_rap,max_pair_rap);
+  task->setK0sPtRange(min_pair_pt,max_pair_pt);
   task->setK0sDaughterTrackPRange(min_track_p,max_track_p);
   task->setK0sDaughterTrackPtRange(min_track_pt,max_track_pt);
   task->setK0sDaughterTrackEtaRange(min_track_eta,max_track_eta);

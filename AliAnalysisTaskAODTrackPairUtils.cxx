@@ -15,11 +15,6 @@
 #include "TClonesArray.h"
 #include "TDatabasePDG.h"
 
-#include "KFParticle.h"
-#include "KFVertex.h"
-#include "KFPVertex.h"
-#include "KFPTrack.h"
-
 #include "iostream"
 #include <time.h>
 
@@ -200,6 +195,7 @@ AliAnalysisTaskAODTrackPairUtils::AliAnalysisTaskAODTrackPairUtils() : TNamed(),
   fMaxMuonSigmaTPC(2.0),
   fMinMuonSigmaTOF(-2.0),
   fMaxMuonSigmaTOF(2.0),
+  
   fMinTrackTPCNClusts(70),
   fMinTrackSPDNClusts(1), 
   fMaxReducedChi2TPC(4.),
@@ -374,76 +370,35 @@ void AliAnalysisTaskAODTrackPairUtils::setInit() {
   fNChEta20 = 0;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent *event,
-                                                AliVEventHandler *handler) {
+bool AliAnalysisTaskAODTrackPairUtils::setEvent(AliAODEvent *event, AliVEventHandler *handler) {
+  
   setInit();
 
   fEvent = event;
 
-  if (!fEvent) {
-    return false;
-  }
-
+  if (!fEvent) return false;
+  
   fInputHandler = handler;
 
   if (!fInputHandler) {
     return false;
   }
+  
+  fPIDResponse = fInputHandler->GetPIDResponse();
+  
+  if (!fPIDResponse) return false;
 
-  if (fIsMidTrackAna && !fPIDResponse) {
-    fPIDResponse = fInputHandler->GetPIDResponse();
-    if (!fPIDResponse) {
-      return false;
-    }
-  }
+  if (fIsMC) setMCEventInfo();
 
-  fRunNumber = fEvent->GetRunNumber();
-
-  if (fIsMC) {
-    setMCEventInfo();
-  }
-
-  if (!fIsEvtSelect) {
-    return true;
-  }
+  if (!fIsEvtSelect) return true;
 
   fMultSelection = (AliMultSelection *)fEvent->FindListObject("MultSelection");
 
-  if (!fMultSelection) {
-    return false;
-  }
-
-  if (!fIsMidTrackAna && !setRunnumberIndex()) {
-    return false;
-  }
-
-  if (!fIsMidTrackAna && !setPeriodInfo()) {
-    return false;
-  }
-
-  if (!fIsMidTrackAna && !setTriggerInfo()) {
-    return false;
-  }
-
-  if (!setVtxZCentPsi()) {
-    return false;
-  }
-
-  if (!fIsMidTrackAna && !setDownScaleFactor()) {
-    return false;
-  }
-
-  if (!setSPDTrk()) {
-    return false;
-  }
-
-  if (!setSPDClust()) {
-    return false;
-  }
-
-  if (!setVZERO()) {
-    return false;
-  }
+  if (!fMultSelection)   return false;  
+  if (!setVtxZCentPsi()) return false;
+  if (!setSPDTrk())      return false;
+  if (!setSPDClust())    return false;
+  if (!setVZERO())       return false;
 
   return true;
 }
@@ -706,44 +661,6 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptMidPid(
   return true;
 }
 
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Basic(AliAODv0 *v0, int charge){
-
-  if (v0->GetNProngs() != 2 || v0->GetOnFlyStatus() == 1) {
-    return false;
-  }
-  
-  AliAODTrack *pTrack = (AliAODTrack *)v0->GetDaughter(0);
-  AliAODTrack *nTrack = (AliAODTrack *)v0->GetDaughter(1);
-
-  if (!pTrack || !nTrack) {
-    return false;
-  }
-
-  if (!isAcceptTrackKinematics(pTrack) || !isAcceptTrackKinematics(nTrack)) {
-    return false;
-  }
-  if (!isAcceptV0TrackQuality(pTrack) || !isAcceptV0TrackQuality(nTrack)) {
-    return false;
-  }
-
-  return true;
-}
-
-bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0Quality(AliAODv0 *v0, int charge){
-  
-  double vtx[] = {fVtxX, fVtxY, fVtxZ};
-  double length = v0->DecayLengthV0(vtx);
-  double proper_life_time = fPdgK0sMass * length / v0->P();
-  
-  if (fMinCosPointingAngleCut > v0->CosPointingAngle(vtx) || fMaxCosPointingAngleCut < v0->CosPointingAngle(vtx)) return false;
-  if (fMinV0DCA > v0->DcaV0ToPrimVertex() || fMaxV0DCA < v0->DcaV0ToPrimVertex())                                 return false;
-  if (fMinV0DaughterDCA > v0->DcaV0Daughters() || fMaxV0DaughterDCA < v0->DcaV0Daughters())                       return false;
-  if (fMinV0DecayLength > length || fMaxV0DecayLength < length)                                                   return false;    
-  if (proper_life_time < fMinV0PropLifeTime || proper_life_time > fMaxV0PropLifeTime)                             return false;
-  
-  return true;
-}
-
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptedK0sFromKpmStar(AliAODv0 *v0,double& mass){
 
 
@@ -886,49 +803,6 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptNotSharingTracks(AliAODv0 *v0_1, 
 }
 
 bool AliAnalysisTaskAODTrackPairUtils::isAcceptK0s(AliAODv0 *v0){
-  
-  if ( !isAcceptV0Quality(v0,0) ) {
-    return false;
-  }    
-  if ( !isAcceptArmenterosK0s(v0) ) {
-    return false;
-  }
-  
-  AliAODTrack *pTrack = (AliAODTrack *)v0->GetDaughter(0);
-  AliAODTrack *nTrack = (AliAODTrack *)v0->GetDaughter(1);
-
-  TLorentzVector lv1, lv2, lv12;
-  
-  if (pTrack->P() > nTrack->P()) {
-    lv1.SetPtEtaPhiM(pTrack->Pt(), pTrack->Eta(), pTrack->Phi(),
-                     TDatabasePDG::Instance()->GetParticle(2212)->Mass());
-    lv2.SetPtEtaPhiM(nTrack->Pt(), nTrack->Eta(), nTrack->Phi(),
-                     TDatabasePDG::Instance()->GetParticle(211)->Mass());
-  } else {
-    lv1.SetPtEtaPhiM(pTrack->Pt(), pTrack->Eta(), pTrack->Phi(),
-                     TDatabasePDG::Instance()->GetParticle(211)->Mass());
-    lv2.SetPtEtaPhiM(nTrack->Pt(), nTrack->Eta(), nTrack->Phi(),
-                     TDatabasePDG::Instance()->GetParticle(2212)->Mass());
-  }
-
-  lv12 = lv1 + lv2;
-  
-  if (fPdgLambdaMass - fMinRejectMassWidthLambda < lv12.M() &&
-      lv12.M() < fPdgLambdaMass + fMaxRejectMassWidthLambda) {
-    return false;
-  }
-  
-  lv1.SetPtEtaPhiM(pTrack->Pt(), pTrack->Eta(), pTrack->Phi(),
-                   TDatabasePDG::Instance()->GetParticle(11)->Mass());
-  lv2.SetPtEtaPhiM(nTrack->Pt(), nTrack->Eta(), nTrack->Phi(),
-                   TDatabasePDG::Instance()->GetParticle(11)->Mass());
-
-  lv12 = lv1 + lv2;
-
-  if (lv12.M() < 0.05) {
-    return false;
-  }
-
   return true;
 }
 
@@ -971,14 +845,15 @@ bool AliAnalysisTaskAODTrackPairUtils::isAcceptV0TrackQuality(AliAODTrack *track
   if ( track->GetKinkIndex(0) != 0 )                                                    return false;
   if ( fMinCrossRowsFindableRatio > track->GetTPCNclsF() / track->GetTPCCrossedRows() ) return false;
   if ( fMaxReducedChi2TPC < track->GetTPCchi2() / track->GetTPCNcls() )                 return false;
+  if ( fabs(track->Xv()) > 100. )                                                       return false;
+  if ( fabs(track->Yv()) > 100. )                                                       return false;
+  if ( fabs(track->Zv()) > 100. )                                                       return false;
   
-  AliExternalTrackParam exTrack;
-  exTrack.CopyFromVTrack(track);
-  exTrack.CheckCovariance();
-  double d = exTrack.GetD(getVtxX(),getVtxY(),fEvent->GetMagneticField());
-  
-  if (fabs(d) < fFuncMaxDCAxy->Eval(track->Pt()) ) return false;
-  
+  double cov[21]={};
+  track->GetCovarianceXYZPxPyPz(cov);
+
+  for (int index=0; index<21; ++index) if (fabs(cov[index]) > 100.) return false; 
+
   return true;
 }
 
@@ -1132,6 +1007,14 @@ bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(AliAODTrack *track1,
 
   int label1 = track1->GetLabel();
   int label2 = track2->GetLabel();
+
+  return isSameMotherPair(label1,label2);
+}
+
+bool AliAnalysisTaskAODTrackPairUtils::isSameMotherPair(int label1, int label2){
+
+  if (!fMCArray)
+    return false;
 
   if (label1 < 0 || label2 < 0)
     return false;
@@ -1311,6 +1194,161 @@ bool AliAnalysisTaskAODTrackPairUtils::isHeavyFlavorOrigin(
     return false;
 }
 
+AliExternalTrackParam* AliAnalysisTaskAODTrackPairUtils::getExTrackParams(AliAODTrack *aodTrack){
+  
+  double MagF = fEvent->GetMagneticField();
+  AliExternalTrackParam *exTrack = new AliExternalTrackParam();
+  
+  const double kSafe = 1e-5;
+  
+  double xyz[3];
+  aodTrack->GetXYZ(xyz);
+  double pxpypz[3]{aodTrack->Px(),aodTrack->Py(),aodTrack->Pz()};
+  double cov[21]={};
+  aodTrack->GetCovMatrix(cov);
+  
+  double fAlpha = TMath::ATan2(pxpypz[1],pxpypz[0]);
+  Double_t radPos2 = xyz[0]*xyz[0]+xyz[1]*xyz[1];  
+  Double_t radMax  = 45.; // approximately ITS outer radius
+  if (radPos2 < radMax*radMax) { // inside the ITS     
+    
+  } else { // outside the ITS
+    //cout<<"outside the ITS"<<endl;
+  }
+
+
+  double cs=TMath::Cos(fAlpha);
+  double sn=TMath::Sin(fAlpha);
+  
+  if (TMath::Abs(sn)<2*kSafe) {
+    if (fAlpha>0) fAlpha += fAlpha< TMath::Pi()/2. ?  2*kSafe : -2*kSafe;
+    else          fAlpha += fAlpha>-TMath::Pi()/2. ? -2*kSafe :  2*kSafe;
+    cs=TMath::Cos(fAlpha);
+    sn=TMath::Sin(fAlpha);
+  } else if (TMath::Abs(cs)<2*kSafe) {
+    if (fAlpha>0) fAlpha += fAlpha> TMath::Pi()/2. ? 2*kSafe : -2*kSafe;
+    else          fAlpha += fAlpha>-TMath::Pi()/2. ? 2*kSafe : -2*kSafe;
+    cs=TMath::Cos(fAlpha);
+    sn=TMath::Sin(fAlpha);
+  }
+
+  short int sign = aodTrack->Charge();
+  
+  double fX = 0;
+  double fP[5]={};
+  double fC[15]={};
+  
+  TVector3 ver(xyz[0],xyz[1],xyz[2]);
+  TVector3 mom(pxpypz[0],pxpypz[1],pxpypz[2]);
+  
+  ver.RotateZ(-fAlpha);
+  mom.RotateZ(-fAlpha);
+    
+  fX    = ver.X();
+  fP[0] = ver.Y();
+  fP[1] = ver.Z();
+  fP[2] = TMath::Sin(mom.Phi());
+  fP[3] = mom.Pz()/mom.Pt();
+  fP[4] = TMath::Sign(1/mom.Pt(),sign);
+
+  if      (TMath::Abs( 1-fP[2]) < kSafe) fP[2] = 1.- kSafe; //Protection
+  else if (TMath::Abs(-1-fP[2]) < kSafe) fP[2] =-1.+ kSafe; //Protection
+
+  double pt=1./TMath::Abs(fP[4]);
+  double r=TMath::Sqrt((1.-fP[2])*(1.+fP[2]));
+  
+  double cov34 = TMath::Sqrt(cov[3]*cov[3]+cov[4]*cov[4]);
+  
+  Int_t special = 0;
+  double sgcheck = r*sn + fP[2]*cs;
+  if (TMath::Abs(sgcheck)>=1-kSafe) { // special case: lab phi is +-pi/2
+    special = 1;
+    sgcheck = TMath::Sign(1.0,sgcheck);
+  }
+  else if (TMath::Abs(sgcheck)<kSafe) {
+    sgcheck = TMath::Sign(1.0,cs);
+    special = 2;   // special case: lab phi is 0
+  }
+
+  fC[0] = cov[0]+cov[2];  
+  fC[1] = TMath::Sign(cov34,-cov[3]*sn); 
+  fC[2] = cov[5]; 
+  
+  if (special==1) {
+    double pti = 1./pt;
+    double pti2 = pti*pti;
+    int q = sign;
+    fC[3 ] = cov[6]*pti;
+    fC[4 ] = -sgcheck*cov[8]*r*pti;
+    fC[5 ] = TMath::Abs(cov[9]*r*r*pti2);
+    fC[6 ] = (cov[10]*fP[3]-sgcheck*cov[15])*pti/r;
+    fC[7 ] = (cov[17]-sgcheck*cov[12]*fP[3])*pti;
+    fC[8 ] = (-sgcheck*cov[18]+cov[13]*fP[3])*r*pti2;
+    fC[9 ] = TMath::Abs( cov[20]-2*sgcheck*cov[19]*fP[3]+cov[14]*fP[3]*fP[3])*pti2;
+    fC[10] = cov[10]*pti2/r*q;
+    fC[11] = -sgcheck*cov[12]*pti2*q;
+    fC[12] = cov[13]*r*pti*pti2*q;
+    fC[13] = (-sgcheck*cov[19]+cov[14]*fP[3])*r*pti2*pti;
+    fC[14] = TMath::Abs(cov[14]*pti2*pti2);
+  } else if (special==2) {
+    double pti = 1./pt;
+    double pti2 = pti*pti;
+    int q = sign;
+    fC[3 ] = -cov[10]*pti*cs/sn;
+    fC[4 ] = cov[12]*cs*pti;
+    fC[5 ] = TMath::Abs(cov[14]*cs*cs*pti2);
+    fC[6 ] = (sgcheck*cov[6]*fP[3]-cov[15])*pti/sn;
+    fC[7 ] = (cov[17]-sgcheck*cov[8]*fP[3])*pti;
+    fC[8 ] = (cov[19]-sgcheck*cov[13]*fP[3])*cs*pti2;
+    fC[9 ] = TMath::Abs( cov[20]-2*sgcheck*cov[18]*fP[3]+cov[9]*fP[3]*fP[3])*pti2;
+    fC[10] = sgcheck*cov[6]*pti2/sn*q;
+    fC[11] = -sgcheck*cov[8]*pti2*q;
+    fC[12] = -sgcheck*cov[13]*cs*pti*pti2*q;
+    fC[13] = (-sgcheck*cov[18]+cov[9]*fP[3])*pti2*pti*q;
+    fC[14] = TMath::Abs(cov[9]*pti2*pti2);
+  } else {
+    Double_t m00=-sn;// m10=cs;
+    Double_t m23=-pt*(sn + fP[2]*cs/r), m43=-pt*pt*(r*cs - fP[2]*sn);
+    Double_t m24= pt*(cs - fP[2]*sn/r), m44=-pt*pt*(r*sn + fP[2]*cs);
+    Double_t m35=pt, m45=-pt*pt*fP[3];
+    //
+    m43*=sign;
+    m44*=sign;
+    m45*=sign;
+    //
+    Double_t a1=cov[13]-cov[9]*(m23*m44+m43*m24)/m23/m43;
+    Double_t a2=m23*m24-m23*(m23*m44+m43*m24)/m43;
+    Double_t a3=m43*m44-m43*(m23*m44+m43*m24)/m23;
+    Double_t a4=cov[14]+2.*cov[9]; //cov[14]-2.*cov[9]*m24*m44/m23/m43;
+    Double_t a5=m24*m24-2.*m24*m44*m23/m43;
+    Double_t a6=m44*m44-2.*m24*m44*m43/m23;
+    //    
+    fC[3 ] = (cov[10]*m43-cov[6]*m44)/(m24*m43-m23*m44)/m00; 
+    fC[10] = (cov[6]/m00-fC[3 ]*m23)/m43; 
+    fC[6 ] = (cov[15]/m00-fC[10]*m45)/m35; 
+    fC[4 ] = (cov[12]*m43-cov[8]*m44)/(m24*m43-m23*m44); 
+    fC[11] = (cov[8]-fC[4]*m23)/m43; 
+    fC[7 ] = cov[17]/m35-fC[11]*m45/m35; 
+    fC[5 ] = TMath::Abs((a4*a3-a6*a1)/(a5*a3-a6*a2));
+    fC[14] = TMath::Abs((a1-a2*fC[5])/a3);
+    fC[12] = (cov[9]-fC[5]*m23*m23-fC[14]*m43*m43)/m23/m43;
+    Double_t b1=cov[18]-fC[12]*m23*m45-fC[14]*m43*m45;
+    Double_t b2=m23*m35;
+    Double_t b3=m43*m35;
+    Double_t b4=cov[19]-fC[12]*m24*m45-fC[14]*m44*m45;
+    Double_t b5=m24*m35;
+    Double_t b6=m44*m35;
+    fC[8 ] = (b4-b6*b1/b3)/(b5-b6*b2/b3);
+    fC[13] = b1/b3-b2*fC[8]/b3;
+    fC[9 ] = TMath::Abs((cov[20]-fC[14]*(m45*m45)-fC[13]*2.*m35*m45)/(m35*m35));
+  }
+
+  exTrack->Set(fX,fAlpha,fP,fC);
+  
+  return exTrack;
+
+}
+
 int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(AliAODTrack *track) {
   if (!fMCArray)
     return false;
@@ -1319,6 +1357,13 @@ int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(AliAODTrack *track) {
     return false;
 
   int label = track->GetLabel();
+  
+  return getMotherPdgCode(label);
+}
+
+int AliAnalysisTaskAODTrackPairUtils::getMotherPdgCode(int label) {
+  if (!fMCArray)
+    return false;
 
   if (label < -1)
     return false;
@@ -1389,6 +1434,29 @@ int AliAnalysisTaskAODTrackPairUtils::getMotherLabel(AliAODMCParticle *part) {
 
   int mom = part->GetMother();
 
+  return mom;
+}
+
+int AliAnalysisTaskAODTrackPairUtils::getGrandMotherLabel(int label) {
+  if (!fMCArray)
+    return false;
+
+  if (label < -1) return false;
+
+  AliAODMCParticle *part = (AliAODMCParticle *)fMCArray->At(label);
+  
+  if (!part) return false;
+
+  int mom = part->GetMother();
+
+  if (mom < -1) {
+    return -99;
+  }
+
+  part = (AliAODMCParticle *)fMCArray->At(mom);
+  
+  mom = part->GetMother();
+  
   return mom;
 }
 

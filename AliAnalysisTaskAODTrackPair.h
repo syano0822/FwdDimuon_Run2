@@ -319,6 +319,7 @@ class KFParticleK0s : public KFParticle {
       if (fabs(fChi2)>safe_threshold) return false;
       //cout<<"    [1.2.26.0]"<<endl;
     }
+    return true;
   }
 
   double safe_threshold = 1.e2;
@@ -415,6 +416,14 @@ public:
   void setEvtMixingPoolCent(bool flag) { onEvtMixingPoolCent = flag; }
   void setEvtMixingPoolPsi(bool flag) { onEvtMixingPoolPsi = flag; }
 
+  void setK0sPtRange(double min, double max){
+    fMinK0sPt = min;
+    fMaxK0sPt = max;
+  }
+  void setK0sRapRange(double min, double max){
+    fMinK0sRap = min;
+    fMaxK0sRap = max;
+  }
   void setK0sDaughterTrackPRange(double min, double max){
     fMinTrackP = min;
     fMaxTrackP = max;
@@ -505,13 +514,13 @@ private:
 
   bool AddK0sArray(AliPID::EParticleType pid1, AliPID::EParticleType pid2);
 
-  unique_ptr<K0sContainer> calcK0sFromTracks(AliAODTrack* aodTrack1,AliAODTrack* aodTrack2);
-  unique_ptr<AliAODv0> calcAliAODv0FromTracks(AliAODTrack* aodTrack1,AliAODTrack* aodTrack2);
+  K0sContainer *calcK0sFromTracks(AliAODTrack* aodTrack1,AliAODTrack* aodTrack2);
+  AliAODv0 *updateAODv0(AliAODTrack* aodTrack1,AliAODTrack* aodTrack2);
 
-  bool updateAODv0(AliAODv0* v0);
-
-  int findLeadingTrack();
+  void checkPrimaryTrack();
   
+  bool isKstarCandidate(AliAODv0* v0);
+
   KFParticle CreateKFParticle(AliAODTrack* track,int pdg);
   
   K0sContainer *CreateRawPointerK0sContainer(K0sContainer* unique);
@@ -522,17 +531,23 @@ private:
   bool ProcessMC();
 
   bool isAcceptK0sPair(K0sContainer* v0_1, K0sContainer* v0_2);
+  bool isAcceptK0sPair(AliAODv0* v0_1, AliAODv0* v0_2);
+  bool isAcceptK0sPair(int label1[2], int label2[2]);
+
   bool isAcceptV0QualityCuts(K0sContainer* v0, bool isAcceptCuts[7]);
   bool isAcceptV0QualityCuts(AliAODv0* v0, bool isAcceptCuts[7]);
   bool isAcceptV0QualityCuts(double p, double chi2, double cpv, double lengthXY, double trackDistanceXY, double DCAxy, double lifetime, bool isAcceptCuts[7]);
+  
   bool isAcceptK0sArmenteros(K0sContainer* v0);
-  bool isAcceptK0sCuts(K0sContainer* v0);
+    
   bool isAcceptK0sKinematics(K0sContainer* v0);
   bool isAcceptK0sKinematics(AliAODv0* v0);
   bool isAcceptK0sKinematics(AliAODMCParticle* v0);
   bool isAcceptK0sKinematics(double rap, double pt);
+  
   bool isAcceptPrimaryTrack(AliAODTrack* track);
   bool isAcceptK0sCandidateMassRange(double mass);
+  
   bool isAcceptDaughterTrackPairAngle(AliAODTrack* track1, AliAODTrack* track2);
   bool isAcceptDaughterTrack(AliAODTrack *track, AliPID::EParticleType pid1);
   bool isAcceptDaughterTrackKinematics(AliAODTrack *track);
@@ -541,7 +556,8 @@ private:
 
   AliAODEvent *fEvent;
   AliAODVertex *fPrimVtx;
-  
+  AliAODTrack *fLeadingTrack;
+ 
   AliEventPoolManager *fPoolMuonTrackMgrK0s;  
   AliEventPoolManager *fPoolMuonTrackMgrPion;  
   
@@ -551,9 +567,10 @@ private:
   
   TClonesArray *fMCTrackArray;
 
-  unique_ptr<TObjArray> fArrayK0s;
-  unique_ptr<TObjArray> fArrayK0sDaughterTrack;
-
+  TObjArray *fArrayK0s;
+  TObjArray *fArrayK0sDaughterTrack;
+  TObjArray *fArrayPrimaryPionTrack;
+  
   TH1F* fHistDecayLengthCut;
   TH1F* fHistPointingAngleCut;
   TH1F* fHistChi2perNDFCut;
@@ -616,6 +633,8 @@ private:
   double fPrimVtxCov[6];
   double fCent;
   double fPsi;
+  
+  int fNK0s;
 
   int fMinNContPrimVtx;
 
@@ -636,32 +655,49 @@ private:
   THnSparse *fSparseULSPionPair;
   THnSparse *fSparseLSppPionPair;
   THnSparse *fSparseLSmmPionPair;
-
+ 
   THnSparse *fSparseMixULSPionPair;
   THnSparse *fSparseMixLSppPionPair;
   THnSparse *fSparseMixLSmmPionPair;
 
+  THnSparse *fSparseULSPrimaryPionPair;
+  THnSparse *fSparseLSppPrimaryPionPair;
+  THnSparse *fSparseLSmmPrimaryPionPair;
+ 
+  THnSparse *fSparseMixULSPrimaryPionPair;
+  THnSparse *fSparseMixLSppPrimaryPionPair;
+  THnSparse *fSparseMixLSmmPrimaryPionPair;
+  
   THnSparse *fSparseULSPionPairBeforeCuts;
   THnSparse *fSparseLSppPionPairBeforeCuts;
   THnSparse *fSparseLSmmPionPairBeforeCuts;
   
-  THnSparse* fSparseULSPionPair_PassChi2perNDFCut;
-  THnSparse* fSparseULSPionPair_PassCPVXYCut;
-  THnSparse* fSparseULSPionPair_PassDecayLengthXYCut;
-  THnSparse* fSparseULSPionPair_PassDaughterDistanceXYCut;  
-  THnSparse* fSparseULSPionPair_PassDCAXYCut;
-  THnSparse* fSparseULSPionPair_PassLifetimeCut;
-  THnSparse* fSparseULSPionPair_PassArmenterosCut;
-
   THnSparse *fSparseNeutralK0sPair;
-  THnSparse *fSparseNeutralNegativeK0sPair;
-  THnSparse *fSparseNeutralPositiveK0sPair;
-  THnSparse *fSparsePositiveK0sPair;
-  THnSparse *fSparseNegativeK0sPair;
-  THnSparse *fSparsePositiveNegativeK0sPair;
+  THnSparse *fSparseMixNeutralK0sPair;
 
+  THnSparse *fSparseNeutralK0sPairRejectKstar;
+  THnSparse *fSparseMixNeutralK0sPairRejectKstar;
+
+  THnSparse *fSparseNeutralK0sPairTransverse;
+  THnSparse *fSparseNeutralK0sPairToward;
+  THnSparse *fSparseNeutralK0sPairAway;
+  THnSparse *fSparseNeutralK0sPairInJet;
+
+  THnSparse *fSparseK0sPion;
+  THnSparse *fSparseULSPionPairRejectKstar;
+     
+  THnSparse *fSparseRecK0s;
+  THnSparse *fSparseRecK0sRejectKstar;
   THnSparse *fSparseTrueK0s;
+  
   THnSparse *fSparseTrueK0sRecK0s;
+  
+  TH2F* fHistResoK0sMassPt;
+  TH2F* fHistResoK0sPtPt;
+  TH2F* fHistResoK0sEtaPt;
+  TH2F* fHistResoK0sPhiPt;
+
+  TH1F* fHistNumK0sCandidates;
 
   TH2F *fHistTPCdEdxP;
   TH2F *fHistTPCSigmaElectron;
@@ -756,65 +792,7 @@ private:
   TH2F *fHistSelV0TrackDCA_TrueK0s; 
   TH2F *fHistSelV0Armenteros_TrueK0s;
 
-  TH2F *fHistLSV0PV0DecayLengthXY;
-  TH2F *fHistLSV0PV0DecayLength;
-  TH2F *fHistLSV0PV0PointingAngleXY;
-  TH2F *fHistLSV0PV0PointingAngle;
-  TH2F *fHistLSV0PV0DCAXY;
-  TH2F *fHistLSV0PV0DCA;
-  TH2F *fHistLSV0PV0TrackDistanceXY;
-  TH2F *fHistLSV0PV0TrackDistance;
-  TH2F *fHistLSV0PV0Chi2perNDF;
-  TH2F *fHistLSV0PV0PropLifeTime;
-  TH2F *fHistLSV0TrackDCAXY; 
-  TH2F *fHistLSV0TrackDCA; 
-  TH2F *fHistLSV0Armenteros;
-
-  TH2F *fHistLSSelV0PV0DecayLengthXY;
-  TH2F *fHistLSSelV0PV0DecayLength;
-  TH2F *fHistLSSelV0PV0PointingAngleXY;
-  TH2F *fHistLSSelV0PV0PointingAngle;
-  TH2F *fHistLSSelV0PV0DCAXY;
-  TH2F *fHistLSSelV0PV0DCA;
-  TH2F *fHistLSSelV0PV0TrackDistanceXY;
-  TH2F *fHistLSSelV0PV0TrackDistance;
-  TH2F *fHistLSSelV0PV0Chi2perNDF;
-  TH2F *fHistLSSelV0PV0PropLifeTime;
-  TH2F *fHistLSSelV0TrackDCAXY; 
-  TH2F *fHistLSSelV0TrackDCA; 
-  TH2F *fHistLSSelV0Armenteros;
-
-  TH2F *fHistLSV0PV0DecayLengthXY_TrueK0s;
-  TH2F *fHistLSV0PV0DecayLength_TrueK0s;
-  TH2F *fHistLSV0PV0PointingAngleXY_TrueK0s;
-  TH2F *fHistLSV0PV0PointingAngle_TrueK0s;
-  TH2F *fHistLSV0PV0DCAXY_TrueK0s;
-  TH2F *fHistLSV0PV0DCA_TrueK0s;
-  TH2F *fHistLSV0PV0TrackDistanceXY_TrueK0s;
-  TH2F *fHistLSV0PV0TrackDistance_TrueK0s;
-  TH2F *fHistLSV0PV0Chi2perNDF_TrueK0s;
-  TH2F *fHistLSV0PV0PropLifeTime_TrueK0s;
-  TH2F *fHistLSV0TrackDCAXY_TrueK0s; 
-  TH2F *fHistLSV0TrackDCA_TrueK0s; 
-  TH2F *fHistLSV0Armenteros_TrueK0s;
-
-  TH2F *fHistLSSelV0PV0DecayLengthXY_TrueK0s;
-  TH2F *fHistLSSelV0PV0DecayLength_TrueK0s;
-  TH2F *fHistLSSelV0PV0PointingAngleXY_TrueK0s;
-  TH2F *fHistLSSelV0PV0PointingAngle_TrueK0s;
-  TH2F *fHistLSSelV0PV0DCAXY_TrueK0s;
-  TH2F *fHistLSSelV0PV0DCA_TrueK0s;
-  TH2F *fHistLSSelV0PV0TrackDistanceXY_TrueK0s;
-  TH2F *fHistLSSelV0PV0TrackDistance_TrueK0s;
-  TH2F *fHistLSSelV0PV0Chi2perNDF_TrueK0s;
-  TH2F *fHistLSSelV0PV0PropLifeTime_TrueK0s;
-  TH2F *fHistLSSelV0TrackDCAXY_TrueK0s; 
-  TH2F *fHistLSSelV0TrackDCA_TrueK0s; 
-  TH2F *fHistLSSelV0Armenteros_TrueK0s;
-
-  int selectEvt;
-  int all;
-  int abord;
+  int nEvtAnalyzed;
 
   clock_t start;
   clock_t end;
