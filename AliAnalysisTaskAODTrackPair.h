@@ -406,15 +406,24 @@ public:
 
   void setMC(bool isMC) { fIsMC = isMC; }
   void setManualV0Analysis(bool isManual) {fIsManualV0Analysis=isManual;}
-
+  
   void setMixingAnalysis(bool isMix) { fIsMixingAnalysis = isMix; }
+  void setCentralityMethod(std::string method){fMethodCent = method;}
+
+
   void setUtils(AliAnalysisTaskAODTrackPairUtils *utils) { fUtils = utils; }
+  
   void setEvtMixingTrackDepth(int depth) { fTrackDepth = depth; }
   void setEvtMixingPoolSize(int size) { fPoolSize = size; }
   void setEvtMixingReadyFraction(double frac) { fReadyFraction = frac; }
   void setEvtMixingPoolVtxZ(bool flag) { onEvtMixingPoolVtxZ = flag; }
   void setEvtMixingPoolCent(bool flag) { onEvtMixingPoolCent = flag; }
   void setEvtMixingPoolPsi(bool flag) { onEvtMixingPoolPsi = flag; }
+  
+  void setVtxZRange(double min, double max) {
+    fMinVertexCutZ = min;
+    fMaxVertexCutZ = max;
+  }
 
   void setK0sPtRange(double min, double max){
     fMinK0sPt = min;
@@ -604,6 +613,9 @@ private:
   bool fIsManualV0Analysis;
   
   double fArmenterosAlpha;
+  
+  double fMinVertexCutZ;
+  double fMaxVertexCutZ;
 
   double fMinK0sRap;
   double fMaxK0sRap;

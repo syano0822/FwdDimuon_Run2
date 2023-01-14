@@ -90,7 +90,6 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   utils->setTrackQualities(findable, dcaxy.c_str(), dcaz, chi2tpc, chi2its, nclusttpc, nclustits);
   utils->setPairTargetPIDs(pid1, pid2);
 
-
   AliAnalysisManager *mgr = AliAnalysisManager::GetAnalysisManager();
   if (!mgr) {
     ::Error("AddTaskAODMuonEventSelection",
@@ -110,6 +109,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
 
   task->setUtils(utils);
   task->setMC(isMC);
+  task->setCentralityMethod(multi_method);
   task->setEvtMixingTrackDepth(trackdepth);
   task->setEvtMixingPoolSize(poolsize);
   task->setEvtMixingReadyFraction(readypoolfraction);
@@ -117,6 +117,7 @@ AliAnalysisTaskAODTrackPair *AddTaskAODTrackPair(
   task->setEvtMixingPoolCent(onpoolCent);
   task->setEvtMixingPoolPsi(onpoolPsi);
   task->setMixingAnalysis(onMixingAnalysis);
+  task->setVtxZRange(min_vtxz,max_vtxz);
   task->setManualV0Analysis(isManual);  
   task->setK0sCuts(input3,decay_length_cut,pointangle_cut,chi2_cut,pairDCA_cut,track_distance_cut,dcaxy_cut,lifetime_cut,armenteros_cut);  
   task->setK0sRapRange(min_pair_rap,max_pair_rap);

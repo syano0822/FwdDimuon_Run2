@@ -120,6 +120,9 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
 
   fArmenterosAlpha(0.16),
 
+  fMinVertexCutZ(-10),
+  fMaxVertexCutZ(10),
+
   fMinK0sRap(-1.5),
   fMaxK0sRap(1.5),
   fMinK0sPt(0.0),
@@ -141,7 +144,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair() : AliAnalysisTaskSE()
   fMaxTrackEta(+0.8),  
   fMinLeadingTrackPt(5.),
 
-  fMethodCent("V0A"),
+  fMethodCent("V0M"),
   fPrimVtxPos(),
   fPrimVtxCov(),
   fCent(0.),
@@ -362,6 +365,9 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) :
 
   fArmenterosAlpha(0.16),
 
+  fMinVertexCutZ(-10),
+  fMaxVertexCutZ(10),
+
   fMinK0sRap(-1.5),
   fMaxK0sRap(1.5),
   fMinK0sPt(0.0),
@@ -383,7 +389,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) :
   fMaxTrackEta(+0.8),
   fMinLeadingTrackPt(5.),
 
-  fMethodCent("V0A"),
+  fMethodCent("V0M"),
   fPrimVtxPos(),
   fPrimVtxCov(),
   fCent(0.),
@@ -953,9 +959,7 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) :
  //________________________________________________________________________
 
  void AliAnalysisTaskAODTrackPair::UserExec(Option_t *) {
-   
-   
-
+     
    fArrayK0s              = new TObjArray();      
    fArrayK0sDaughterTrack = new TObjArray();
    fArrayPrimaryPionTrack = new TObjArray();
@@ -963,14 +967,18 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) :
    if (!Initialize())            return ;
    if (!fUtils->isAcceptEvent()) return ;
    
-   checkPrimaryTrack();
+   //checkPrimaryTrack();
    
    AddK0sArray(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
    fHistNumK0sCandidates->Fill(fNK0s);
    
    if (fNK0s>1){
+     /*
      if (!fIsMixingAnalysis) K0sPairAnalysis(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));     
      else                    K0sPairAnalysisEventMixing(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
+     */
+     K0sPairAnalysis(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));     
+     K0sPairAnalysisEventMixing(fUtils->getPairTargetPIDs(0),fUtils->getPairTargetPIDs(1));
    }
 
    if(fIsMC) ProcessMC();
@@ -1004,15 +1012,19 @@ AliAnalysisTaskAODTrackPair::AliAnalysisTaskAODTrackPair(const char *name) :
    
    if (!fPrimVtx)                                       return false;   
    if (fPrimVtx->GetNContributors() < fMinNContPrimVtx) return false;
-
+   
    fPrimVtx->GetXYZ(fPrimVtxPos);
    fPrimVtx->GetCovarianceMatrix(fPrimVtxCov);
    
+   if (fMinVertexCutZ > fPrimVtxPos[2] || fMaxVertexCutZ < fPrimVtxPos[2]) return false;
+
    fMultSelection = (AliMultSelection *)fEvent->FindListObject("MultSelection");
    
    if (!fMultSelection) return false;
 
    fCent = fMultSelection->GetMultiplicityPercentile(fMethodCent.c_str(), false);
+   
+   if (0>fCent || fCent>100) return false;
    
    fHistEventVtxZ    -> Fill(fPrimVtxPos[2]);
    fHistEventCent    -> Fill(fCent);
@@ -1350,7 +1362,7 @@ bool AliAnalysisTaskAODTrackPair::K0sPairAnalysisEventMixing(AliPID::EParticleTy
   if (onEvtMixingPoolVtxZ) poolVtxZ = fPrimVtxPos[2];
   if (onEvtMixingPoolCent) poolCent = fCent;
   if (onEvtMixingPoolPsi)  poolPsi  = 0;
-
+  
   AliEventPool *pool = (AliEventPool *)fPoolMuonTrackMgrK0s->GetEventPool(poolCent, poolVtxZ, poolPsi);
   
   for (int iTrack1 = 0; iTrack1 < fNK0s; ++iTrack1) {
